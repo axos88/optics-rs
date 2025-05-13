@@ -1,0 +1,17 @@
+[package]
+name = "optics"
+version = "0.1.0"
+authors = ["Vamdra-Meyer Ákos <akos@vandra.hu>"]
+edition = "2024"
+license = "MIT OR Apache-2.0"
+description = "A no_std-compatible optics library providing composable lenses, prisms, isomorphisms, and fallible isomorphisms."
+repository = "https://github.com/axos88/optics-rs"
+keywords = ["optics", "lens", "prism", "iso", "no_std"]
+categories = ["no-std", "data-structures", "rust-patterns"]
+readme = "README.md"
+exclude = [".github/*", ".gitignore"]
+
+[package.metadata]
+msrv = "1.86.0"
+
+[dependencies]
