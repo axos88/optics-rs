@@ -40,7 +40,11 @@ where
     /// * `source` — A reference to the focus type value `A`.
     ///
     /// # Returns
-    /// `Ok(S)` if the reverse transformation succeeds, or `Err(Self::Error)` if it fails.
+    /// `Ok(S)` if the reverse transformation succeeds,
+    ///
+    /// # Errors
+    /// Returns `Err(Self::Error)` if the transformation fails.
+    ///
     fn try_reverse_get(&self, source: &A) -> Result<S, Self::Error>;
 }
 
@@ -136,7 +140,6 @@ where
     /// );
     ///
     /// ```
-
     pub fn new(get_fn: GET, rev_fn: REV) -> Self {
         FallibleIsoImpl {
             get_fn,
@@ -150,7 +153,7 @@ where
 ///
 /// This struct is automatically created by composing two existing optics, and is **not** intended
 /// to be directly constructed outside the crate. Instead, it is generated through composition of
-/// two optics via the corresponding ComposableXXX traits, where each optic can be any
+/// two optics via the corresponding `ComposableXXX` traits, where each optic can be any
 /// valid optic type where the result is a `FallibleIso`.
 ///
 /// A `ComposedFallible` not only combines two optics into a single lens, but it also inherently
@@ -209,7 +212,7 @@ where
     fn set(&self, source: &mut S, value: A) {
         self.try_reverse_get(&value)
             .into_iter()
-            .for_each(|s| *source = s)
+            .for_each(|s| *source = s);
     }
 }
 

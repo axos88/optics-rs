@@ -28,15 +28,15 @@ This crate defines several types of optics that extend the functionality of the 
   - **Lenses**: Lenses focus on a part of a structure and provide a way to get and set the value of that part, such as `Point` -> `x: u32`
 
   - **Prisms**: Prisms in general allow for focusing on a specific variant of a sum type (like enums in Rust). 
-  They can be used to extract or modify the value of that variant, or a focusing operation that may fail because the 
-  value that may or may not be present, such as `Option<u32>` -> `u32`
+    They can be used to extract or modify the value of that variant, or a focusing operation that may fail because the 
+    value that may or may not be present, such as `Option<u32>` -> `u32`
 
   - **Isos** (Isomorphisms): Isos provide a bijective mapping between types. 
-  They can be used to transform data between two types while preserving structure, such as an `IpAddrV4` <=> `u32`.
+    They can be used to transform data between two types while preserving structure, such as an `IpAddrV4` <=> `u32`.
     
   - **Fallible Isos**: Fallible isos extend the concept of isos by introducing the possibility of failure. 
-  Both the getting and setting operations may fail, and they return Result types that allow you to handle errors. 
-  This can be used for parsing or validating data, such as converting a string to an integer.
+    Both the getting and setting operations may fail, and they return Result types that allow you to handle errors. 
+    This can be used for parsing or validating data, such as converting a string to an integer.
 
 ### Combining Optics
 One of the most powerful features of this crate is the ability to combine optics. 
@@ -56,11 +56,11 @@ access to B, ensuring that the types align correctly during the composition proc
 
 ### Limitations
   - Type Theory and Category Theory: The library is still evolving, and the underlying concepts may not fully 
-implement category theory or other type-theoretical ideas. While this crate aims to be powerful, there is plenty 
-of room for improvement and refinement.
+    implement category theory or other type-theoretical ideas. While this crate aims to be powerful, there is plenty 
+    of room for improvement and refinement.
 
   - HKT (Higher-Kinded Types): Rust's lack of support for higher-kinded types (HKT) means that some abstractions 
-are probably not possible. For example, you cannot write a general Prism that would work for any `Option<T>` -> `T`.
+    are probably not possible. For example, you cannot write a general Prism that would work for any `Option<T>` -> `T`.
 
   - Error Handling: All prisms in the crate require the error type to implement `From<NoFocus>` and all lens need to implement `From<Infallible>`.
 
@@ -75,10 +75,9 @@ allow returning any custom error type. This will make Prism behave more like a g
 and would make Prism redundant and will be deprecated once this change is made.
 
 ## Code Examples
-Below is a simplified example of how the optics work in this crate. The code below is inspired by the test suite (test.rs) and illustrates how to use Lens, Prism, Iso, and FallibleIso.
+Below is a simplified example of how the optics work in this crate. The code below is inspired by the test suite (test.rs) and illustrates how to use [`Lens`], [`Prism`], [`Iso`], and [`FallibleIso`].
 
 ```rust
-#[test]
 fn optic_example() {
 // Create a Config object with some default values
 let mut config = Config::default();

@@ -156,7 +156,7 @@ where
     }
 
     fn set(&self, source: &mut S, value: A) {
-        (self.set_fn)(source, value)
+        (self.set_fn)(source, value);
     }
 }
 
@@ -184,7 +184,7 @@ where
 ///
 /// This struct is automatically created by composing two existing optics, and is **not** intended
 /// to be directly constructed outside the crate. Instead, it is generated through composition of
-/// two optics via the corresponding ComposableXXX traits, where each optic can be any
+/// two optics via the corresponding `ComposableXXX` traits, where each optic can be any
 /// valid optic type where the result is a `Lens`.
 ///
 /// A `ComposedLens` not only combines two optics into a single lens, but it also inherently
@@ -360,7 +360,7 @@ where
 {
     type Error = Infallible;
     fn try_get(&self, source: &S) -> Result<A, Self::Error> {
-        Ok(self.optic2.try_get(&self.optic1.try_get(source)?)?)
+        self.optic2.try_get(&self.optic1.try_get(source)?)
     }
 
     fn set(&self, source: &mut S, value: A) {

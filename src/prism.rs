@@ -162,7 +162,7 @@ where
     }
 
     fn set(&self, source: &mut S, value: A) {
-        (self.set_fn)(source, value)
+        (self.set_fn)(source, value);
     }
 }
 

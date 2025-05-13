@@ -142,7 +142,7 @@ where
     }
 
     fn set(&self, source: &mut S, value: A) {
-        *source = self.reverse_get(&value)
+        *source = self.reverse_get(&value);
     }
 }
 
@@ -166,7 +166,7 @@ where
     }
 }
 
-/// A composed [`Iso`] type, combining two optics into a single ['Iso'].
+/// A composed [`Iso`] type, combining two optics into a single [`Iso`].
 ///
 /// This struct is automatically created by composing two existing optics into a more general `Iso`.
 /// It is **not** intended to be directly constructed outside the crate, but is generated through
@@ -418,7 +418,7 @@ where
 {
     type Error = Infallible;
     fn try_get(&self, source: &S) -> Result<A, Self::Error> {
-        Ok(self.optic2.try_get(&self.optic1.try_get(source)?)?)
+        self.optic2.try_get(&self.optic1.try_get(source)?)
     }
 
     fn set(&self, source: &mut S, value: A) {

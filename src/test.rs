@@ -4,7 +4,6 @@ use crate::lens::Lens;
 use crate::lens::{ComposableLens, LensImpl};
 use crate::optic::Optic;
 use crate::prism::{ComposablePrism, NoFocus, Prism, PrismImpl};
-use crate::test::Timespan::Minutes;
 use alloc::string::{String, ToString};
 use alloc::vec;
 use alloc::vec::Vec;
@@ -66,6 +65,7 @@ impl Default for Config {
 }
 
 #[test]
+#[allow(clippy::too_many_lines)]
 fn foo() {
     let mut config = Config::default();
 
@@ -73,8 +73,7 @@ fn foo() {
 
     assert_eq!(main_lens.get(&config), config.main);
 
-    let port_lens =
-        LensImpl::<DatabaseConfig, Option<u16>>::new(|c| c.port.clone(), |c, v| c.port = v);
+    let port_lens = LensImpl::<DatabaseConfig, Option<u16>>::new(|c| c.port, |c, v| c.port = v);
 
     let composed = main_lens.compose_lens_with_lens(port_lens);
     assert_eq!(composed.get(&config), config.main.port);
@@ -85,13 +84,12 @@ fn foo() {
     let timespan_seconds_prism = PrismImpl::<Timespan, u32>::new(
         |c| match c {
             Timespan::Seconds(s) => Some(*s),
-            Timespan::Minutes(_) => None,
-            Timespan::Hours(_) => None,
+            _ => None,
         },
-        |c, v| match c {
-            Timespan::Seconds(_) => *c = Timespan::Seconds(v),
-            Timespan::Minutes(_) => (),
-            Timespan::Hours(_) => (),
+        |c, v| {
+            if let Timespan::Seconds(_) = c {
+                *c = Timespan::Seconds(v);
+            }
         },
     );
 
@@ -118,13 +116,12 @@ fn foo() {
     let seconds_value_prism = PrismImpl::<Timespan, u32, _, _>::new(
         |c| match c {
             Timespan::Seconds(s) => Some(*s),
-            Timespan::Minutes(_) => None,
-            Timespan::Hours(_) => None,
+            _ => None,
         },
-        |c, v| match c {
-            Timespan::Seconds(_) => *c = Timespan::Seconds(v),
-            Timespan::Minutes(_) => (),
-            Timespan::Hours(_) => (),
+        |c, v| {
+            if let Timespan::Seconds(_) = c {
+                *c = Timespan::Seconds(v);
+            }
         },
     );
 
@@ -157,10 +154,10 @@ fn foo() {
             Timespan::Minutes(m) => u16::try_from(*m * 60).map_err(|_| "Out of bounds".to_string()),
             Timespan::Hours(h) => u16::try_from(*h * 3600).map_err(|_| "Out of bounds".to_string()),
         },
-        |c: &u16| match *c as u32 {
-            c if c % 3600 == 0 => Ok(Timespan::Hours(c as u32 / 3600)),
-            c if c % 60 == 0 => Ok(Timespan::Minutes(c as u32 / 60)),
-            c => Ok(Timespan::Seconds(c as u32)),
+        |c: &u16| match u32::from(*c) {
+            c if c % 3600 == 0 => Ok(Timespan::Hours(c / 3600)),
+            c if c % 60 == 0 => Ok(Timespan::Minutes(c / 60)),
+            c => Ok(Timespan::Seconds(c)),
         },
     );
 
@@ -173,7 +170,7 @@ fn foo() {
 
     let delay_lens =
         LensImpl::<Config, Timespan, _, _>::new(|c| c.delay.clone(), |c, v| c.delay = v);
-    assert_eq!(delay_lens.get(&config), Minutes(30));
+    assert_eq!(delay_lens.get(&config), Timespan::Minutes(30));
 
     delay_lens.set(&mut config, Timespan::Hours(1000));
     assert_eq!(seconds_prism.try_get(&config), Err(NoFocus));
@@ -182,7 +179,7 @@ fn foo() {
 
     let to_u16 = FallibleIsoImpl::<u32, u16, _, _, _>::new(
         |c| u16::try_from(*c).map_err(|_| "Too big".to_string()),
-        |v| Ok(*v as u32),
+        |v| Ok(u32::from(*v)),
     );
 
     let times_2 = FallibleIsoImpl::<u16, u16, _, _, _>::new(
@@ -235,7 +232,7 @@ fn foo() {
 
     let to_u16 = FallibleIsoImpl::<u32, u16, _, _, _>::new(
         |c| u16::try_from(*c).map_err(|_| "Too big".to_string()),
-        |v| Ok(*v as u32),
+        |v| Ok(u32::from(*v)),
     );
 
     val = 65535;

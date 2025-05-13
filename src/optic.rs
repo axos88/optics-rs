@@ -35,7 +35,11 @@ pub trait Optic<S, A> {
     /// # Returns
     ///
     /// - `Ok(A)` if focus extraction is successful.
-    /// - `Err(Self::Error)` if the focus is absent or extraction fails.
+    ///
+    /// # Errors
+    ///
+    /// Returns `Self::Error` if the focus is absent or extraction fails.
+    ///
     ///
     /// # Behavior
     ///
