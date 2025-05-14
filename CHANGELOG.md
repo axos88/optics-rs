@@ -10,6 +10,7 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 ### Added
   - a proper example
 ### Fixed
+  - Fixed missing export of `ComposedFallibleIso`
 
 ---
 
