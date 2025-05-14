@@ -52,7 +52,7 @@ impl From<Infallible> for NoFocus {
 /// - [`NoFocus`] — the current error type returned by `Prism::preview` on failure
 pub trait Prism<S, A>: Optic<S, A>
 where
-    NoFocus: From<<Self as Optic<S, A>>::Error>,
+    Self::Error: Into<NoFocus>,
 {
     /// Attempt to extract a value of type `A` from `S`
     fn preview(&self, source: &S) -> Option<A>;
@@ -200,7 +200,7 @@ where
 /// - [`ComposedPrism`] — a type representing the possible result of composing a lens with other optics.
 pub trait ComposablePrism<S, I, A, O2: Optic<I, A>>: Prism<S, I> + Sized
 where
-    NoFocus: From<Self::Error>,
+    Self::Error: Into<NoFocus>,
 {
     /// Composes the current `Prism` with a `Lens`.
     ///
@@ -229,7 +229,7 @@ where
     fn compose_prism_with_prism(self, other: O2) -> ComposedPrism<Self, O2, S, I, A>
     where
         O2: Prism<I, A>,
-        NoFocus: From<O2::Error>;
+        O2::Error: Into<NoFocus>;
 
     /// Composes the current `Prism` with a `FallibleIso`.
     ///
@@ -245,7 +245,7 @@ where
     where
         O2: FallibleIso<I, A> + Prism<I, A>,
         E: From<Self::Error> + From<O2::Error>,
-        NoFocus: From<O2::Error>;
+        O2::Error: Into<NoFocus>;
 
     /// Composes the current `Prism` with an `Iso`.
     ///
@@ -265,13 +265,13 @@ where
 impl<P, O2, S, I, A> ComposablePrism<S, I, A, O2> for P
 where
     P: Prism<S, I> + Sized,
-    NoFocus: From<Self::Error>,
+    Self::Error: Into<NoFocus>,
     O2: Optic<I, A>,
 {
     fn compose_prism_with_lens(self, other: O2) -> ComposedPrism<Self, O2, S, I, A>
     where
         O2: Lens<I, A> + Prism<I, A>,
-        NoFocus: From<O2::Error>,
+        O2::Error: Into<NoFocus>,
     {
         ComposedPrism::new(self, other)
     }
@@ -279,7 +279,7 @@ where
     fn compose_prism_with_prism(self, other: O2) -> ComposedPrism<Self, O2, S, I, A>
     where
         O2: Prism<I, A>,
-        NoFocus: From<O2::Error>,
+        O2::Error: Into<NoFocus>,
     {
         ComposedPrism::new(self, other)
     }
@@ -288,7 +288,7 @@ where
     where
         O2: FallibleIso<I, A> + Prism<I, A>,
         E: From<Self::Error> + From<O2::Error>,
-        NoFocus: From<O2::Error>,
+        O2::Error: Into<NoFocus>,
     {
         ComposedPrism::new(self, other)
     }
@@ -296,7 +296,7 @@ where
     fn compose_prism_with_iso(self, other: O2) -> ComposedPrism<Self, O2, S, I, A>
     where
         O2: Iso<I, A> + Prism<I, A>,
-        NoFocus: From<O2::Error>,
+        O2::Error: Into<NoFocus>,
     {
         ComposedPrism::new(self, other)
     }
@@ -338,7 +338,8 @@ impl<O1, O2, S, I, A> ComposedPrism<O1, O2, S, I, A> {
     where
         O1: Prism<S, I>,
         O2: Prism<I, A>,
-        NoFocus: From<O1::Error> + From<O2::Error>,
+        O1::Error: Into<NoFocus>,
+        O2::Error: Into<NoFocus>,
     {
         ComposedPrism {
             optic1,
@@ -352,11 +353,14 @@ impl<O1, O2, S, I, A> Optic<S, A> for ComposedPrism<O1, O2, S, I, A>
 where
     O1: Optic<S, I>,
     O2: Optic<I, A>,
-    NoFocus: From<O1::Error> + From<O2::Error>,
+    O1::Error: Into<NoFocus>,
+    O2::Error: Into<NoFocus>,
 {
     type Error = NoFocus;
     fn try_get(&self, source: &S) -> Result<A, Self::Error> {
-        Ok(self.optic2.try_get(&self.optic1.try_get(source)?)?)
+        self.optic2
+            .try_get(&self.optic1.try_get(source).map_err(Into::into)?)
+            .map_err(Into::into)
     }
 
     fn set(&self, source: &mut S, value: A) {
@@ -371,7 +375,8 @@ impl<O1, O2, S, I, A> Prism<S, A> for ComposedPrism<O1, O2, S, I, A>
 where
     O1: Prism<S, I> + Optic<S, I>,
     O2: Prism<I, A> + Optic<I, A>,
-    NoFocus: From<O1::Error> + From<O2::Error>,
+    O1::Error: Into<NoFocus>,
+    O2::Error: Into<NoFocus>,
 {
     fn preview(&self, source: &S) -> Option<A> {
         self.optic2.preview(&self.optic1.preview(source)?)

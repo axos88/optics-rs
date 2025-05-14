@@ -7,10 +7,10 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 ## [Unreleased]
 
 ### Breaking changes
+### Changed
+  - switched From bounds to Into bounds
 ### Added
-- a proper example
 ### Fixed
-- Fixed missing export of `ComposedFallibleIso`
 
 
 ## [0.1.2] - 2025-05-15

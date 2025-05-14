@@ -28,7 +28,7 @@ use core::marker::PhantomData;
 /// - [`Optic`] — the base trait for all optics.
 pub trait FallibleIso<S, A>: Optic<S, A> + Prism<S, A>
 where
-    NoFocus: From<Self::Error>,
+    Self::Error: Into<NoFocus>,
 {
     /// Attempts to perform the reverse transformation from the focus type `A` back to the source type `S`.
     ///
@@ -176,7 +176,8 @@ pub struct ComposedFallibleIso<O1, O2, E, S, I, A>
 where
     O1: FallibleIso<S, I>,
     O2: FallibleIso<I, A>,
-    NoFocus: From<O1::Error> + From<O2::Error>,
+    O1::Error: Into<NoFocus>,
+    O2::Error: Into<NoFocus>,
 {
     optic1: O1,
     optic2: O2,
@@ -187,7 +188,8 @@ impl<O1, O2, S, I, A, E> ComposedFallibleIso<O1, O2, E, S, I, A>
 where
     O1: FallibleIso<S, I>,
     O2: FallibleIso<I, A>,
-    NoFocus: From<O1::Error> + From<O2::Error>,
+    O1::Error: Into<NoFocus>,
+    O2::Error: Into<NoFocus>,
 {
     pub(crate) fn new(optic1: O1, optic2: O2) -> Self where {
         ComposedFallibleIso {
@@ -202,7 +204,7 @@ impl<S, A, E, GET, REV> Optic<S, A> for FallibleIsoImpl<S, A, E, GET, REV>
 where
     GET: Fn(&S) -> Result<A, E>,
     REV: Fn(&A) -> Result<S, E>,
-    NoFocus: From<E>,
+    E: Into<NoFocus>,
 {
     type Error = E;
     fn try_get(&self, source: &S) -> Result<A, Self::Error> {
@@ -220,7 +222,7 @@ impl<S, A, E, GET, REV> Prism<S, A> for FallibleIsoImpl<S, A, E, GET, REV>
 where
     GET: Fn(&S) -> Result<A, E>,
     REV: Fn(&A) -> Result<S, E>,
-    NoFocus: From<E>,
+    E: Into<NoFocus>,
 {
     fn preview(&self, source: &S) -> Option<A> {
         (self.get_fn)(source).ok()
@@ -231,8 +233,11 @@ impl<O1, O2, E, S, I, A> Prism<S, A> for ComposedFallibleIso<O1, O2, E, S, I, A>
 where
     O1: FallibleIso<S, I>,
     O2: FallibleIso<I, A>,
-    NoFocus: From<O1::Error> + From<O2::Error> + From<E>,
-    E: From<O1::Error> + From<O2::Error>,
+    O1::Error: Into<NoFocus>,
+    O2::Error: Into<NoFocus>,
+    O1::Error: Into<E>,
+    O2::Error: Into<E>,
+    E: Into<NoFocus>,
 {
     fn preview(&self, source: &S) -> Option<A> {
         let i = self.optic1.preview(source)?;
@@ -244,7 +249,7 @@ impl<S, A, E, GET, REV> FallibleIso<S, A> for FallibleIsoImpl<S, A, E, GET, REV>
 where
     GET: Fn(&S) -> Result<A, E>,
     REV: Fn(&A) -> Result<S, E>,
-    NoFocus: From<E>,
+    E: Into<NoFocus>,
 {
     fn try_reverse_get(&self, source: &A) -> Result<S, Self::Error> {
         (self.rev_fn)(source)
@@ -255,12 +260,15 @@ impl<O1, O2, E, S, I, A> FallibleIso<S, A> for ComposedFallibleIso<O1, O2, E, S,
 where
     O1: FallibleIso<S, I> + Optic<S, I>,
     O2: FallibleIso<I, A> + Optic<I, A>,
-    E: From<O1::Error> + From<O2::Error>,
-    NoFocus: From<O1::Error> + From<O2::Error> + From<E>,
+    O1::Error: Into<E>,
+    O2::Error: Into<E>,
+    O1::Error: Into<NoFocus>,
+    O2::Error: Into<NoFocus>,
+    E: Into<NoFocus>,
 {
     fn try_reverse_get(&self, source: &A) -> Result<S, Self::Error> {
-        let i = self.optic2.try_reverse_get(source)?;
-        Ok(self.optic1.try_reverse_get(&i)?)
+        let i = self.optic2.try_reverse_get(source).map_err(Into::into)?;
+        self.optic1.try_reverse_get(&i).map_err(Into::into)
     }
 }
 
@@ -289,7 +297,7 @@ where
 /// - [`ComposedPrism`] — a type representing the possible result of composing a lens with other optics
 pub trait ComposableFallibleIso<S, I, A, O2: Optic<I, A>>: FallibleIso<S, I> + Sized
 where
-    NoFocus: From<Self::Error>,
+    Self::Error: Into<NoFocus>,
 {
     /// Composes the current `FallibleIso` with an `Lens`.
     ///
@@ -304,7 +312,8 @@ where
     where
         Self: Prism<S, I>,
         O2: Lens<I, A> + Prism<I, A>,
-        NoFocus: From<Self::Error> + From<O2::Error>;
+        Self::Error: Into<NoFocus>,
+        O2::Error: Into<NoFocus>;
 
     /// Composes the current `FallibleIso` with an `Prism`.
     ///
@@ -319,7 +328,8 @@ where
     where
         Self: Prism<S, I>,
         O2: Prism<I, A>,
-        NoFocus: From<Self::Error> + From<O2::Error>;
+        Self::Error: Into<NoFocus>,
+        O2::Error: Into<NoFocus>;
 
     /// Composes the current `FallibleIso` with an `FallibleIso`.
     ///
@@ -336,8 +346,9 @@ where
     ) -> ComposedFallibleIso<Self, O2, E, S, I, A>
     where
         O2: FallibleIso<I, A>,
-        E: From<Self::Error> + From<O2::Error>,
-        NoFocus: From<O2::Error>;
+        Self::Error: Into<E>,
+        O2::Error: Into<E>,
+        O2::Error: Into<NoFocus>;
 
     /// Composes the current `FallibleIso` with an `Iso`.
     ///
@@ -360,13 +371,14 @@ impl<FI, O2, S, I, A> ComposableFallibleIso<S, I, A, O2> for FI
 where
     FI: FallibleIso<S, I>,
     O2: Optic<I, A>,
-    NoFocus: From<FI::Error>,
+    FI::Error: Into<NoFocus>,
 {
     fn compose_fallible_iso_with_lens(self, other: O2) -> ComposedPrism<Self, O2, S, I, A>
     where
         Self: Prism<S, I>,
         O2: Lens<I, A> + Prism<I, A>,
-        NoFocus: From<O2::Error> + From<Self::Error>,
+        O2::Error: Into<NoFocus>,
+        Self::Error: Into<NoFocus>,
     {
         ComposedPrism::new(self, other)
     }
@@ -375,7 +387,8 @@ where
     where
         Self: Prism<S, I>,
         O2: Prism<I, A>,
-        NoFocus: From<O2::Error> + From<Self::Error>,
+        O2::Error: Into<NoFocus>,
+        Self::Error: Into<NoFocus>,
     {
         ComposedPrism::new(self, other)
     }
@@ -386,8 +399,8 @@ where
     ) -> ComposedFallibleIso<Self, O2, E, S, I, A>
     where
         O2: FallibleIso<I, A>,
-        E: From<O2::Error>,
-        NoFocus: From<O2::Error>,
+        O2::Error: Into<E>,
+        O2::Error: Into<NoFocus>,
     {
         ComposedFallibleIso::new(self, other)
     }
@@ -398,7 +411,7 @@ where
     ) -> ComposedFallibleIso<Self, O2, Self::Error, S, I, A>
     where
         O2: Iso<I, A> + FallibleIso<I, A>,
-        NoFocus: From<O2::Error>,
+        O2::Error: Into<NoFocus>,
     {
         ComposedFallibleIso::new(self, other)
     }
@@ -408,12 +421,16 @@ impl<O1, O2, S, I, A, E> Optic<S, A> for ComposedFallibleIso<O1, O2, E, S, I, A>
 where
     O1: FallibleIso<S, I>,
     O2: FallibleIso<I, A>,
-    E: From<O1::Error> + From<O2::Error>,
-    NoFocus: From<O1::Error> + From<O2::Error>,
+    O1::Error: Into<E>,
+    O2::Error: Into<E>,
+    O1::Error: Into<NoFocus>,
+    O2::Error: Into<NoFocus>,
 {
     type Error = E;
     fn try_get(&self, source: &S) -> Result<A, Self::Error> {
-        Ok(self.optic2.try_get(&self.optic1.try_get(source)?)?)
+        self.optic2
+            .try_get(&self.optic1.try_get(source).map_err(Into::into)?)
+            .map_err(Into::into)
     }
 
     fn set(&self, source: &mut S, value: A) {

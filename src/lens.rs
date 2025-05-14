@@ -278,7 +278,8 @@ pub trait ComposableLens<S, I, A, O2: Optic<I, A>>: Lens<S, I> + Sized {
     where
         Self: Prism<S, I>,
         O2: Prism<I, A>,
-        NoFocus: From<Self::Error> + From<O2::Error>;
+        Self::Error: Into<NoFocus>,
+        O2::Error: Into<NoFocus>;
 
     /// Composes the current `Lens` with a `FallibleIso`.
     ///
@@ -294,7 +295,7 @@ pub trait ComposableLens<S, I, A, O2: Optic<I, A>>: Lens<S, I> + Sized {
     where
         Self: Prism<S, I>,
         O2: FallibleIso<I, A> + Prism<I, A>,
-        NoFocus: From<O2::Error>;
+        O2::Error: Into<NoFocus>;
 
     /// Composes the current `Lens` with an `Iso`.
     ///
@@ -331,7 +332,8 @@ where
     where
         Self: Prism<S, I>,
         O2: Prism<I, A>,
-        NoFocus: From<Self::Error> + From<O2::Error>,
+        Self::Error: Into<NoFocus>,
+        O2::Error: Into<NoFocus>,
     {
         ComposedPrism::new(self, other)
     }
@@ -340,7 +342,8 @@ where
     where
         Self: Prism<S, I>,
         O2: FallibleIso<I, A> + Prism<I, A>,
-        NoFocus: From<O2::Error> + From<Self::Error>,
+        O2::Error: Into<NoFocus>,
+        Self::Error: Into<NoFocus>,
     {
         ComposedPrism::new(self, other)
     }

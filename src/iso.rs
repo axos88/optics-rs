@@ -238,7 +238,8 @@ impl<O1, O2, S, I, A> Iso<S, A> for ComposedIso<O1, O2, S, I, A>
 where
     O1: Iso<S, I>,
     O2: Iso<I, A>,
-    NoFocus: From<O1::Error> + From<O2::Error>,
+    O1::Error: Into<NoFocus>,
+    O2::Error: Into<NoFocus>,
 {
     fn reverse_get(&self, source: &A) -> S {
         let i = self.optic2.reverse_get(source);
@@ -250,7 +251,8 @@ impl<O1, O2, S, I, A> FallibleIso<S, A> for ComposedIso<O1, O2, S, I, A>
 where
     O1: Iso<S, I>,
     O2: Iso<I, A>,
-    NoFocus: From<O1::Error> + From<O2::Error>,
+    O1::Error: Into<NoFocus>,
+    O2::Error: Into<NoFocus>,
 {
     fn try_reverse_get(&self, source: &A) -> Result<S, Infallible> {
         let i = self.optic2.try_reverse_get(source)?;
@@ -262,7 +264,8 @@ impl<O1, O2, S, I, A> Prism<S, A> for ComposedIso<O1, O2, S, I, A>
 where
     O1: Iso<S, I>,
     O2: Iso<I, A>,
-    NoFocus: From<O1::Error> + From<O2::Error>,
+    O1::Error: Into<NoFocus>,
+    O2::Error: Into<NoFocus>,
 {
     fn preview(&self, source: &S) -> Option<A> {
         let i = self.optic1.preview(source)?;
@@ -274,7 +277,8 @@ impl<O1, O2, S, I, A> Lens<S, A> for ComposedIso<O1, O2, S, I, A>
 where
     O1: Iso<S, I>,
     O2: Iso<I, A>,
-    NoFocus: From<O1::Error> + From<O2::Error>,
+    O1::Error: Into<NoFocus>,
+    O2::Error: Into<NoFocus>,
 {
     fn get(&self, source: &S) -> A {
         let i = self.optic1.get(source);
@@ -332,7 +336,8 @@ pub trait ComposableIso<S, I, A, O2: Optic<I, A>>: Iso<S, I> + Sized {
     where
         Self: Prism<S, I>,
         O2: Prism<I, A>,
-        NoFocus: From<Self::Error> + From<O2::Error>;
+        Self::Error: Into<NoFocus>,
+        O2::Error: Into<NoFocus>;
 
     /// Composes the current `Iso` with an `FallibleIso`.
     ///
@@ -351,7 +356,7 @@ pub trait ComposableIso<S, I, A, O2: Optic<I, A>>: Iso<S, I> + Sized {
         Self: FallibleIso<S, I>,
         O2: FallibleIso<I, A>,
         E: From<O2::Error> + From<Self::Error>,
-        NoFocus: From<O2::Error>;
+        O2::Error: Into<NoFocus>;
 
     /// Composes the current `Iso` with an `Iso`.
     ///
@@ -376,7 +381,7 @@ where
     where
         Self: Lens<S, I>,
         O2: Lens<I, A>,
-        NoFocus: From<O2::Error>,
+        O2::Error: Into<NoFocus>,
     {
         ComposedLens::new(self, other)
     }
@@ -385,7 +390,8 @@ where
     where
         Self: Prism<S, I>,
         O2: Prism<I, A>,
-        NoFocus: From<Self::Error> + From<O2::Error>,
+        Self::Error: Into<NoFocus>,
+        O2::Error: Into<NoFocus>,
     {
         ComposedPrism::new(self, other)
     }
@@ -398,7 +404,8 @@ where
         Self: FallibleIso<S, I>,
         O2: FallibleIso<I, A>,
         E: From<O2::Error> + From<Self::Error>,
-        NoFocus: From<O2::Error> + From<Self::Error>,
+        O2::Error: Into<NoFocus>,
+        Self::Error: Into<NoFocus>,
     {
         ComposedFallibleIso::new(self, other)
     }
