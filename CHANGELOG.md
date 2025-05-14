@@ -8,7 +8,17 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Breaking changes
 ### Added
+- a proper example
+### Fixed
+- Fixed missing export of `ComposedFallibleIso`
+
+
+## [0.1.2] - 2025-05-15
+
+### Breaking changes
+### Added
   - a proper example
+  - release script
 ### Fixed
   - Fixed missing export of `ComposedFallibleIso`
 
