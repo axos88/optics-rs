@@ -156,7 +156,7 @@ impl From<MyError> for NoFocus {
 
 impl From<NoFocus> for MyError {
   fn from(_: NoFocus) -> Self {
-    NoFocus
+    MyError
   }
 }
 
