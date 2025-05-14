@@ -1,6 +1,6 @@
 [package]
 name = "optics"
-version = "0.1.0"
+version = "0.1.1"
 authors = ["Vamdra-Meyer Ákos <akos@vandra.hu>"]
 edition = "2024"
 license = "MIT OR Apache-2.0"
