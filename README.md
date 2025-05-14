@@ -6,6 +6,59 @@
 [![Rust 1.87+](https://img.shields.io/badge/rust-1.87%2B-blue.svg)](https://blog.rust-lang.org/)
 [![License](https://img.shields.io/crates/l/optics.svg)](https://github.com/axos88/optics-rs/blob/main/LICENSE)
 
+## Summary
+`optics` is a set of **composable, type-safe tools** for accessing, transforming, and navigating data structures.
+It takes inspiration from the optics concepts you'd find in functional languages like Haskell —
+but it’s designed by someone who does not have a complete grasp on type theory or Van Laarhoven/profunctor lenses.
+
+It tries to mimic similar functionality within the constraints of Rust’s type system without higher-kinded types.
+
+The goal was simple:
+
+👉 Build something useful and composable for everyday Rust projects — no magic.
+
+### ✨ Features
+- Lenses — for focusing on subfields of structs
+- Prisms — for working with enum variants
+- Isomorphisms — for invertible type transformations
+- Fallible Isomorphisms — for conversions that might fail (e.g., String ↔ u16)
+- Composable — optics can be chained together to drill down into nested structures
+
+
+- No dependencies — pure Rust, no external crates
+- no_std support — usable in embedded and other restricted environments
+- Type-safe, explicit interfaces
+- Honest documentation
+
+### 📦 Philosophy
+
+This is a **layman's implementation** of optics. I don’t fully grasp all the deep type theory behind
+profunctor optics or Van Laarhoven lenses. Instead, I built something practical and composable,
+within the limitations of Rust’s type system and my own understanding.
+
+Some of the generic type bounds are clunky. I ran into situations where missing negative trait bounds
+in Rust forced some awkward decisions. There’s also a lot of repetition in the code — some of it could
+likely be reduced with macros, but I’m cautious about that since excessive macro usage tends to kill
+readability and maintainability.
+
+I genuinely welcome critics, feedback, and suggestions. If you see a way to clean up the generics, improve trait compositions, or simplify the code structure, I’m all ears. Drop me a PR, an issue, or a comment.
+
+### 📌 Status
+
+This is a **pre-release**, and the code is **unfinished** — but it’s good enough to start experimenting with in real projects.
+
+There’s a lot of room for simplification and improvement. Type-level constraints, trait bounds, and generic compositions are kind of bloated right now, and I wouldn’t mind help tightening it up.
+
+### 💬 Call for Critics
+
+If you know your type theory, or even if you just have an eye for clean Rust APIs — I’d love for you to take a look. Suggestions, critiques, and even teardown reviews are welcome.
+This is very much a **learning-while-doing** project for me.
+
+
+---
+
+## Documentation
+
 This crate provides an implementation of various optic types (Lenses, Prisms, Isos, and Fallible Isos), 
 which are used to focus on and manipulate parts of data structures in a type-safe and composable manner. 
 The crate allows for the combination of optics, providing powerful abstractions for working with deeply nested 
@@ -74,64 +127,85 @@ Currently, Prism uses a predefined error type for failures, but in the future, t
 allow returning any custom error type. This will make Prism behave more like a general Optic type, 
 and would make Prism redundant and will be deprecated once this change is made.
 
-## Code Examples
-Below is a simplified example of how the optics work in this crate. The code below is inspired by the test suite (test.rs) and illustrates how to use [`Lens`], [`Prism`], [`Iso`], and [`FallibleIso`].
+## Examples
+Below is a simplified example of how the optics work in this crate. The code below illustrates how to use and combine the various optic types.
 
 ```rust
-fn optic_example() {
-// Create a Config object with some default values
-let mut config = Config::default();
+use optics::{LensImpl, FallibleIsoImpl, PrismImpl, Optic, NoFocus};
+use optics::composers::{ComposableLens, ComposablePrism};
 
-    // Lens to focus on the main DatabaseConfig field of Config
-    let main_lens = LensImpl::<Config, DatabaseConfig>::new(
-        |c| c.main.clone(),
-        |c, v| c.main = v,
-    );
+#[derive(Debug, Clone)]
+struct HttpConfig {
+  bind_address: Option<String>,
+  workers: usize,
+}
 
-    // Get and assert the main config
-    assert_eq!(main_lens.get(&config), config.main);
+#[derive(Debug, Clone)]
+struct AppConfig {
+  http: HttpConfig,
+  name: String,
+}
 
-    // Lens for the port of DatabaseConfig
-    let port_lens = LensImpl::<DatabaseConfig, Option<u16>>::new(
-        |c| c.port.clone(),
-        |c, v| c.port = v,
-    );
+struct MyError;
 
-    // Compose two lenses into a new lens focusing on config.main.port
-    let composed_lens = main_lens.compose_lens_with_lens(port_lens);
-    assert_eq!(composed_lens.get(&config), config.main.port);
+impl From<MyError> for NoFocus {
+  fn from(_: MyError) -> Self {
+    NoFocus
+  }
+}
 
-    // Prism to focus on the Seconds variant of the Timespan enum
-    let timespan_seconds_prism = PrismImpl::<Timespan, u32>::new(
-        |c| match c {
-            Timespan::Seconds(s) => Some(*s),
-            _ => None,
-        },
-        |c, v| match c {
-            Timespan::Seconds(_) => *c = Timespan::Seconds(v),
-            _ => (),
-        }
-    );
+impl From<NoFocus> for MyError {
+  fn from(_: NoFocus) -> Self {
+    NoFocus
+  }
+}
 
-    // Compose a Lens and a Prism
-    let delay_seconds_prism = main_lens.compose_lens_with_prism(timespan_seconds_prism);
-    assert_eq!(delay_seconds_prism.preview(&config), None);
 
-    // Now set the value using a FallibleIso
-    let delay_iso = FallibleIsoImpl::<Timespan, u16, String>::new(
-        |c| match c {
-            Timespan::Seconds(s) => u16::try_from(*s).map_err(|_| "Out of bounds".to_string()),
-            _ => Err("Invalid Time".to_string()),
-        },
-        |c| Ok(Timespan::Seconds(*c as u32)),
-    );
+fn main() {
+  // Define lenses to focus on subfields
+  let http_lens = LensImpl::<AppConfig, HttpConfig>::new(
+    |app| app.http.clone(),
+    |app, http| app.http = http,
+  );
 
-    let fallible_iso = delay_seconds_prism.compose_fallible_iso_with_fallible_iso::<String>(delay_iso);
+  let bind_address_prism = PrismImpl::<HttpConfig, String>::new(
+    |http| http.bind_address.clone(),
+    |http, addr| http.bind_address = Some(addr),
+  );
 
-    assert_eq!(fallible_iso.try_get(&config), Ok(11));
+  let minimum_port = 1024;
+  // Define a fallible isomorphism between String and u16 (parsing a port)
+  let port_fallible_iso = FallibleIsoImpl::<String, u16, MyError, _, _>::new(
+    |addr: &String| {
+      addr.rsplit(':')
+        .next()
+        .and_then(|port| port.parse::<u16>().ok()).ok_or(MyError)
+    },
+    move |port: &u16| if *port > minimum_port { Ok(format!("0.0.0.0:{}", port)) } else { Err(MyError) }
+  );
+
+  // Compose lens and fallible iso into a ComposedFallibleIso
+
+  let http_bind_address_prism = http_lens.compose_lens_with_prism(bind_address_prism);
+  let http_bind_address_port_prism = http_bind_address_prism.compose_prism_with_fallible_iso::<MyError>(port_fallible_iso);
+
+  let mut config = AppConfig {
+    http: HttpConfig {
+      bind_address: Some("127.0.0.1:8080".to_string()),
+      workers: 4,
+    },
+    name: "my_app".into(),
+  };
+
+  // Use the composed optic to get the port
+  let port = http_bind_address_port_prism.try_get(&config).unwrap();
+  println!("Current port: {}", port); // 8080
+
+  // Use it to increment the port and update the config
+  http_bind_address_port_prism.set(&mut config, port + 1);
+
+  println!("Updated bind address: {:?}", config.http.bind_address); // port is now 8081
 }
 ```
 
-## Summary
-This crate provides a robust and flexible way to work with nested data structures in Rust. By using optics like lenses, prisms, and isos, you can safely manipulate and combine parts of your data. The library is extensible and supports both fallible and non-fallible transformations, making it a powerful tool for functional-style programming.
 
