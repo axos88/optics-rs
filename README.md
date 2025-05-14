@@ -26,7 +26,7 @@ The goal was simple:
 
 
 - No dependencies — pure Rust, no external crates
-- no_std support — usable in embedded and other restricted environments
+- `no_std` support — usable in embedded and other restricted environments
 - Type-safe, explicit interfaces
 - Honest documentation
 
@@ -206,6 +206,8 @@ fn main() {
 
   println!("Updated bind address: {:?}", config.http.bind_address); // port is now 8081
 }
+
+main();
 ```
 
 

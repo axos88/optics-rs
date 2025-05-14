@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash -e
 
 cargo build --all-targets --all-features
 cargo test --all-targets --all-features

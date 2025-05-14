@@ -17,7 +17,7 @@ mod prism;
 #[cfg(test)]
 mod test;
 
-pub use fallible_iso::{FallibleIso, FallibleIsoImpl, ComposedFallibleIso};
+pub use fallible_iso::{ComposedFallibleIso, FallibleIso, FallibleIsoImpl};
 pub use iso::{ComposedIso, Iso, IsoImpl};
 pub use lens::{ComposedLens, Lens, LensImpl};
 pub use optic::Optic;
