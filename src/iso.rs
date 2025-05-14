@@ -1,7 +1,7 @@
 use crate::fallible_iso::{ComposedFallibleIso, FallibleIso};
 use crate::lens::{ComposedLens, Lens};
 use crate::optic::Optic;
-use crate::prism::{ComposedPrism, NoFocus, Prism};
+use crate::prism::{ComposedPrism, Prism};
 use core::convert::Infallible;
 use core::marker::PhantomData;
 
@@ -238,8 +238,6 @@ impl<O1, O2, S, I, A> Iso<S, A> for ComposedIso<O1, O2, S, I, A>
 where
     O1: Iso<S, I>,
     O2: Iso<I, A>,
-    O1::Error: Into<NoFocus>,
-    O2::Error: Into<NoFocus>,
 {
     fn reverse_get(&self, source: &A) -> S {
         let i = self.optic2.reverse_get(source);
@@ -251,8 +249,6 @@ impl<O1, O2, S, I, A> FallibleIso<S, A> for ComposedIso<O1, O2, S, I, A>
 where
     O1: Iso<S, I>,
     O2: Iso<I, A>,
-    O1::Error: Into<NoFocus>,
-    O2::Error: Into<NoFocus>,
 {
     fn try_reverse_get(&self, source: &A) -> Result<S, Infallible> {
         let i = self.optic2.try_reverse_get(source)?;
@@ -264,8 +260,6 @@ impl<O1, O2, S, I, A> Prism<S, A> for ComposedIso<O1, O2, S, I, A>
 where
     O1: Iso<S, I>,
     O2: Iso<I, A>,
-    O1::Error: Into<NoFocus>,
-    O2::Error: Into<NoFocus>,
 {
     fn preview(&self, source: &S) -> Option<A> {
         let i = self.optic1.preview(source)?;
@@ -277,8 +271,6 @@ impl<O1, O2, S, I, A> Lens<S, A> for ComposedIso<O1, O2, S, I, A>
 where
     O1: Iso<S, I>,
     O2: Iso<I, A>,
-    O1::Error: Into<NoFocus>,
-    O2::Error: Into<NoFocus>,
 {
     fn get(&self, source: &S) -> A {
         let i = self.optic1.get(source);
@@ -320,8 +312,7 @@ pub trait ComposableIso<S, I, A, O2: Optic<I, A>>: Iso<S, I> + Sized {
     ///
     fn compose_iso_with_lens(self, other: O2) -> ComposedLens<Self, O2, S, I, A>
     where
-        O2: Lens<I, A>,
-        Self: Lens<S, I>;
+        O2: Lens<I, A>;
 
     /// Composes the current `Iso` with an `Prism`.
     ///
@@ -334,10 +325,7 @@ pub trait ComposableIso<S, I, A, O2: Optic<I, A>>: Iso<S, I> + Sized {
     /// - A `Prism<S, A>`, which is the resulting composed optic.
     fn compose_iso_with_prism(self, other: O2) -> ComposedPrism<Self, O2, S, I, A>
     where
-        Self: Prism<S, I>,
-        O2: Prism<I, A>,
-        Self::Error: Into<NoFocus>,
-        O2::Error: Into<NoFocus>;
+        O2: Prism<I, A>;
 
     /// Composes the current `Iso` with an `FallibleIso`.
     ///
@@ -353,10 +341,7 @@ pub trait ComposableIso<S, I, A, O2: Optic<I, A>>: Iso<S, I> + Sized {
         other: O2,
     ) -> ComposedFallibleIso<Self, O2, E, S, I, A>
     where
-        Self: FallibleIso<S, I>,
-        O2: FallibleIso<I, A>,
-        E: From<O2::Error> + From<Self::Error>,
-        O2::Error: Into<NoFocus>;
+        O2: FallibleIso<I, A>;
 
     /// Composes the current `Iso` with an `Iso`.
     ///
@@ -379,19 +364,14 @@ where
 {
     fn compose_iso_with_lens(self, other: O2) -> ComposedLens<Self, O2, S, I, A>
     where
-        Self: Lens<S, I>,
         O2: Lens<I, A>,
-        O2::Error: Into<NoFocus>,
     {
         ComposedLens::new(self, other)
     }
 
     fn compose_iso_with_prism(self, other: O2) -> ComposedPrism<Self, O2, S, I, A>
     where
-        Self: Prism<S, I>,
         O2: Prism<I, A>,
-        Self::Error: Into<NoFocus>,
-        O2::Error: Into<NoFocus>,
     {
         ComposedPrism::new(self, other)
     }
@@ -401,11 +381,7 @@ where
         other: O2,
     ) -> ComposedFallibleIso<Self, O2, E, S, I, A>
     where
-        Self: FallibleIso<S, I>,
         O2: FallibleIso<I, A>,
-        E: From<O2::Error> + From<Self::Error>,
-        O2::Error: Into<NoFocus>,
-        Self::Error: Into<NoFocus>,
     {
         ComposedFallibleIso::new(self, other)
     }

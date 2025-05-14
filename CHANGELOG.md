@@ -8,6 +8,7 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Breaking changes
 ### Changed
+  - refactored type constraints as per u/OliveTreeFounder's suggestion - thanks!
   - switched From bounds to Into bounds
 ### Added
 ### Fixed

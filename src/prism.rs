@@ -50,10 +50,7 @@ impl From<Infallible> for NoFocus {
 /// - [`Iso`] — an isomorphism optic representing a reversible one-to-one transformation between two types
 ///
 /// - [`NoFocus`] — the current error type returned by `Prism::preview` on failure
-pub trait Prism<S, A>: Optic<S, A>
-where
-    Self::Error: Into<NoFocus>,
-{
+pub trait Prism<S, A>: Optic<S, A, Error: Into<NoFocus>> {
     /// Attempt to extract a value of type `A` from `S`
     fn preview(&self, source: &S) -> Option<A>;
 }
@@ -198,10 +195,7 @@ where
 /// - [`Iso`] — a trait for reversible transformations between types.
 /// - [`FallibleIso`] — a trait for isomorphisms that may fail.
 /// - [`ComposedPrism`] — a type representing the possible result of composing a lens with other optics.
-pub trait ComposablePrism<S, I, A, O2: Optic<I, A>>: Prism<S, I> + Sized
-where
-    Self::Error: Into<NoFocus>,
-{
+pub trait ComposablePrism<S, I, A, O2: Optic<I, A>>: Prism<S, I> + Sized {
     /// Composes the current `Prism` with a `Lens`.
     ///
     /// This method combines a `Prism` with a `Lens`, resulting in a new `Prism`.
@@ -228,8 +222,7 @@ where
     ///
     fn compose_prism_with_prism(self, other: O2) -> ComposedPrism<Self, O2, S, I, A>
     where
-        O2: Prism<I, A>,
-        O2::Error: Into<NoFocus>;
+        O2: Prism<I, A>;
 
     /// Composes the current `Prism` with a `FallibleIso`.
     ///
@@ -243,9 +236,8 @@ where
     ///
     fn compose_prism_with_fallible_iso<E>(self, other: O2) -> ComposedPrism<Self, O2, S, I, A>
     where
-        O2: FallibleIso<I, A> + Prism<I, A>,
-        E: From<Self::Error> + From<O2::Error>,
-        O2::Error: Into<NoFocus>;
+        O2: FallibleIso<I, A>,
+        E: From<Self::Error> + From<O2::Error>;
 
     /// Composes the current `Prism` with an `Iso`.
     ///
@@ -259,7 +251,7 @@ where
     ///
     fn compose_prism_with_iso(self, other: O2) -> ComposedPrism<Self, O2, S, I, A>
     where
-        O2: Iso<I, A> + Prism<I, A>;
+        O2: Iso<I, A>;
 }
 
 impl<P, O2, S, I, A> ComposablePrism<S, I, A, O2> for P
@@ -270,8 +262,7 @@ where
 {
     fn compose_prism_with_lens(self, other: O2) -> ComposedPrism<Self, O2, S, I, A>
     where
-        O2: Lens<I, A> + Prism<I, A>,
-        O2::Error: Into<NoFocus>,
+        O2: Lens<I, A>,
     {
         ComposedPrism::new(self, other)
     }
@@ -279,16 +270,14 @@ where
     fn compose_prism_with_prism(self, other: O2) -> ComposedPrism<Self, O2, S, I, A>
     where
         O2: Prism<I, A>,
-        O2::Error: Into<NoFocus>,
     {
         ComposedPrism::new(self, other)
     }
 
     fn compose_prism_with_fallible_iso<E>(self, other: O2) -> ComposedPrism<Self, O2, S, I, A>
     where
-        O2: FallibleIso<I, A> + Prism<I, A>,
+        O2: FallibleIso<I, A>,
         E: From<Self::Error> + From<O2::Error>,
-        O2::Error: Into<NoFocus>,
     {
         ComposedPrism::new(self, other)
     }
@@ -296,7 +285,6 @@ where
     fn compose_prism_with_iso(self, other: O2) -> ComposedPrism<Self, O2, S, I, A>
     where
         O2: Iso<I, A> + Prism<I, A>,
-        O2::Error: Into<NoFocus>,
     {
         ComposedPrism::new(self, other)
     }
@@ -338,8 +326,6 @@ impl<O1, O2, S, I, A> ComposedPrism<O1, O2, S, I, A> {
     where
         O1: Prism<S, I>,
         O2: Prism<I, A>,
-        O1::Error: Into<NoFocus>,
-        O2::Error: Into<NoFocus>,
     {
         ComposedPrism {
             optic1,
@@ -351,10 +337,8 @@ impl<O1, O2, S, I, A> ComposedPrism<O1, O2, S, I, A> {
 
 impl<O1, O2, S, I, A> Optic<S, A> for ComposedPrism<O1, O2, S, I, A>
 where
-    O1: Optic<S, I>,
-    O2: Optic<I, A>,
-    O1::Error: Into<NoFocus>,
-    O2::Error: Into<NoFocus>,
+    O1: Prism<S, I>,
+    O2: Prism<I, A>,
 {
     type Error = NoFocus;
     fn try_get(&self, source: &S) -> Result<A, Self::Error> {
@@ -373,10 +357,8 @@ where
 
 impl<O1, O2, S, I, A> Prism<S, A> for ComposedPrism<O1, O2, S, I, A>
 where
-    O1: Prism<S, I> + Optic<S, I>,
-    O2: Prism<I, A> + Optic<I, A>,
-    O1::Error: Into<NoFocus>,
-    O2::Error: Into<NoFocus>,
+    O1: Prism<S, I>,
+    O2: Prism<I, A>,
 {
     fn preview(&self, source: &S) -> Option<A> {
         self.optic2.preview(&self.optic1.preview(source)?)
