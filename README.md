@@ -156,12 +156,12 @@ impl From<MyError> for NoFocus {
 
 impl From<NoFocus> for MyError {
   fn from(_: NoFocus) -> Self {
-    NoFocus
+    MyError
   }
 }
 
 
-fn main() {
+fn example() {
   // Define lenses to focus on subfields
   let http_lens = LensImpl::<AppConfig, HttpConfig>::new(
     |app| app.http.clone(),
@@ -207,7 +207,7 @@ fn main() {
   println!("Updated bind address: {:?}", config.http.bind_address); // port is now 8081
 }
 
-main();
+example();
 ```
 
 
