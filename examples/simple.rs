@@ -1,5 +1,7 @@
-use optics::composers::{ComposableLens, ComposablePrism};
-use optics::{FallibleIsoImpl, LensImpl, NoFocus, Optic, PrismImpl};
+use optics::{
+    ComposeWithFallibleIso, ComposeWithPrism, NoFocus, Optic, mapped_fallible_iso, mapped_lens,
+    mapped_prism,
+};
 
 #[allow(dead_code)]
 #[derive(Debug, Clone)]
@@ -31,17 +33,19 @@ impl From<NoFocus> for MyError {
 
 fn main() {
     // Define lenses to focus on subfields
-    let http_lens =
-        LensImpl::<AppConfig, HttpConfig>::new(|app| app.http.clone(), |app, http| app.http = http);
+    let http_lens = mapped_lens(
+        |app: &AppConfig| app.http.clone(),
+        |app, http| app.http = http,
+    );
 
-    let bind_address_prism = PrismImpl::<HttpConfig, String>::new(
-        |http| http.bind_address.clone(),
+    let bind_address_prism = mapped_prism(
+        |http: &HttpConfig| http.bind_address.clone(),
         |http, addr| http.bind_address = Some(addr),
     );
 
     let minimum_port = 1024;
     // Define a fallible isomorphism between String and u16 (parsing a port)
-    let port_fallible_iso = FallibleIsoImpl::<String, u16, MyError, _, _>::new(
+    let port_fallible_iso = mapped_fallible_iso(
         |addr: &String| {
             addr.rsplit(':')
                 .next()
@@ -59,9 +63,9 @@ fn main() {
 
     // Compose lens and fallible iso into a ComposedFallibleIso
 
-    let http_bind_address_prism = http_lens.compose_lens_with_prism(bind_address_prism);
+    let http_bind_address_prism = http_lens.compose_with_prism(bind_address_prism);
     let http_bind_address_port_prism =
-        http_bind_address_prism.compose_prism_with_fallible_iso::<MyError>(port_fallible_iso);
+        http_bind_address_prism.compose_with_fallible_iso::<MyError, _, _>(port_fallible_iso);
 
     let mut config = AppConfig {
         http: HttpConfig {

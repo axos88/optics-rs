@@ -2,7 +2,7 @@ use crate::opaque::{A, B};
 use optics::Lens;
 
 mod opaque {
-    use optics::{Lens, LensImpl};
+    use optics::{Lens, mapped_lens};
 
     #[derive(Debug, Clone)]
     pub struct A {
@@ -21,14 +21,14 @@ mod opaque {
 
     impl A {
         pub fn email_lens() -> impl Lens<A, String> {
-            LensImpl::<A, String>::new(|a| a.email.clone(), |a, email| a.email = email)
+            mapped_lens(|a: &A| a.email.clone(), |a, email| a.email = email)
         }
     }
 
     impl B {
         pub fn email_lens() -> impl Lens<B, String> {
-            LensImpl::<B, String>::new(
-                |b| b.person.email.clone(),
+            mapped_lens(
+                |b: &B| b.person.email.clone(),
                 |b, email| b.person.email = email,
             )
         }
