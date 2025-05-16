@@ -1,8 +1,12 @@
-use core::marker::PhantomData;
+use crate::fallible_iso::{FallibleIso, FallibleIsoImpl};
+use crate::lens::{Lens, LensImpl};
 use crate::partial_getter::PartialGetter;
-use crate::setter::Setter;
 use crate::prism::composed::ComposedPrism;
+use crate::setter::Setter;
+use crate::{Iso, IsoImpl, infallible};
 pub use composed::new as composed_prism;
+use core::convert::identity;
+use core::marker::PhantomData;
 pub use mapped::new as mapped_prism;
 
 pub(crate) mod composed;
@@ -38,11 +42,6 @@ pub(crate) mod mapped;
 /// - [`NoFocus`] — the current error type returned by `Prism::preview` on failure
 pub trait Prism<S, A>: PartialGetter<S, A> + Setter<S, A> {}
 
-pub trait ComposeWithPrism<S, I>: PartialGetter<S, I> + Setter<S, I> {
-    type Result<E, A, P: Prism<I, A>>;
-    fn compose_with_prism<E, A, P: Prism<I, A>>(self, other: P, error_mapper_1: fn(Self::GetterError) -> E, error_mapper_2: fn(P::GetterError) -> E) -> Self::Result<E, A, P>;
-}
-
 pub struct PrismImpl<S, A, P: Prism<S, A>>(pub P, PhantomData<(S, A)>);
 
 impl<S, A, P: Prism<S, A>> PrismImpl<S, A, P> {
@@ -67,47 +66,67 @@ impl<S, A, P: Prism<S, A>> Setter<S, A> for PrismImpl<S, A, P> {
 
 impl<S, A, P: Prism<S, A>> Prism<S, A> for PrismImpl<S, A, P> {}
 
-impl<S, I, P: Prism<S, I>> ComposeWithPrism<S, I> for PrismImpl<S, I, P> {
-    type Result<E, A, P2: Prism<I, A>> = PrismImpl<S, A, ComposedPrism<Self, P2, E, S, I, A>>;
+impl<S, I, P1: Prism<S, I>> PrismImpl<S, I, P1> {
+    pub fn compose_with_prism<
+        E: From<P1::GetterError> + From<P2::GetterError>,
+        A,
+        P2: Prism<I, A>,
+    >(
+        self,
+        other: P2,
+    ) -> PrismImpl<S, A, ComposedPrism<Self, P2, E, S, I, A>> {
+        PrismImpl::new(ComposedPrism::new(self, other, Into::into, Into::into))
+    }
 
-    fn compose_with_prism<E, A, P2: Prism<I, A>>(self, other: P2, error_mapper1: fn(P::GetterError) -> E, error_mapper_2: fn(P2::GetterError) -> E) -> Self::Result<E, A, P2> {
-        PrismImpl::new(ComposedPrism::new(self, other, error_mapper1, error_mapper_2))
+    pub fn compose_with_prism_with_mappers<E, A, P2: Prism<I, A>>(
+        self,
+        other: P2,
+        error_mapper1: fn(P1::GetterError) -> E,
+        error_mapper_2: fn(P2::GetterError) -> E,
+    ) -> PrismImpl<S, A, ComposedPrism<Self, P2, E, S, I, A>> {
+        PrismImpl::new(ComposedPrism::new(
+            self,
+            other,
+            error_mapper1,
+            error_mapper_2,
+        ))
+    }
+
+    pub fn compose_with_lens<A, O2: Lens<I, A>>(
+        self,
+        other: LensImpl<I, A, O2>,
+    ) -> PrismImpl<S, A, ComposedPrism<Self, LensImpl<I, A, O2>, P1::GetterError, S, I, A>> {
+        PrismImpl::new(ComposedPrism::new(self, other, identity, infallible))
+    }
+
+    pub fn compose_with_fallible_iso<E, A, F2: FallibleIso<I, A>>(
+        self,
+        other: FallibleIsoImpl<I, A, F2>,
+    ) -> PrismImpl<S, A, ComposedPrism<Self, FallibleIsoImpl<I, A, F2>, E, S, I, A>>
+    where
+        E: From<F2::GetterError> + From<P1::GetterError>,
+    {
+        PrismImpl::new(ComposedPrism::new(self, other, Into::into, Into::into))
+    }
+
+    pub fn compose_with_fallible_iso_with_mappers<E, A, F2: FallibleIso<I, A>>(
+        self,
+        other: FallibleIsoImpl<I, A, F2>,
+        getter_error_mapper_1: fn(P1::GetterError) -> E,
+        getter_error_mapper_2: fn(F2::GetterError) -> E,
+    ) -> PrismImpl<S, A, ComposedPrism<Self, FallibleIsoImpl<I, A, F2>, E, S, I, A>> {
+        PrismImpl::new(ComposedPrism::new(
+            self,
+            other,
+            getter_error_mapper_1,
+            getter_error_mapper_2,
+        ))
+    }
+
+    pub fn compose_with_iso<A, ISO2: Iso<I, A>>(
+        self,
+        other: IsoImpl<I, A, ISO2>,
+    ) -> PrismImpl<S, A, ComposedPrism<Self, IsoImpl<I, A, ISO2>, P1::GetterError, S, I, A>> {
+        PrismImpl::new(ComposedPrism::new(self, other, identity, infallible))
     }
 }
-
-// impl<S, I, P: Prism<S, I>> ComposeWithLens<S, I> for PrismImpl<S, I, P> {
-//     type Result<A, L2: Lens<I, A>> =
-//         PrismImpl<S, A, ComposedPrism<Self, LensImpl<I, A, L2>, S, I, A>>;
-//
-//     fn compose_with_lens<A, L: Lens<I, A>>(self, other: LensImpl<I, A, L>) -> Self::Result<A, L> {
-//         PrismImpl::new(ComposedPrism::new(self, other))
-//     }
-// }
-//
-// impl<S, I, P: Prism<S, I>> ComposeWithFallibleIso<S, I> for PrismImpl<S, I, P> {
-//     type Result<E, A, F2: FallibleIso<I, A>>
-//         = PrismImpl<S, A, ComposedPrism<Self, FallibleIsoImpl<I, A, F2>, S, I, A>>
-//     where
-//         Self::Error: Into<E>,
-//         F2::Error: Into<E>;
-//
-//     fn compose_with_fallible_iso<E, A, F: FallibleIso<I, A>>(
-//         self,
-//         other: FallibleIsoImpl<I, A, F>,
-//     ) -> Self::Result<E, A, F>
-//     where
-//         Self::Error: Into<E>,
-//         F::Error: Into<E>,
-//     {
-//         PrismImpl::new(ComposedPrism::new(self, other))
-//     }
-// }
-//
-// impl<S, I, P: Prism<S, I>> ComposeWithIso<S, I> for PrismImpl<S, I, P> {
-//     type Result<A, ISO2: Iso<I, A>> =
-//         PrismImpl<S, A, ComposedPrism<Self, IsoImpl<I, A, ISO2>, S, I, A>>;
-//
-//     fn compose_with_iso<A, O2: Iso<I, A>>(self, other: IsoImpl<I, A, O2>) -> Self::Result<A, O2> {
-//         PrismImpl::new(ComposedPrism::new(self, other))
-//     }
-// }

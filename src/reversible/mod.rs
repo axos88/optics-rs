@@ -21,20 +21,20 @@
 /// - [`Prism`] — for partial optics where only one direction may be partial.
 /// - [`Optic`] — the base trait for all optics.
 pub trait Reversible<S, A> {
-  /// Attempts to perform the reverse transformation from the focus type `A` back to the source type `S`.
-  ///
-  /// Since this is a *fallible* isomorphism, the operation may fail if the provided `A` value
-  /// cannot be converted back into a valid `S`. The error type is defined by the `Error`
-  /// associated type of the [`Optic`] supertrait.
-  ///
-  /// # Arguments
-  /// * `source` — A reference to the focus type value `A`.
-  ///
-  /// # Returns
-  /// `Ok(S)` if the reverse transformation succeeds,
-  ///
-  /// # Errors
-  /// Returns `Err(Self::Error)` if the transformation fails.
-  ///
-  fn reverse_get(&self, value: &A) -> S;
+    /// Attempts to perform the reverse transformation from the focus type `A` back to the source type `S`.
+    ///
+    /// Since this is a *fallible* isomorphism, the operation may fail if the provided `A` value
+    /// cannot be converted back into a valid `S`. The error type is defined by the `Error`
+    /// associated type of the [`Optic`] supertrait.
+    ///
+    /// # Arguments
+    /// * `source` — A reference to the focus type value `A`.
+    ///
+    /// # Returns
+    /// `Ok(S)` if the reverse transformation succeeds,
+    ///
+    /// # Errors
+    /// Returns `Err(Self::Error)` if the transformation fails.
+    ///
+    fn reverse_get(&self, value: &A) -> S;
 }

@@ -1,6 +1,5 @@
-use crate::iso::Iso;
-use crate::{FallibleIso, IsoImpl, Lens, Optic, Prism};
-use core::convert::Infallible;
+use crate::iso::{Iso, IsoImpl};
+use crate::{Getter, Reversible, Setter};
 use core::marker::PhantomData;
 
 /// A composed `Iso` type, combining two optics into a single `Iso`.
@@ -50,25 +49,30 @@ where
     }
 }
 
-impl<O1, O2, S, I, A> Optic<S, A> for ComposedIso<O1, O2, S, I, A>
+impl<O1, O2, S, I, A> Getter<S, A> for ComposedIso<O1, O2, S, I, A>
 where
     O1: Iso<S, I>,
     O2: Iso<I, A>,
 {
-    type Error = Infallible;
-
-    fn try_get(&self, source: &S) -> Result<A, Self::Error> {
-        self.optic2.try_get(&self.optic1.try_get(source)?)
-    }
-
-    fn set(&self, source: &mut S, value: A) {
-        let Ok(mut inter) = self.optic1.try_get(source);
-        self.optic2.set(&mut inter, value);
-        self.optic1.set(source, inter);
+    fn get(&self, source: &S) -> A {
+        let i = self.optic1.get(source);
+        self.optic2.get(&i)
     }
 }
 
-impl<O1, O2, S, I, A> Iso<S, A> for ComposedIso<O1, O2, S, I, A>
+impl<O1, O2, S, I, A> Setter<S, A> for ComposedIso<O1, O2, S, I, A>
+where
+    O1: Iso<S, I>,
+    O2: Iso<I, A>,
+{
+    fn set(&self, source: &mut S, value: A) {
+        let mut i = self.optic1.get(source);
+        self.optic2.set(&mut i, value);
+        self.optic1.set(source, i);
+    }
+}
+
+impl<O1, O2, S, I, A> Reversible<S, A> for ComposedIso<O1, O2, S, I, A>
 where
     O1: Iso<S, I>,
     O2: Iso<I, A>,
@@ -79,13 +83,18 @@ where
     }
 }
 
+impl<O1, O2, S, I, A> Iso<S, A> for ComposedIso<O1, O2, S, I, A>
+where
+    O1: Iso<S, I>,
+    O2: Iso<I, A>,
+{
+}
+
 pub fn new<S, A, I, E, F1: Iso<S, I>, F2: Iso<I, A>>(
     f1: F1,
     f2: F2,
 ) -> IsoImpl<S, A, ComposedIso<F1, F2, S, I, A>>
 where
-    F1::Error: Into<E>,
-    F2::Error: Into<E>,
 {
     IsoImpl::new(ComposedIso::new(f1, f2))
 }

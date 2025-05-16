@@ -1,6 +1,5 @@
-use crate::iso::Iso;
-use crate::{IsoImpl, Optic, Prism};
-use core::convert::Infallible;
+use crate::iso::{Iso, IsoImpl};
+use crate::{Getter, Reversible, Setter};
 use core::marker::PhantomData;
 
 /// A concrete implementation of a [`Iso`] between types `S` and `A`.
@@ -60,7 +59,7 @@ where
     ///
     /// # Examples
     ///
-    /// ```
+    // ```
     /// use optics::IsoImpl;
     ///
     /// let fallible_iso = IsoImpl::<i32, String, String>::new(
@@ -75,7 +74,7 @@ where
     /// need to capture environment variables. In that case, you can specify the trailing
     /// type parameters as `_`, and the compiler will infer them:
     ///
-    /// ```
+    // ```
     /// use optics::IsoImpl;
     ///
     /// let max_value = 100;
@@ -94,7 +93,7 @@ where
     ///     },
     /// );
     ///
-    /// ```
+    // ```
     pub(crate) fn new(get_fn: GET, rev_fn: REV) -> Self {
         MappedIso {
             get_fn,
@@ -104,32 +103,27 @@ where
     }
 }
 
-impl<S, A, GET, REV> Optic<S, A> for MappedIso<S, A, GET, REV>
+impl<S, A, GET, REV> Getter<S, A> for MappedIso<S, A, GET, REV>
 where
     GET: Fn(&S) -> A,
     REV: Fn(&A) -> S,
 {
-    type Error = Infallible;
-
-    fn try_get(&self, source: &S) -> Result<A, Self::Error> {
-        Ok((self.get_fn)(source))
+    fn get(&self, source: &S) -> A {
+        (self.get_fn)(source)
     }
+}
 
+impl<S, A, GET, REV> Setter<S, A> for MappedIso<S, A, GET, REV>
+where
+    GET: Fn(&S) -> A,
+    REV: Fn(&A) -> S,
+{
     fn set(&self, source: &mut S, value: A) {
         *source = self.reverse_get(&value);
     }
 }
 
-impl<S, A, GET, REV> Prism<S, A> for MappedIso<S, A, GET, REV>
-where
-    GET: Fn(&S) -> A,
-    REV: Fn(&A) -> S,
-{
-    fn preview(&self, source: &S) -> Option<A> {
-        Some((self.get_fn)(source))
-    }
-}
-impl<S, A, GET, REV> Iso<S, A> for MappedIso<S, A, GET, REV>
+impl<S, A, GET, REV> Reversible<S, A> for MappedIso<S, A, GET, REV>
 where
     GET: Fn(&S) -> A,
     REV: Fn(&A) -> S,
@@ -139,7 +133,14 @@ where
     }
 }
 
-pub fn new<S, A, E, GET, REV>(get_fn: GET, rev_fn: REV) -> IsoImpl<S, A, MappedIso<S, A, GET, REV>>
+impl<S, A, GET, REV> Iso<S, A> for MappedIso<S, A, GET, REV>
+where
+    GET: Fn(&S) -> A,
+    REV: Fn(&A) -> S,
+{
+}
+
+pub fn new<S, A, GET, REV>(get_fn: GET, rev_fn: REV) -> IsoImpl<S, A, MappedIso<S, A, GET, REV>>
 where
     GET: Fn(&S) -> A,
     REV: Fn(&A) -> S,

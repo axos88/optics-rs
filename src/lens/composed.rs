@@ -1,8 +1,7 @@
-use crate::{Lens, LensImpl, Optic, Prism};
-use core::convert::Infallible;
-use core::marker::PhantomData;
 use crate::getter::Getter;
-use crate::lens::Lens;
+use crate::lens::{Lens, LensImpl};
+use crate::setter::Setter;
+use core::marker::PhantomData;
 
 /// A composed `Lens` type, combining two optics into a single `Lens`.
 ///
@@ -37,9 +36,12 @@ pub struct ComposedLens<O1: Lens<S, I>, O2: Lens<I, A>, S, I, A> {
     _phantom: PhantomData<(S, I, A)>,
 }
 
-impl<O1, O2, S, I, A> ComposedLens<O1, O2, S, I, A> where O1: Lens<S, I>, O2: Lens<S, I> {
-    pub(crate) fn new(optic1: O1, optic2: O2) -> Self
-    {
+impl<O1, O2, S, I, A> ComposedLens<O1, O2, S, I, A>
+where
+    O1: Lens<S, I>,
+    O2: Lens<I, A>,
+{
+    pub(crate) fn new(optic1: O1, optic2: O2) -> Self {
         ComposedLens {
             optic1,
             optic2,
@@ -55,9 +57,15 @@ where
 {
     fn get(&self, source: &S) -> A {
         let i = self.optic1.get(source);
-        self.optic2.get(i)
+        self.optic2.get(&i)
     }
+}
 
+impl<S, I, A, O1, O2> Setter<S, A> for ComposedLens<O1, O2, S, I, A>
+where
+    O1: Lens<S, I>,
+    O2: Lens<I, A>,
+{
     fn set(&self, source: &mut S, value: A) {
         let mut i = self.optic1.get(source);
         self.optic2.set(&mut i, value);
@@ -70,9 +78,6 @@ where
     O1: Lens<S, I>,
     O2: Lens<I, A>,
 {
-    fn get(&self, source: &S) -> A {
-        self.optic2.get(&self.optic1.get(source))
-    }
 }
 
 pub fn new<S, A, I, L1: Lens<S, I>, L2: Lens<I, A>>(

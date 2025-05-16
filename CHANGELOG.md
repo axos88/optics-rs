@@ -7,7 +7,15 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 ## [Unreleased]
 
 ### Breaking changes
-  - refactored entire type hierarchy - it is now much easier to understand and extend with new optic types
+  - refactored entire type hierarchy:
+    - removed Optic base trait,separated into five base traits:
+    - introduced PartialGetter, Getter, Setter, PartialReversible, Reversible
+    - all optics implement a combination of these base traits
+    - optics are now implemented via an Impl (public) and several concrete (opaque) structs, currently only MappedXXX, but it is now easier to add more, even outside the crate
+    - removed CombineWithXXX traits, as different optics require different signatures. Combination is now part of the Impl structs.
+    - optics can now be combined even if errors do not implment Into<> for eachother, but a mapper function is provided
+    - lens are now contstructed via exported helper functions, not using the Struct::new, as the structs are opaque.
+    - prisms now return a result with any error rather than an option
 ### Changed
   - refactored type constraints as per u/OliveTreeFounder's suggestion - thanks!
   - switched From bounds to Into bounds

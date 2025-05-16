@@ -1,4 +1,5 @@
 use crate::opaque::{A, B};
+use optics::Getter;
 use optics::Lens;
 
 mod opaque {

@@ -1,7 +1,7 @@
-use core::marker::PhantomData;
 use crate::partial_getter::PartialGetter;
 use crate::prism::{Prism, PrismImpl};
 use crate::setter::Setter;
+use core::marker::PhantomData;
 
 /// A composed `Prism` type, combining two optics into a single prism.
 ///
@@ -38,11 +38,15 @@ pub struct ComposedPrism<O1: Prism<S, I>, O2: Prism<I, A>, E, S, I, A> {
 
 impl<O1, O2, E, S, I, A> ComposedPrism<O1, O2, E, S, I, A>
 where
-  O1: Prism<S, I>,
-  O2: Prism<I, A>,
+    O1: Prism<S, I>,
+    O2: Prism<I, A>,
 {
-    pub(crate) fn new(optic1: O1, optic2: O2, error_fn_1: fn(O1::GetterError) -> E, error_fn_2: fn(O2::GetterError) -> E) -> Self
-    {
+    pub(crate) fn new(
+        optic1: O1,
+        optic2: O2,
+        error_fn_1: fn(O1::GetterError) -> E,
+        error_fn_2: fn(O2::GetterError) -> E,
+    ) -> Self {
         ComposedPrism {
             optic1,
             optic2,
@@ -68,8 +72,8 @@ where
 
 impl<O1, O2, E, S, I, A> Setter<S, A> for ComposedPrism<O1, O2, E, S, I, A>
 where
-  O1: Prism<S, I>,
-  O2: Prism<I, A>,
+    O1: Prism<S, I>,
+    O2: Prism<I, A>,
 {
     fn set(&self, source: &mut S, value: A) {
         if let Ok(mut i) = self.optic1.try_get(source).map_err(self.error_fn_1) {
@@ -84,16 +88,13 @@ where
     O1: Prism<S, I>,
     O2: Prism<I, A>,
 {
-    fn preview(&self, source: &S) -> Result<A, E> {
-        self.optic2.preview(&self.optic1.preview(source).map_err(self.error_fn_1)?).map_err(self.error_fn_2)
-    }
 }
 
 pub fn new<S, A, I, E, L1: Prism<S, I>, L2: Prism<I, A>>(
     l1: L1,
     l2: L2,
     error_fn_1: fn(L1::GetterError) -> E,
-    error_fn_2: fn(L2::GetterError) -> E
+    error_fn_2: fn(L2::GetterError) -> E,
 ) -> PrismImpl<S, A, ComposedPrism<L1, L2, E, S, I, A>> {
     PrismImpl::new(ComposedPrism::new(l1, l2, error_fn_1, error_fn_2))
 }

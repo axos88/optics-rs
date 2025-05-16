@@ -1,7 +1,7 @@
-use core::marker::PhantomData;
 use crate::partial_getter::PartialGetter;
 use crate::prism::{Prism, PrismImpl};
 use crate::setter::Setter;
+use core::marker::PhantomData;
 
 /// A concrete implementation of the [`Prism`] trait.
 ///
@@ -55,7 +55,7 @@ where
     ///
     /// # Examples
     ///
-    /// ```
+    // ```
     /// use optics::{Lens, MappedLens, Optic};
     ///
     /// struct Point { x: i32, y: i32 }
@@ -66,7 +66,7 @@ where
     /// );
     /// let x_value = x_lens.get(&point); // retrieves 10
     /// x_lens.set(&mut point, 30); // sets x to 30
-    /// ```
+    // ```
     ///
     /// # Capturing Closures
     ///
@@ -74,7 +74,7 @@ where
     /// need to capture environment variables. In that case, you can specify the trailing
     /// type parameters as `_`, and the compiler will infer them:
     ///
-    /// ```
+    // ```
     /// use optics::{Lens, MappedLens, Optic};
     ///
     /// struct Point { x: i32, y: i32 }
@@ -86,7 +86,7 @@ where
     /// );
     /// let x_value = x_lens.get(&point); // retrieves 10 * 2 = 20
     /// x_lens.set(&mut point, 60); // sets x to 60 / 2 = 30
-    /// ```
+    // ```
     pub(crate) fn new(get_fn: GET, set_fn: SET) -> Self {
         MappedPrism {
             get_fn,
@@ -110,8 +110,8 @@ where
 
 impl<S, A, E, GET, SET> Setter<S, A> for MappedPrism<S, A, E, GET, SET>
 where
-  GET: Fn(&S) -> Result<A, E>,
-  SET: Fn(&mut S, A),
+    GET: Fn(&S) -> Result<A, E>,
+    SET: Fn(&mut S, A),
 {
     fn set(&self, source: &mut S, value: A) {
         (self.set_fn)(source, value);
@@ -123,12 +123,12 @@ where
     GET: Fn(&S) -> Result<A, E>,
     SET: Fn(&mut S, A),
 {
-    fn preview(&self, source: &S) -> Result<A, Self::GetterError> {
-        (self.get_fn)(source)
-    }
 }
 
-pub fn new<S, A, E, GET, SET>(get_fn: GET, set_fn: SET) -> PrismImpl<S, A, MappedPrism<S, A, E, GET, SET>>
+pub fn new<S, A, E, GET, SET>(
+    get_fn: GET,
+    set_fn: SET,
+) -> PrismImpl<S, A, MappedPrism<S, A, E, GET, SET>>
 where
     GET: Fn(&S) -> Result<A, E>,
     SET: Fn(&mut S, A),

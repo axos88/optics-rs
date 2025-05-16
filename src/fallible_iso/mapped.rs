@@ -1,5 +1,6 @@
 use crate::fallible_iso::{FallibleIso, FallibleIsoImpl};
-use crate::{Optic, Prism};
+use crate::partial_reversible::PartialReversible;
+use crate::{PartialGetter, Setter};
 use core::marker::PhantomData;
 
 /// A concrete implementation of a [`FallibleIso`] between types `S` and `A`.
@@ -26,20 +27,26 @@ use core::marker::PhantomData;
 /// # See Also
 /// - [`FallibleIso`] — The trait implemented by this struct.
 /// - [`Prism`] — The equivalent for partial optics.
-pub struct MappedFallibleIso<S, A, E, GET = fn(&S) -> Result<A, E>, REV = fn(&A) -> Result<S, E>>
-where
-    GET: Fn(&S) -> Result<A, E>,
-    REV: Fn(&A) -> Result<S, E>,
+pub struct MappedFallibleIso<
+    S,
+    A,
+    GE,
+    RE,
+    GET = fn(&S) -> Result<A, GE>,
+    REV = fn(&A) -> Result<S, RE>,
+> where
+    GET: Fn(&S) -> Result<A, GE>,
+    REV: Fn(&A) -> Result<S, RE>,
 {
     get_fn: GET,
     rev_fn: REV,
-    phantom: PhantomData<(S, A, E)>,
+    phantom: PhantomData<(S, A, GE, RE)>,
 }
 
-impl<S, A, E, GET, REV> MappedFallibleIso<S, A, E, GET, REV>
+impl<S, A, GE, RE, GET, REV> MappedFallibleIso<S, A, GE, RE, GET, REV>
 where
-    GET: Fn(&S) -> Result<A, E>,
-    REV: Fn(&A) -> Result<S, E>,
+    GET: Fn(&S) -> Result<A, GE>,
+    REV: Fn(&A) -> Result<S, RE>,
 {
     /// Creates a new [`MappedFallibleIso`] instance from the provided fallible conversion functions.
     ///
@@ -59,14 +66,14 @@ where
     ///
     /// # Examples
     ///
-    /// ```
+    // ```
     /// use optics::FallibleIsoImpl;
     ///
     /// let fallible_iso = FallibleIsoImpl::<i32, String, String>::new(
     ///   |i| if *i > 0 { Ok(i.to_string()) } else { Err("Negative".to_string()) },
     ///   |s| s.parse::<i32>().map_err(|e| e.to_string())
     /// );
-    /// ```
+    // ```
     ///
     /// # Capturing Closures
     ///
@@ -74,7 +81,7 @@ where
     /// need to capture environment variables. In that case, you can specify the trailing
     /// type parameters as `_`, and the compiler will infer them:
     ///
-    /// ```
+    // ```
     /// use optics::FallibleIsoImpl;
     ///
     /// let max_value = 100;
@@ -93,7 +100,7 @@ where
     ///     },
     /// );
     ///
-    /// ```
+    // ```
     pub(crate) fn new(get_fn: GET, rev_fn: REV) -> Self {
         MappedFallibleIso {
             get_fn,
@@ -103,17 +110,23 @@ where
     }
 }
 
-impl<S, A, E, GET, REV> Optic<S, A> for MappedFallibleIso<S, A, E, GET, REV>
+impl<S, A, GE, RE, GET, REV> PartialGetter<S, A> for MappedFallibleIso<S, A, GE, RE, GET, REV>
 where
-    GET: Fn(&S) -> Result<A, E>,
-    REV: Fn(&A) -> Result<S, E>,
+    GET: Fn(&S) -> Result<A, GE>,
+    REV: Fn(&A) -> Result<S, RE>,
 {
-    type Error = E;
+    type GetterError = GE;
 
-    fn try_get(&self, source: &S) -> Result<A, Self::Error> {
+    fn try_get(&self, source: &S) -> Result<A, Self::GetterError> {
         (self.get_fn)(source)
     }
+}
 
+impl<S, A, GE, RE, GET, REV> Setter<S, A> for MappedFallibleIso<S, A, GE, RE, GET, REV>
+where
+    GET: Fn(&S) -> Result<A, GE>,
+    REV: Fn(&A) -> Result<S, RE>,
+{
     fn set(&self, source: &mut S, value: A) {
         self.try_reverse_get(&value)
             .into_iter()
@@ -121,32 +134,32 @@ where
     }
 }
 
-impl<S, A, E, GET, REV> Prism<S, A> for MappedFallibleIso<S, A, E, GET, REV>
+impl<S, A, GE, RE, GET, REV> PartialReversible<S, A> for MappedFallibleIso<S, A, GE, RE, GET, REV>
 where
-    GET: Fn(&S) -> Result<A, E>,
-    REV: Fn(&A) -> Result<S, E>,
+    GET: Fn(&S) -> Result<A, GE>,
+    REV: Fn(&A) -> Result<S, RE>,
 {
-    fn preview(&self, source: &S) -> Option<A> {
-        (self.get_fn)(source).ok()
-    }
-}
-impl<S, A, E, GET, REV> FallibleIso<S, A> for MappedFallibleIso<S, A, E, GET, REV>
-where
-    GET: Fn(&S) -> Result<A, E>,
-    REV: Fn(&A) -> Result<S, E>,
-{
-    fn try_reverse_get(&self, source: &A) -> Result<S, Self::Error> {
+    type ReverseError = RE;
+
+    fn try_reverse_get(&self, source: &A) -> Result<S, Self::ReverseError> {
         (self.rev_fn)(source)
     }
 }
 
-pub fn new<S, A, E, GET, REV>(
+impl<S, A, GE, RE, GET, REV> FallibleIso<S, A> for MappedFallibleIso<S, A, GE, RE, GET, REV>
+where
+    GET: Fn(&S) -> Result<A, GE>,
+    REV: Fn(&A) -> Result<S, RE>,
+{
+}
+
+pub fn new<S, A, GE, RE, GET, REV>(
     get_fn: GET,
     rev_fn: REV,
-) -> FallibleIsoImpl<S, A, MappedFallibleIso<S, A, E, GET, REV>>
+) -> FallibleIsoImpl<S, A, MappedFallibleIso<S, A, GE, RE, GET, REV>>
 where
-    GET: Fn(&S) -> Result<A, E>,
-    REV: Fn(&A) -> Result<S, E>,
+    GET: Fn(&S) -> Result<A, GE>,
+    REV: Fn(&A) -> Result<S, RE>,
 {
     FallibleIsoImpl::new(MappedFallibleIso::new(get_fn, rev_fn))
 }
