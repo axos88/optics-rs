@@ -7,6 +7,7 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 ## [Unreleased]
 
 ### Breaking changes
+  - refactored entire type hierarchy - it is now much easier to understand and extend with new optic types
 ### Changed
   - refactored type constraints as per u/OliveTreeFounder's suggestion - thanks!
   - switched From bounds to Into bounds
