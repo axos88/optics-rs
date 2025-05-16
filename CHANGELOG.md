@@ -7,6 +7,14 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 ## [Unreleased]
 
 ### Breaking changes
+### Changed
+### Added
+### Fixed
+
+
+## [0.2.0] - 2025-05-16
+
+### Breaking changes
   - refactored entire type hierarchy:
     - removed Optic base trait,separated into five base traits:
     - introduced PartialGetter, Getter, Setter, PartialReversible, Reversible
