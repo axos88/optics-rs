@@ -5,8 +5,8 @@ use crate::lens::composed::ComposedLens;
 use crate::prism::Prism;
 use crate::prism::composed::ComposedPrism;
 use crate::{
-    FallibleIsoImpl, Getter, LensImpl, PartialGetter, PartialReversible, PrismImpl, Reversible,
-    Setter, infallible,
+    FallibleIsoImpl, Getter, HasGetter, HasPartialGetter, HasPartialReversible, HasReversible,
+    HasSetter, LensImpl, PartialGetter, PrismImpl, Setter, infallible,
 };
 use core::convert::{Infallible, identity};
 use core::marker::PhantomData;
@@ -38,7 +38,7 @@ pub use mapped::new as mapped_iso;
 /// - [`Prism`] — for partial optics.
 /// - [`FallibleIso`] — for reversible optics that can fail.
 /// - [`Optic`] — the base trait for all optics.
-pub trait Iso<S, A>: Getter<S, A> + Setter<S, A> + Reversible<S, A> {}
+pub trait Iso<S, A>: HasGetter<S, A> + HasSetter<S, A> + HasReversible<S, A> {}
 
 pub struct IsoImpl<S, A, ISO: Iso<S, A>>(pub ISO, PhantomData<(S, A)>);
 
@@ -48,7 +48,7 @@ impl<S, A, ISO: Iso<S, A>> IsoImpl<S, A, ISO> {
     }
 }
 
-impl<S, A, ISO: Iso<S, A>> PartialGetter<S, A> for IsoImpl<S, A, ISO> {
+impl<S, A, ISO: Iso<S, A>> HasPartialGetter<S, A> for IsoImpl<S, A, ISO> {
     type GetterError = Infallible;
 
     fn try_get(&self, source: &S) -> Result<A, Self::GetterError> {
@@ -56,19 +56,19 @@ impl<S, A, ISO: Iso<S, A>> PartialGetter<S, A> for IsoImpl<S, A, ISO> {
     }
 }
 
-impl<S, A, ISO: Iso<S, A>> Getter<S, A> for IsoImpl<S, A, ISO> {
+impl<S, A, ISO: Iso<S, A>> HasGetter<S, A> for IsoImpl<S, A, ISO> {
     fn get(&self, source: &S) -> A {
         self.0.get(source)
     }
 }
 
-impl<S, A, ISO: Iso<S, A>> Setter<S, A> for IsoImpl<S, A, ISO> {
+impl<S, A, ISO: Iso<S, A>> HasSetter<S, A> for IsoImpl<S, A, ISO> {
     fn set(&self, source: &mut S, value: A) {
         self.0.set(source, value);
     }
 }
 
-impl<S, A, ISO: Iso<S, A>> PartialReversible<S, A> for IsoImpl<S, A, ISO> {
+impl<S, A, ISO: Iso<S, A>> HasPartialReversible<S, A> for IsoImpl<S, A, ISO> {
     type ReverseError = Infallible;
 
     fn try_reverse_get(&self, value: &A) -> Result<S, Self::ReverseError> {
@@ -76,12 +76,15 @@ impl<S, A, ISO: Iso<S, A>> PartialReversible<S, A> for IsoImpl<S, A, ISO> {
     }
 }
 
-impl<S, A, ISO: Iso<S, A>> Reversible<S, A> for IsoImpl<S, A, ISO> {
+impl<S, A, ISO: Iso<S, A>> HasReversible<S, A> for IsoImpl<S, A, ISO> {
     fn reverse_get(&self, value: &A) -> S {
         self.0.reverse_get(value)
     }
 }
 
+impl<S, A, ISO: Iso<S, A>> PartialGetter<S, A> for IsoImpl<S, A, ISO> {}
+impl<S, A, ISO: Iso<S, A>> Getter<S, A> for IsoImpl<S, A, ISO> {}
+impl<S, A, ISO: Iso<S, A>> Setter<S, A> for IsoImpl<S, A, ISO> {}
 impl<S, A, ISO: Iso<S, A>> Lens<S, A> for IsoImpl<S, A, ISO> {}
 impl<S, A, ISO: Iso<S, A>> Prism<S, A> for IsoImpl<S, A, ISO> {}
 impl<S, A, ISO: Iso<S, A>> FallibleIso<S, A> for IsoImpl<S, A, ISO> {}

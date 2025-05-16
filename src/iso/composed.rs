@@ -1,5 +1,5 @@
-use crate::iso::{Iso, IsoImpl};
-use crate::{Getter, Reversible, Setter};
+use crate::iso::Iso;
+use crate::{HasGetter, HasReversible, HasSetter};
 use core::marker::PhantomData;
 
 /// A composed `Iso` type, combining two optics into a single `Iso`.
@@ -49,7 +49,7 @@ where
     }
 }
 
-impl<O1, O2, S, I, A> Getter<S, A> for ComposedIso<O1, O2, S, I, A>
+impl<O1, O2, S, I, A> HasGetter<S, A> for ComposedIso<O1, O2, S, I, A>
 where
     O1: Iso<S, I>,
     O2: Iso<I, A>,
@@ -60,7 +60,7 @@ where
     }
 }
 
-impl<O1, O2, S, I, A> Setter<S, A> for ComposedIso<O1, O2, S, I, A>
+impl<O1, O2, S, I, A> HasSetter<S, A> for ComposedIso<O1, O2, S, I, A>
 where
     O1: Iso<S, I>,
     O2: Iso<I, A>,
@@ -72,7 +72,7 @@ where
     }
 }
 
-impl<O1, O2, S, I, A> Reversible<S, A> for ComposedIso<O1, O2, S, I, A>
+impl<O1, O2, S, I, A> HasReversible<S, A> for ComposedIso<O1, O2, S, I, A>
 where
     O1: Iso<S, I>,
     O2: Iso<I, A>,
@@ -93,8 +93,8 @@ where
 pub fn new<S, A, I, E, F1: Iso<S, I>, F2: Iso<I, A>>(
     f1: F1,
     f2: F2,
-) -> IsoImpl<S, A, ComposedIso<F1, F2, S, I, A>>
+) -> ComposedIso<F1, F2, S, I, A>
 where
 {
-    IsoImpl::new(ComposedIso::new(f1, f2))
+    ComposedIso::new(f1, f2)
 }

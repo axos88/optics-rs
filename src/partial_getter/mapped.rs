@@ -1,46 +1,41 @@
-use crate::HasPartialGetter;
-use crate::HasSetter;
-use crate::prism::{Prism, PrismImpl};
+use crate::{HasPartialGetter, PartialGetter, PartialGetterImpl};
 use core::marker::PhantomData;
 
-/// A concrete implementation of the [`Prism`] trait.
+/// A concrete implementation of the [`PartialGetter`] trait.
 ///
-/// This struct allows you to create a `Prism` by providing custom getter and setter functions.
-/// It is the primary way to create a `Prism` manually, and is flexible enough to support any
+/// This struct allows you to create a `PartialGetter` by providing custom getter and setter functions.
+/// It is the primary way to create a `PartialGetter` manually, and is flexible enough to support any
 /// getter and setter functions that match the required signatures.
 ///
 /// Typically, you will only need to specify the source type `S` and the focus type `A`.
 /// The getter and setter functions will be inferred or explicitly provided.
 ///
 /// If you prefer to use capturing closures, you can specify the trailing type parameters as `_`
-/// in the construction of `PrismImpl` to allow the compiler to infer them for you. This is especially
+/// in the construction of `PartialGetterImpl` to allow the compiler to infer them for you. This is especially
 /// useful when you need to use closures with captured environment variables.
 ///
 /// # Construction
 ///
-/// The usual way to construct a `PrismImpl` is to use `PrismImpl::<S, A>::new()`, which
+/// The usual way to construct a `PartialGetterImpl` is to use `PartialGetterImpl::<S, A>::new()`, which
 /// will use non-capturing closures by default. Alternatively, you can specify the
-/// getter and setter type parameters as `PrismImpl::<S, A,_, _>::new()` for more complex use cases,
+/// getter and setter type parameters as `PartialGetterImpl::<S, A,_, _>::new()` for more complex use cases,
 /// such as captruring closures.
 ///
 /// # See Also
 ///
 /// - [`Lens`] — a more restrictive optic type for focus values
 /// - [`Optic`] — base trait that all optics implement
-pub struct MappedPrism<S, A, E, GET = fn(&S) -> Result<A, E>, SET = fn(&mut S, A)>
+pub struct MappedPartialGetter<S, A, E, GET = fn(&S) -> Result<A, E>>
 where
     GET: Fn(&S) -> Result<A, E>,
-    SET: Fn(&mut S, A),
 {
     get_fn: GET,
-    set_fn: SET,
     phantom: PhantomData<(S, A)>,
 }
 
-impl<S, A, E, GET, SET> MappedPrism<S, A, E, GET, SET>
+impl<S, A, E, GET> MappedPartialGetter<S, A, E, GET>
 where
     GET: Fn(&S) -> Result<A, E>,
-    SET: Fn(&mut S, A),
 {
     /// Creates a new `LensImpl` with the provided getter and setter functions.
     ///
@@ -87,19 +82,17 @@ where
     /// let `x_value` = `x_lens.get(&point)`; // retrieves 10 * 2 = 20
     /// `x_lens.set(&mut` point, 60); // sets x to 60 / 2 = 30
     // ```
-    pub(crate) fn new(get_fn: GET, set_fn: SET) -> Self {
-        MappedPrism {
+    pub(crate) fn new(get_fn: GET) -> Self {
+        MappedPartialGetter {
             get_fn,
-            set_fn,
             phantom: PhantomData,
         }
     }
 }
 
-impl<S, A, E, GET, SET> HasPartialGetter<S, A> for MappedPrism<S, A, E, GET, SET>
+impl<S, A, E, GET> HasPartialGetter<S, A> for MappedPartialGetter<S, A, E, GET>
 where
     GET: Fn(&S) -> Result<A, E>,
-    SET: Fn(&mut S, A),
 {
     type GetterError = E;
 
@@ -108,30 +101,16 @@ where
     }
 }
 
-impl<S, A, E, GET, SET> HasSetter<S, A> for MappedPrism<S, A, E, GET, SET>
-where
-    GET: Fn(&S) -> Result<A, E>,
-    SET: Fn(&mut S, A),
-{
-    fn set(&self, source: &mut S, value: A) {
-        (self.set_fn)(source, value);
-    }
-}
-
-impl<S, A, E, GET, SET> Prism<S, A> for MappedPrism<S, A, E, GET, SET>
-where
-    GET: Fn(&S) -> Result<A, E>,
-    SET: Fn(&mut S, A),
+impl<S, A, E, GET> PartialGetter<S, A> for MappedPartialGetter<S, A, E, GET> where
+    GET: Fn(&S) -> Result<A, E>
 {
 }
 
 pub fn new<S, A, E, GET, SET>(
     get_fn: GET,
-    set_fn: SET,
-) -> PrismImpl<S, A, MappedPrism<S, A, E, GET, SET>>
+) -> PartialGetterImpl<S, A, MappedPartialGetter<S, A, E, GET>>
 where
     GET: Fn(&S) -> Result<A, E>,
-    SET: Fn(&mut S, A),
 {
-    PrismImpl::new(MappedPrism::new(get_fn, set_fn))
+    PartialGetterImpl::new(MappedPartialGetter::new(get_fn))
 }

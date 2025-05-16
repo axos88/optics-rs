@@ -20,8 +20,7 @@
 /// - [`Iso`] — for total, infallible isomorphisms.
 /// - [`Prism`] — for partial optics where only one direction may be partial.
 /// - [`Optic`] — the base trait for all optics.
-pub trait PartialReversible<S, A> {
-    type ReverseError;
+pub trait HasReversible<S, A> {
     /// Attempts to perform the reverse transformation from the focus type `A` back to the source type `S`.
     ///
     /// Since this is a *fallible* isomorphism, the operation may fail if the provided `A` value
@@ -37,5 +36,5 @@ pub trait PartialReversible<S, A> {
     /// # Errors
     /// Returns `Err(Self::Error)` if the transformation fails.
     ///
-    fn try_reverse_get(&self, value: &A) -> Result<S, Self::ReverseError>;
+    fn reverse_get(&self, value: &A) -> S;
 }

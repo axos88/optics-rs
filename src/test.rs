@@ -1,9 +1,9 @@
-use crate::getter::Getter;
+use crate::HasGetter;
+use crate::HasPartialGetter;
+use crate::HasSetter;
 use crate::lens::{Lens, mapped_lens};
-use crate::partial_getter::PartialGetter;
 use crate::prism::{Prism, mapped_prism};
-use crate::setter::Setter;
-use crate::{FallibleIso, Iso, PartialReversible, mapped_fallible_iso, mapped_iso};
+use crate::{FallibleIso, HasPartialReversible, Iso, mapped_fallible_iso, mapped_iso};
 use alloc::string::{String, ToString};
 use alloc::vec;
 use alloc::vec::Vec;

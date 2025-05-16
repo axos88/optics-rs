@@ -1,6 +1,4 @@
-use crate::HasPartialGetter;
-use crate::HasSetter;
-use crate::prism::{Prism, PrismImpl};
+use crate::{Getter, GetterImpl, HasGetter};
 use core::marker::PhantomData;
 
 /// A concrete implementation of the [`Prism`] trait.
@@ -27,20 +25,17 @@ use core::marker::PhantomData;
 ///
 /// - [`Lens`] — a more restrictive optic type for focus values
 /// - [`Optic`] — base trait that all optics implement
-pub struct MappedPrism<S, A, E, GET = fn(&S) -> Result<A, E>, SET = fn(&mut S, A)>
+pub struct MappedGetter<S, A, GET = fn(&S) -> A>
 where
-    GET: Fn(&S) -> Result<A, E>,
-    SET: Fn(&mut S, A),
+    GET: Fn(&S) -> A,
 {
     get_fn: GET,
-    set_fn: SET,
     phantom: PhantomData<(S, A)>,
 }
 
-impl<S, A, E, GET, SET> MappedPrism<S, A, E, GET, SET>
+impl<S, A, GET> MappedGetter<S, A, GET>
 where
-    GET: Fn(&S) -> Result<A, E>,
-    SET: Fn(&mut S, A),
+    GET: Fn(&S) -> A,
 {
     /// Creates a new `LensImpl` with the provided getter and setter functions.
     ///
@@ -87,51 +82,28 @@ where
     /// let `x_value` = `x_lens.get(&point)`; // retrieves 10 * 2 = 20
     /// `x_lens.set(&mut` point, 60); // sets x to 60 / 2 = 30
     // ```
-    pub(crate) fn new(get_fn: GET, set_fn: SET) -> Self {
-        MappedPrism {
+    pub(crate) fn new(get_fn: GET) -> Self {
+        MappedGetter {
             get_fn,
-            set_fn,
             phantom: PhantomData,
         }
     }
 }
 
-impl<S, A, E, GET, SET> HasPartialGetter<S, A> for MappedPrism<S, A, E, GET, SET>
+impl<S, A, GET> HasGetter<S, A> for MappedGetter<S, A, GET>
 where
-    GET: Fn(&S) -> Result<A, E>,
-    SET: Fn(&mut S, A),
+    GET: Fn(&S) -> A,
 {
-    type GetterError = E;
-
-    fn try_get(&self, source: &S) -> Result<A, Self::GetterError> {
+    fn get(&self, source: &S) -> A {
         (self.get_fn)(source)
     }
 }
 
-impl<S, A, E, GET, SET> HasSetter<S, A> for MappedPrism<S, A, E, GET, SET>
-where
-    GET: Fn(&S) -> Result<A, E>,
-    SET: Fn(&mut S, A),
-{
-    fn set(&self, source: &mut S, value: A) {
-        (self.set_fn)(source, value);
-    }
-}
+impl<S, A, GET> Getter<S, A> for MappedGetter<S, A, GET> where GET: Fn(&S) -> A {}
 
-impl<S, A, E, GET, SET> Prism<S, A> for MappedPrism<S, A, E, GET, SET>
+pub fn new<S, A, GET>(get_fn: GET) -> GetterImpl<S, A, MappedGetter<S, A, GET>>
 where
-    GET: Fn(&S) -> Result<A, E>,
-    SET: Fn(&mut S, A),
+    GET: Fn(&S) -> A,
 {
-}
-
-pub fn new<S, A, E, GET, SET>(
-    get_fn: GET,
-    set_fn: SET,
-) -> PrismImpl<S, A, MappedPrism<S, A, E, GET, SET>>
-where
-    GET: Fn(&S) -> Result<A, E>,
-    SET: Fn(&mut S, A),
-{
-    PrismImpl::new(MappedPrism::new(get_fn, set_fn))
+    GetterImpl::new(MappedGetter::new(get_fn))
 }

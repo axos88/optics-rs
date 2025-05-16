@@ -1,5 +1,5 @@
 use crate::iso::{Iso, IsoImpl};
-use crate::{Getter, Reversible, Setter};
+use crate::{HasGetter, HasReversible, HasSetter};
 use core::marker::PhantomData;
 
 /// A concrete implementation of a [`Iso`] between types `S` and `A`.
@@ -60,11 +60,11 @@ where
     /// # Examples
     ///
     // ```
-    /// use optics::IsoImpl;
+    /// use `optics::IsoImpl`;
     ///
-    /// let fallible_iso = IsoImpl::<i32, String, String>::new(
-    ///   |i| if *i > 0 { Ok(i.to_string()) } else { Err("Negative".to_string()) },
-    ///   |s| s.parse::<i32>().map_err(|e| e.to_string())
+    /// let `fallible_iso` = `IsoImpl::`<i32, String, `String>::new`(
+    ///   |i| if *i > 0 { `Ok(i.to_string())` } else { `Err("Negative".to_string())` },
+    ///   |s| `s.parse::`<i32>().`map_err(|e`| `e.to_string()`)
     /// );
     /// ```
     ///
@@ -103,7 +103,7 @@ where
     }
 }
 
-impl<S, A, GET, REV> Getter<S, A> for MappedIso<S, A, GET, REV>
+impl<S, A, GET, REV> HasGetter<S, A> for MappedIso<S, A, GET, REV>
 where
     GET: Fn(&S) -> A,
     REV: Fn(&A) -> S,
@@ -113,7 +113,7 @@ where
     }
 }
 
-impl<S, A, GET, REV> Setter<S, A> for MappedIso<S, A, GET, REV>
+impl<S, A, GET, REV> HasSetter<S, A> for MappedIso<S, A, GET, REV>
 where
     GET: Fn(&S) -> A,
     REV: Fn(&A) -> S,
@@ -123,7 +123,7 @@ where
     }
 }
 
-impl<S, A, GET, REV> Reversible<S, A> for MappedIso<S, A, GET, REV>
+impl<S, A, GET, REV> HasReversible<S, A> for MappedIso<S, A, GET, REV>
 where
     GET: Fn(&S) -> A,
     REV: Fn(&A) -> S,

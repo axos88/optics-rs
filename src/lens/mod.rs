@@ -7,9 +7,9 @@ use core::marker::PhantomData;
 pub(crate) mod composed;
 pub(crate) mod mapped;
 use crate::fallible_iso::{FallibleIso, FallibleIsoImpl};
-use crate::getter::Getter;
-use crate::partial_getter::PartialGetter;
-use crate::setter::Setter;
+use crate::{Getter, HasGetter};
+use crate::{HasPartialGetter, PartialGetter};
+use crate::{HasSetter, Setter};
 use crate::{Iso, IsoImpl, infallible};
 pub use composed::new as composed_lens;
 pub use mapped::new as mapped_lens;
@@ -28,7 +28,7 @@ pub use mapped::new as mapped_lens;
 /// - [`Prism`] — optional focus optic for sum types
 /// - [`Iso`] — reversible transformations
 /// - [`FallibleIso`] — reversible transformations with fallible forward mapping
-pub trait Lens<S, A>: Getter<S, A> + Setter<S, A> {}
+pub trait Lens<S, A>: HasGetter<S, A> + HasSetter<S, A> {}
 
 pub struct LensImpl<S, A, L: Lens<S, A>>(pub L, PhantomData<(S, A)>);
 
@@ -38,13 +38,13 @@ impl<S, A, L: Lens<S, A>> LensImpl<S, A, L> {
     }
 }
 
-impl<S, A, L: Lens<S, A>> Getter<S, A> for LensImpl<S, A, L> {
+impl<S, A, L: Lens<S, A>> HasGetter<S, A> for LensImpl<S, A, L> {
     fn get(&self, source: &S) -> A {
         self.0.get(source)
     }
 }
 
-impl<S, A, L: Lens<S, A>> PartialGetter<S, A> for LensImpl<S, A, L> {
+impl<S, A, L: Lens<S, A>> HasPartialGetter<S, A> for LensImpl<S, A, L> {
     type GetterError = Infallible;
 
     fn try_get(&self, source: &S) -> Result<A, Self::GetterError> {
@@ -52,12 +52,15 @@ impl<S, A, L: Lens<S, A>> PartialGetter<S, A> for LensImpl<S, A, L> {
     }
 }
 
-impl<S, A, L: Lens<S, A>> Setter<S, A> for LensImpl<S, A, L> {
+impl<S, A, L: Lens<S, A>> HasSetter<S, A> for LensImpl<S, A, L> {
     fn set(&self, source: &mut S, value: A) {
         self.0.set(source, value);
     }
 }
 
+impl<S, A, L: Lens<S, A>> Getter<S, A> for LensImpl<S, A, L> {}
+impl<S, A, L: Lens<S, A>> PartialGetter<S, A> for LensImpl<S, A, L> {}
+impl<S, A, L: Lens<S, A>> Setter<S, A> for LensImpl<S, A, L> {}
 impl<S, A, L: Lens<S, A>> Lens<S, A> for LensImpl<S, A, L> {}
 impl<S, A, L: Lens<S, A>> Prism<S, A> for LensImpl<S, A, L> {}
 

@@ -1,6 +1,6 @@
-use crate::getter::Getter;
-use crate::lens::{Lens, LensImpl};
-use crate::setter::Setter;
+use crate::HasGetter;
+use crate::HasSetter;
+use crate::lens::Lens;
 use core::marker::PhantomData;
 
 /// A composed `Lens` type, combining two optics into a single `Lens`.
@@ -50,7 +50,7 @@ where
     }
 }
 
-impl<S, I, A, O1, O2> Getter<S, A> for ComposedLens<O1, O2, S, I, A>
+impl<S, I, A, O1, O2> HasGetter<S, A> for ComposedLens<O1, O2, S, I, A>
 where
     O1: Lens<S, I>,
     O2: Lens<I, A>,
@@ -61,7 +61,7 @@ where
     }
 }
 
-impl<S, I, A, O1, O2> Setter<S, A> for ComposedLens<O1, O2, S, I, A>
+impl<S, I, A, O1, O2> HasSetter<S, A> for ComposedLens<O1, O2, S, I, A>
 where
     O1: Lens<S, I>,
     O2: Lens<I, A>,
@@ -83,6 +83,6 @@ where
 pub fn new<S, A, I, L1: Lens<S, I>, L2: Lens<I, A>>(
     l1: L1,
     l2: L2,
-) -> LensImpl<S, A, ComposedLens<L1, L2, S, I, A>> {
-    LensImpl::new(ComposedLens::new(l1, l2))
+) -> ComposedLens<L1, L2, S, I, A> {
+    ComposedLens::new(l1, l2)
 }

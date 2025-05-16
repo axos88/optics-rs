@@ -1,6 +1,6 @@
+use crate::HasPartialReversible;
 use crate::fallible_iso::{FallibleIso, FallibleIsoImpl};
-use crate::partial_reversible::PartialReversible;
-use crate::{PartialGetter, Setter};
+use crate::{HasPartialGetter, HasSetter};
 use core::marker::PhantomData;
 
 /// A concrete implementation of a [`FallibleIso`] between types `S` and `A`.
@@ -67,11 +67,11 @@ where
     /// # Examples
     ///
     // ```
-    /// use optics::FallibleIsoImpl;
+    /// use `optics::FallibleIsoImpl`;
     ///
-    /// let fallible_iso = FallibleIsoImpl::<i32, String, String>::new(
-    ///   |i| if *i > 0 { Ok(i.to_string()) } else { Err("Negative".to_string()) },
-    ///   |s| s.parse::<i32>().map_err(|e| e.to_string())
+    /// let `fallible_iso` = `FallibleIsoImpl::`<i32, String, `String>::new`(
+    ///   |i| if *i > 0 { `Ok(i.to_string())` } else { `Err("Negative".to_string())` },
+    ///   |s| `s.parse::`<i32>().`map_err(|e`| `e.to_string()`)
     /// );
     // ```
     ///
@@ -82,21 +82,21 @@ where
     /// type parameters as `_`, and the compiler will infer them:
     ///
     // ```
-    /// use optics::FallibleIsoImpl;
+    /// use `optics::FallibleIsoImpl`;
     ///
-    /// let max_value = 100;
+    /// let `max_value` = 100;
     ///
-    /// let iso = FallibleIsoImpl::<i32, String, _, _, _>::new(
+    /// let iso = `FallibleIsoImpl::`<i32, String, _, _, _>`::new`(
     ///     move |v| {
-    ///         if *v <= max_value {
-    ///             Ok(v.to_string())
+    ///         if *v <= `max_value` {
+    ///             `Ok(v.to_string())`
     ///         } else {
-    ///             Err(format!("Value {} exceeds maximum {}", v, max_value))
+    ///             Err(format!("Value {} exceeds maximum {}", v, `max_value`))
     ///         }
     ///     },
     ///     move |s| {
-    ///         s.parse::<i32>()
-    ///             .map_err(|_| format!("Failed to parse '{}'", s))
+    ///         `s.parse::`<i32>()
+    ///             .`map_err`(|_| format!("Failed to parse '{}'", s))
     ///     },
     /// );
     ///
@@ -110,7 +110,7 @@ where
     }
 }
 
-impl<S, A, GE, RE, GET, REV> PartialGetter<S, A> for MappedFallibleIso<S, A, GE, RE, GET, REV>
+impl<S, A, GE, RE, GET, REV> HasPartialGetter<S, A> for MappedFallibleIso<S, A, GE, RE, GET, REV>
 where
     GET: Fn(&S) -> Result<A, GE>,
     REV: Fn(&A) -> Result<S, RE>,
@@ -122,7 +122,7 @@ where
     }
 }
 
-impl<S, A, GE, RE, GET, REV> Setter<S, A> for MappedFallibleIso<S, A, GE, RE, GET, REV>
+impl<S, A, GE, RE, GET, REV> HasSetter<S, A> for MappedFallibleIso<S, A, GE, RE, GET, REV>
 where
     GET: Fn(&S) -> Result<A, GE>,
     REV: Fn(&A) -> Result<S, RE>,
@@ -134,7 +134,8 @@ where
     }
 }
 
-impl<S, A, GE, RE, GET, REV> PartialReversible<S, A> for MappedFallibleIso<S, A, GE, RE, GET, REV>
+impl<S, A, GE, RE, GET, REV> HasPartialReversible<S, A>
+    for MappedFallibleIso<S, A, GE, RE, GET, REV>
 where
     GET: Fn(&S) -> Result<A, GE>,
     REV: Fn(&A) -> Result<S, RE>,

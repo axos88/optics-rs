@@ -1,14 +1,17 @@
 use crate::lens::Lens;
 use crate::prism::Prism;
-use crate::{Iso, IsoImpl, LensImpl, PartialGetter, PrismImpl, Setter, infallible};
+use crate::{
+    HasPartialGetter, HasSetter, Iso, IsoImpl, LensImpl, PartialGetter, PrismImpl, Setter,
+    infallible,
+};
 use core::convert::identity;
 use core::marker::PhantomData;
 
 pub(crate) mod composed;
 pub(crate) mod mapped;
 
+use crate::HasPartialReversible;
 use crate::fallible_iso::composed::ComposedFallibleIso;
-use crate::partial_reversible::PartialReversible;
 use crate::prism::composed::ComposedPrism;
 pub use composed::new as composed_fallible_iso;
 pub use mapped::new as mapped_fallible_iso;
@@ -35,7 +38,10 @@ pub use mapped::new as mapped_fallible_iso;
 /// - [`Iso`] — for total, infallible isomorphisms.
 /// - [`Prism`] — for partial optics where only one direction may be partial.
 /// - [`Optic`] — the base trait for all optics.
-pub trait FallibleIso<S, A>: PartialGetter<S, A> + Setter<S, A> + PartialReversible<S, A> {}
+pub trait FallibleIso<S, A>:
+    HasPartialGetter<S, A> + HasSetter<S, A> + HasPartialReversible<S, A>
+{
+}
 
 pub struct FallibleIsoImpl<S, A, F: FallibleIso<S, A>>(pub F, PhantomData<(S, A)>);
 
@@ -45,7 +51,7 @@ impl<S, A, F: FallibleIso<S, A>> FallibleIsoImpl<S, A, F> {
     }
 }
 
-impl<S, A, F: FallibleIso<S, A>> PartialGetter<S, A> for FallibleIsoImpl<S, A, F> {
+impl<S, A, F: FallibleIso<S, A>> HasPartialGetter<S, A> for FallibleIsoImpl<S, A, F> {
     type GetterError = F::GetterError;
 
     fn try_get(&self, source: &S) -> Result<A, Self::GetterError> {
@@ -53,13 +59,13 @@ impl<S, A, F: FallibleIso<S, A>> PartialGetter<S, A> for FallibleIsoImpl<S, A, F
     }
 }
 
-impl<S, A, F: FallibleIso<S, A>> Setter<S, A> for FallibleIsoImpl<S, A, F> {
+impl<S, A, F: FallibleIso<S, A>> HasSetter<S, A> for FallibleIsoImpl<S, A, F> {
     fn set(&self, source: &mut S, value: A) {
         self.0.set(source, value);
     }
 }
 
-impl<S, A, F: FallibleIso<S, A>> PartialReversible<S, A> for FallibleIsoImpl<S, A, F> {
+impl<S, A, F: FallibleIso<S, A>> HasPartialReversible<S, A> for FallibleIsoImpl<S, A, F> {
     type ReverseError = F::ReverseError;
 
     fn try_reverse_get(&self, value: &A) -> Result<S, Self::ReverseError> {
@@ -67,6 +73,8 @@ impl<S, A, F: FallibleIso<S, A>> PartialReversible<S, A> for FallibleIsoImpl<S, 
     }
 }
 
+impl<S, A, F: FallibleIso<S, A>> PartialGetter<S, A> for FallibleIsoImpl<S, A, F> {}
+impl<S, A, F: FallibleIso<S, A>> Setter<S, A> for FallibleIsoImpl<S, A, F> {}
 impl<S, A, F: FallibleIso<S, A>> Prism<S, A> for FallibleIsoImpl<S, A, F> {}
 impl<S, A, F: FallibleIso<S, A>> FallibleIso<S, A> for FallibleIsoImpl<S, A, F> {}
 

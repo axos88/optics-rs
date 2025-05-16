@@ -1,8 +1,8 @@
 use crate::fallible_iso::{FallibleIso, FallibleIsoImpl};
 use crate::lens::{Lens, LensImpl};
-use crate::partial_getter::PartialGetter;
 use crate::prism::composed::ComposedPrism;
-use crate::setter::Setter;
+use crate::{HasPartialGetter, PartialGetter};
+use crate::{HasSetter, Setter};
 use crate::{Iso, IsoImpl, infallible};
 pub use composed::new as composed_prism;
 use core::convert::identity;
@@ -40,7 +40,7 @@ pub(crate) mod mapped;
 /// - [`Iso`] — an isomorphism optic representing a reversible one-to-one transformation between two types
 ///
 /// - [`NoFocus`] — the current error type returned by `Prism::preview` on failure
-pub trait Prism<S, A>: PartialGetter<S, A> + Setter<S, A> {}
+pub trait Prism<S, A>: HasPartialGetter<S, A> + HasSetter<S, A> {}
 
 pub struct PrismImpl<S, A, P: Prism<S, A>>(pub P, PhantomData<(S, A)>);
 
@@ -50,7 +50,7 @@ impl<S, A, P: Prism<S, A>> PrismImpl<S, A, P> {
     }
 }
 
-impl<S, A, P: Prism<S, A>> PartialGetter<S, A> for PrismImpl<S, A, P> {
+impl<S, A, P: Prism<S, A>> HasPartialGetter<S, A> for PrismImpl<S, A, P> {
     type GetterError = P::GetterError;
 
     fn try_get(&self, source: &S) -> Result<A, Self::GetterError> {
@@ -58,12 +58,14 @@ impl<S, A, P: Prism<S, A>> PartialGetter<S, A> for PrismImpl<S, A, P> {
     }
 }
 
-impl<S, A, P: Prism<S, A>> Setter<S, A> for PrismImpl<S, A, P> {
+impl<S, A, P: Prism<S, A>> HasSetter<S, A> for PrismImpl<S, A, P> {
     fn set(&self, source: &mut S, value: A) {
         self.0.set(source, value);
     }
 }
 
+impl<S, A, P: Prism<S, A>> PartialGetter<S, A> for PrismImpl<S, A, P> {}
+impl<S, A, P: Prism<S, A>> Setter<S, A> for PrismImpl<S, A, P> {}
 impl<S, A, P: Prism<S, A>> Prism<S, A> for PrismImpl<S, A, P> {}
 
 impl<S, I, P1: Prism<S, I>> PrismImpl<S, I, P1> {

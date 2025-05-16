@@ -7,8 +7,10 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 ## [Unreleased]
 
 ### Breaking changes
+  - move base traits to base trait
 ### Changed
 ### Added
+  - add implementations for getter, partialgetter and setter optics.
 ### Fixed
 
 

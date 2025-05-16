@@ -1,4 +1,4 @@
-use optics::{PartialGetter, Setter, mapped_fallible_iso, mapped_lens, mapped_prism};
+use optics::{HasPartialGetter, HasSetter, mapped_fallible_iso, mapped_lens, mapped_prism};
 
 #[allow(dead_code)]
 #[derive(Debug, Clone)]
