@@ -1,4 +1,4 @@
-use optics::{mapped_fallible_iso, mapped_lens, mapped_prism, PartialGetter, Setter};
+use optics::{PartialGetter, Setter, mapped_fallible_iso, mapped_lens, mapped_prism};
 
 #[allow(dead_code)]
 #[derive(Debug, Clone)]
@@ -27,7 +27,7 @@ fn main() {
     );
 
     let minimum_port = 1024;
-    
+
     // Define a fallible isomorphism between String and u16 (parsing a port)
     let port_fallible_iso = mapped_fallible_iso(
         |addr: &String| {
@@ -37,7 +37,9 @@ fn main() {
                 .ok_or(())
         },
         move |port: &u16| {
-            (*port > minimum_port).then_some(format!("0.0.0.0:{}", port)).ok_or(())
+            (*port > minimum_port)
+                .then_some(format!("0.0.0.0:{}", port))
+                .ok_or(())
         },
     );
 

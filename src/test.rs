@@ -238,7 +238,10 @@ fn foo() {
     assert_eq!(delay_lens.get(&config), Timespan::Minutes(30));
 
     delay_lens.set(&mut config, Timespan::Hours(1000));
-    assert_eq!(seconds_prism.try_get(&config), Err("Out of bounds".to_string()));
+    assert_eq!(
+        seconds_prism.try_get(&config),
+        Err("Out of bounds".to_string())
+    );
 
     let mut val: u32 = 3;
 
