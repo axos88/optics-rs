@@ -8,20 +8,25 @@
 
 extern crate alloc;
 
-pub(crate) mod fallible_iso;
-pub(crate) mod iso;
-pub(crate) mod lens;
-pub(crate) mod optic;
-pub(crate) mod prism;
+// pub(crate) mod fallible_iso;
+// pub(crate) mod iso;
+mod lens;
+// pub(crate) mod optic;
+pub mod prism;
+
 // mod traversal;
 #[cfg(test)]
 mod test;
-
-pub use fallible_iso::{
-    ComposeWithFallibleIso, FallibleIso, FallibleIsoImpl, composed_fallible_iso,
-    mapped_fallible_iso,
-};
-pub use iso::{ComposeWithIso, Iso, IsoImpl, composed_iso, mapped_iso};
-pub use lens::{ComposeWithLens, Lens, LensImpl, composed_lens, mapped_lens};
-pub use optic::Optic;
-pub use prism::{ComposeWithPrism, NoFocus, Prism, PrismImpl, composed_prism, mapped_prism};
+mod partial_getter;
+mod setter;
+mod partial_reversible;
+mod reversible;
+mod getter;
+// pub use fallible_iso::{
+//     ComposeWithFallibleIso, FallibleIso, FallibleIsoImpl, composed_fallible_iso,
+//     mapped_fallible_iso,
+// };
+// pub use iso::{ComposeWithIso, Iso, IsoImpl, composed_iso, mapped_iso};
+// pub use lens::{ComposeWithLens, Lens, LensImpl, composed_lens, mapped_lens};
+// pub use optic::Optic;
+// pub use prism::{ComposeWithPrism, NoFocus, Prism, PrismImpl, composed_prism, mapped_prism};

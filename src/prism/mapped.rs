@@ -1,5 +1,7 @@
-use crate::{NoFocus, Optic, Prism, PrismImpl};
 use core::marker::PhantomData;
+use crate::partial_getter::PartialGetter;
+use crate::prism::{Prism, PrismImpl};
+use crate::setter::Setter;
 
 /// A concrete implementation of the [`Prism`] trait.
 ///
@@ -25,9 +27,9 @@ use core::marker::PhantomData;
 ///
 /// - [`Lens`] — a more restrictive optic type for focus values
 /// - [`Optic`] — base trait that all optics implement
-pub struct MappedPrism<S, A, GET = fn(&S) -> Option<A>, SET = fn(&mut S, A)>
+pub struct MappedPrism<S, A, E, GET = fn(&S) -> Result<A, E>, SET = fn(&mut S, A)>
 where
-    GET: Fn(&S) -> Option<A>,
+    GET: Fn(&S) -> Result<A, E>,
     SET: Fn(&mut S, A),
 {
     get_fn: GET,
@@ -35,9 +37,9 @@ where
     phantom: PhantomData<(S, A)>,
 }
 
-impl<S, A, GET, SET> MappedPrism<S, A, GET, SET>
+impl<S, A, E, GET, SET> MappedPrism<S, A, E, GET, SET>
 where
-    GET: Fn(&S) -> Option<A>,
+    GET: Fn(&S) -> Result<A, E>,
     SET: Fn(&mut S, A),
 {
     /// Creates a new `LensImpl` with the provided getter and setter functions.
@@ -94,35 +96,41 @@ where
     }
 }
 
-impl<S, A, GET, SET> Optic<S, A> for MappedPrism<S, A, GET, SET>
+impl<S, A, E, GET, SET> PartialGetter<S, A> for MappedPrism<S, A, E, GET, SET>
 where
-    GET: Fn(&S) -> Option<A>,
+    GET: Fn(&S) -> Result<A, E>,
     SET: Fn(&mut S, A),
 {
-    type Error = NoFocus;
+    type GetterError = E;
 
-    fn try_get(&self, source: &S) -> Result<A, Self::Error> {
-        (self.get_fn)(source).ok_or(NoFocus)
+    fn try_get(&self, source: &S) -> Result<A, Self::GetterError> {
+        (self.get_fn)(source)
     }
+}
 
+impl<S, A, E, GET, SET> Setter<S, A> for MappedPrism<S, A, E, GET, SET>
+where
+  GET: Fn(&S) -> Result<A, E>,
+  SET: Fn(&mut S, A),
+{
     fn set(&self, source: &mut S, value: A) {
         (self.set_fn)(source, value);
     }
 }
 
-impl<S, A, GET, SET> Prism<S, A> for MappedPrism<S, A, GET, SET>
+impl<S, A, E, GET, SET> Prism<S, A> for MappedPrism<S, A, E, GET, SET>
 where
-    GET: Fn(&S) -> Option<A>,
+    GET: Fn(&S) -> Result<A, E>,
     SET: Fn(&mut S, A),
 {
-    fn preview(&self, source: &S) -> Option<A> {
+    fn preview(&self, source: &S) -> Result<A, Self::GetterError> {
         (self.get_fn)(source)
     }
 }
 
-pub fn new<S, A, GET, SET>(get_fn: GET, set_fn: SET) -> PrismImpl<S, A, MappedPrism<S, A, GET, SET>>
+pub fn new<S, A, E, GET, SET>(get_fn: GET, set_fn: SET) -> PrismImpl<S, A, MappedPrism<S, A, E, GET, SET>>
 where
-    GET: Fn(&S) -> Option<A>,
+    GET: Fn(&S) -> Result<A, E>,
     SET: Fn(&mut S, A),
 {
     PrismImpl::new(MappedPrism::new(get_fn, set_fn))

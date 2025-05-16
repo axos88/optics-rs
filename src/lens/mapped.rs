@@ -1,7 +1,7 @@
-use crate::lens::LensImpl;
-use crate::{Lens, Optic};
-use core::convert::Infallible;
+use crate::lens::{Lens, LensImpl};
 use core::marker::PhantomData;
+use crate::getter::Getter;
+use crate::setter::Setter;
 
 /// A concrete implementation of the [`Lens`] trait.
 ///
@@ -94,31 +94,32 @@ where
     }
 }
 
-impl<S, A, GET, SET> Optic<S, A> for MappedLens<S, A, GET, SET>
-where
-    GET: Fn(&S) -> A,
-    SET: Fn(&mut S, A),
-{
-    type Error = Infallible;
-
-    fn try_get(&self, source: &S) -> Result<A, Self::Error> {
-        Ok(self.get(source))
-    }
-
-    fn set(&self, source: &mut S, value: A) {
-        (self.set_fn)(source, value);
-    }
-}
-
-impl<S, A, GET, SET> Lens<S, A> for MappedLens<S, A, GET, SET>
+impl<S, A, GET, SET> Getter<S, A> for MappedLens<S, A, GET, SET>
 where
     GET: Fn(&S) -> A,
     SET: Fn(&mut S, A),
 {
     fn get(&self, source: &S) -> A {
-        (self.get_fn)(source)
+        self.get_fn(source)
     }
 }
+
+impl<S, A, GET, SET> Setter<S, A> for MappedLens<S, A, GET, SET>
+where
+  GET: Fn(&S) -> A,
+  SET: Fn(&mut S, A),
+{
+    fn set(&self, source: &mut S, value: A) {
+        (self.set_fn)(source, value);
+    }
+}
+
+
+impl<S, A, GET, SET> Lens<S, A> for MappedLens<S, A, GET, SET>
+where
+    GET: Fn(&S) -> A,
+    SET: Fn(&mut S, A),
+{}
 
 pub fn new<S, A, GET, SET>(get_fn: GET, set_fn: SET) -> LensImpl<S, A, MappedLens<S, A, GET, SET>>
 where

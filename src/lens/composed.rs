@@ -1,6 +1,8 @@
 use crate::{Lens, LensImpl, Optic, Prism};
 use core::convert::Infallible;
 use core::marker::PhantomData;
+use crate::getter::Getter;
+use crate::lens::Lens;
 
 /// A composed `Lens` type, combining two optics into a single `Lens`.
 ///
@@ -29,17 +31,14 @@ use core::marker::PhantomData;
 /// - [`crate::composers::ComposablePrism`] — a trait for composing [`Prism`] optics another [`Optic`]
 /// - [`crate::composers::ComposableIso`] — a trait for composing [`Iso`] optics into another [`Optic`]
 /// - [`crate::composers::ComposableFallibleIso`] — a trait for composing [`FallibleIso`] optics into another [`Optic`]
-pub struct ComposedLens<O1, O2, S, I, A> {
+pub struct ComposedLens<O1: Lens<S, I>, O2: Lens<I, A>, S, I, A> {
     optic1: O1,
     optic2: O2,
     _phantom: PhantomData<(S, I, A)>,
 }
 
-impl<O1, O2, S, I, A> ComposedLens<O1, O2, S, I, A> {
+impl<O1, O2, S, I, A> ComposedLens<O1, O2, S, I, A> where O1: Lens<S, I>, O2: Lens<S, I> {
     pub(crate) fn new(optic1: O1, optic2: O2) -> Self
-    where
-        O1: Lens<S, I>,
-        O2: Lens<I, A>,
     {
         ComposedLens {
             optic1,
@@ -49,15 +48,14 @@ impl<O1, O2, S, I, A> ComposedLens<O1, O2, S, I, A> {
     }
 }
 
-impl<S, I, A, O1, O2> Optic<S, A> for ComposedLens<O1, O2, S, I, A>
+impl<S, I, A, O1, O2> Getter<S, A> for ComposedLens<O1, O2, S, I, A>
 where
     O1: Lens<S, I>,
     O2: Lens<I, A>,
 {
-    type Error = Infallible;
-
-    fn try_get(&self, source: &S) -> Result<A, Self::Error> {
-        Ok(self.get(source))
+    fn get(&self, source: &S) -> A {
+        let i = self.optic1.get(source);
+        self.optic2.get(i)
     }
 
     fn set(&self, source: &mut S, value: A) {
