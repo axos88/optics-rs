@@ -1,5 +1,7 @@
 # optics-rs
 
+# MAJOR REFACTOR IN PROGRESS!
+
 [![CI Status](https://github.com/axos88/optics-rs/actions/workflows/ci.yml/badge.svg)](https://github.com/axos88/optics-rs/actions/workflows/ci.yml)
 [![Crates.io](https://img.shields.io/crates/v/optics.svg)](https://crates.io/crates/optics)
 [![Docs.rs](https://docs.rs/optics/badge.svg)](https://docs.rs/optics)
