@@ -72,19 +72,6 @@ where
     }
 }
 
-impl<O1, O2, E, S, I, A> Prism<S, A> for ComposedFallibleIso<O1, O2, E, S, I, A>
-where
-    O1: FallibleIso<S, I>,
-    O2: FallibleIso<I, A>,
-    O1::Error: Into<E>,
-    O2::Error: Into<E>,
-{
-    fn preview(&self, source: &S) -> Option<A> {
-        let i = self.optic1.try_get(source).ok()?;
-        self.optic2.try_get(&i).map_err(|_| NoFocus).ok()
-    }
-}
-
 impl<O1, O2, E, S, I, A> FallibleIso<S, A> for ComposedFallibleIso<O1, O2, E, S, I, A>
 where
     O1: FallibleIso<S, I>,

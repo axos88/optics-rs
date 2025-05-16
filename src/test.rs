@@ -106,7 +106,7 @@ fn can_combine_prisms() {
     assert_eq!(composed.preview(&config), config.main.port);
 
     composed.set(&mut config, 42);
-    assert_eq!(composed.try_get(&config), Ok(42));
+    assert_eq!(composed.preview(&config), Some(42));
 }
 
 #[test]

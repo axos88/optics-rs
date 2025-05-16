@@ -67,16 +67,6 @@ where
     }
 }
 
-impl<O1, O2, S, I, A> Prism<S, A> for ComposedLens<O1, O2, S, I, A>
-where
-    O1: Lens<S, I>,
-    O2: Lens<I, A>,
-{
-    fn preview(&self, source: &S) -> Option<A> {
-        Some(self.get(source))
-    }
-}
-
 impl<O1, O2, S, I, A> Lens<S, A> for ComposedLens<O1, O2, S, I, A>
 where
     O1: Lens<S, I>,

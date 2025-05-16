@@ -68,39 +68,6 @@ where
     }
 }
 
-impl<O1, O2, S, I, A> Prism<S, A> for ComposedIso<O1, O2, S, I, A>
-where
-    O1: Iso<S, I>,
-    O2: Iso<I, A>,
-{
-    fn preview(&self, source: &S) -> Option<A> {
-        Some(self.get(source))
-    }
-}
-
-impl<O1, O2, S, I, A> Lens<S, A> for ComposedIso<O1, O2, S, I, A>
-where
-    O1: Iso<S, I>,
-    O2: Iso<I, A>,
-{
-    fn get(&self, source: &S) -> A {
-        let Ok(i) = self.optic1.try_get(source);
-        let Ok(a) = self.optic2.try_get(&i);
-        a
-    }
-}
-
-impl<O1, O2, S, I, A> FallibleIso<S, A> for ComposedIso<O1, O2, S, I, A>
-where
-    O1: Iso<S, I>,
-    O2: Iso<I, A>,
-{
-    fn try_reverse_get(&self, value: &A) -> Result<S, Self::Error> {
-        let i = self.optic2.reverse_get(value);
-        Ok(self.optic1.reverse_get(&i))
-    }
-}
-
 impl<O1, O2, S, I, A> Iso<S, A> for ComposedIso<O1, O2, S, I, A>
 where
     O1: Iso<S, I>,
