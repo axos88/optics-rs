@@ -1,41 +1,42 @@
-/// A bidirectional, fallible isomorphism between two types `S` and `A`.
+/// A base trait for optics that provides a partial reversible operation.
 ///
-/// A `FallibleIso` is an optic that provides a potentially lossy, reversible mapping between a
-/// source type `S` and a focus type `A`, where **both** the forward (`S → A`) and reverse
-/// (`A → S`) transformations can fail independently.
+/// This trait defines the ability to reverse a value of type `A` back into a source of type `S`,
+/// potentially failing with an error of type `ReverseError`. It serves as a foundational trait for
+/// constructing more complex optics like reversible prisms and fallible isomorphisms.
 ///
-/// This makes it suitable for conversions where neither direction is guaranteed to succeed in
-/// all cases. Examples include parsing, type coercion, or partial decoding tasks where values
-/// may not always be representable in the other form.
+/// # Associated Types
 ///
-/// # Supertraits
-/// - [`Optic<S, A>`] — provides the primary optic interface for fallible `get` and `set` operations.
-/// - [`Prism<S, A>`] — allows using this `FallibleIso` as a `Prism`.
+/// - `ReverseError`: The type of the error that may occur during the reverse operation. This will propagete
+/// as the error type of reverse retrieval of concrete optics that implement this trait.
 ///
-/// # Error Semantics
-/// The associated `Error` type on the `Optic` supertrait defines the possible error value for
-/// both the `try_get` and `try_reverse_get` operations.
+/// # Notes
 ///
-/// # See Also
-/// - [`Iso`] — for total, infallible isomorphisms.
-/// - [`Prism`] — for partial optics where only one direction may be partial.
-/// - [`Optic`] — the base trait for all optics.
+/// - Currently, you will likely need to clone or copy the value in order to reverse it into the source.
+/// - Logically a `PartialReversible<S, A>` implies `PartialGetter<A, S>`, but I have not yet found a way 
+/// around the compiler trait cohesion limitations 
+/// - One way could be to remove `PartialReversible` entirely, and use `PartialGetter<A, S>` instead of 
+/// `PartialReversible<S, A>`, but that comes with its own set of ergonomics issues, like how to 
+/// disambuguate between the two `try_get` operations without too much boilerplate.
+///
+/// # Implementors
+///
+/// Types that implement `HasPartialReversible` can be used to define optics that allow for
+/// partial reversal of values back into a source, where the reversal may fail.
+///
+///   - [`FallibleIso`] — a reversible optic that can fail in both directions.
+///
 pub trait HasPartialReversible<S, A> {
+    /// The type of error that may occur during the reverse operation.
     type ReverseError;
-    /// Attempts to perform the reverse transformation from the focus type `A` back to the source type `S`.
+
+    /// Attempts to reverse a value of type `A` back into a source of type `S`.
     ///
-    /// Since this is a *fallible* isomorphism, the operation may fail if the provided `A` value
-    /// cannot be converted back into a valid `S`. The error type is defined by the `Error`
-    /// associated type of the [`Optic`] supertrait.
+    /// # Parameters
     ///
-    /// # Arguments
-    /// * `source` — A reference to the focus type value `A`.
+    /// - `value`: A reference to the value of type `A` to be reversed into the source.
     ///
     /// # Returns
-    /// `Ok(S)` if the reverse transformation succeeds,
     ///
-    /// # Errors
-    /// Returns `Err(Self::Error)` if the transformation fails.
-    ///
+    /// Returns a `Result<S, Self::ReverseError>`, of the value the optic focuses on.
     fn try_reverse_get(&self, value: &A) -> Result<S, Self::ReverseError>;
 }

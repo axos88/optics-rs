@@ -76,7 +76,7 @@ impl<S, I, L: Lens<S, I>> LensImpl<S, I, L> {
         self,
         other: P,
     ) -> PrismImpl<S, A, ComposedPrism<Self, P, P::GetterError, S, I, A>> {
-        PrismImpl::new(ComposedPrism::new(self, other, |e| match e {}, identity))
+        ComposedPrism::new(self, other, |e| match e {}, identity).wrap()
     }
 
     pub fn compose_with_fallible_iso<A, F2: FallibleIso<I, A>>(
@@ -84,7 +84,7 @@ impl<S, I, L: Lens<S, I>> LensImpl<S, I, L> {
         other: FallibleIsoImpl<I, A, F2>,
     ) -> PrismImpl<S, A, ComposedPrism<Self, FallibleIsoImpl<I, A, F2>, F2::GetterError, S, I, A>>
     {
-        PrismImpl::new(ComposedPrism::new(self, other, infallible, identity))
+        ComposedPrism::new(self, other, infallible, identity).wrap()
     }
 
     pub fn compose_with_iso<A, ISO2: Iso<I, A>>(
@@ -93,4 +93,8 @@ impl<S, I, L: Lens<S, I>> LensImpl<S, I, L> {
     ) -> LensImpl<S, A, ComposedLens<Self, IsoImpl<I, A, ISO2>, S, I, A>> {
         LensImpl::new(ComposedLens::new(self, other))
     }
+}
+
+pub fn identity_lens<S: Clone, E> () -> LensImpl<S, S, impl Lens<S, S>> {
+    mapped_lens(|x: &S| x.clone(), |_, _| ())
 }

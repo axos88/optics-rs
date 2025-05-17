@@ -106,7 +106,7 @@ impl<S, A, E, GET> PartialGetter<S, A> for MappedPartialGetter<S, A, E, GET> whe
 {
 }
 
-pub fn new<S, A, E, GET, SET>(
+pub fn new<S, A, E, GET>(
     get_fn: GET,
 ) -> PartialGetterImpl<S, A, MappedPartialGetter<S, A, E, GET>>
 where

@@ -1,9 +1,6 @@
 use crate::lens::Lens;
 use crate::prism::Prism;
-use crate::{
-    HasPartialGetter, HasSetter, Iso, IsoImpl, LensImpl, PartialGetter, PrismImpl, Setter,
-    infallible,
-};
+use crate::{HasPartialGetter, HasSetter, Iso, IsoImpl, LensImpl, PartialGetter, PrismImpl, Setter, infallible, Getter, GetterImpl, mapped_getter};
 use core::convert::identity;
 use core::marker::PhantomData;
 
@@ -86,7 +83,7 @@ impl<S, I, F1: FallibleIso<S, I>> FallibleIsoImpl<S, I, F1> {
     where
         E: From<F1::GetterError> + From<P2::GetterError>,
     {
-        PrismImpl::new(ComposedPrism::new(self, other, Into::into, Into::into))
+        ComposedPrism::new(self, other, Into::into, Into::into).wrap()
     }
 
     pub fn compose_with_prism_with_mappers<E, A, P2: Prism<I, A>>(
@@ -95,19 +92,19 @@ impl<S, I, F1: FallibleIso<S, I>> FallibleIsoImpl<S, I, F1> {
         error_mapper_1: fn(F1::GetterError) -> E,
         error_mapper_2: fn(P2::GetterError) -> E,
     ) -> PrismImpl<S, A, ComposedPrism<Self, P2, E, S, I, A>> {
-        PrismImpl::new(ComposedPrism::new(
+        ComposedPrism::new(
             self,
             other,
             error_mapper_1,
             error_mapper_2,
-        ))
+        ).wrap()
     }
 
     pub fn compose_with_lens<A, L2: Lens<I, A>>(
         self,
         other: LensImpl<I, A, L2>,
     ) -> PrismImpl<S, A, ComposedPrism<Self, LensImpl<I, A, L2>, F1::GetterError, S, I, A>> {
-        PrismImpl::new(ComposedPrism::new(self, other, identity, infallible))
+        ComposedPrism::new(self, other, identity, infallible).wrap()
     }
 
     pub fn compose_with_fallible_iso<GE, RE, A, F2: FallibleIso<I, A>>(
@@ -160,14 +157,6 @@ impl<S, I, F1: FallibleIso<S, I>> FallibleIsoImpl<S, I, F1> {
     }
 }
 
-// impl<S, I, F: FallibleIso<S, I>> ComposeWithIso<S, I> for FallibleIsoImpl<S, I, F>
-// where
-//     F::Error: From<Infallible>,
-// {
-//     type Result<A, ISO2: Iso<I, A>> =
-//         FallibleIsoImpl<S, A, ComposedFallibleIso<Self, IsoImpl<I, A, ISO2>, F::Error, S, I, A>>;
-//
-//     fn compose_with_iso<A, O2: Iso<I, A>>(self, other: IsoImpl<I, A, O2>) -> Self::Result<A, O2> {
-//         FallibleIsoImpl::new(ComposedFallibleIso::new(self, other))
-//     }
-// }
+pub fn identity_fallible_iso<S: Clone, E> () -> FallibleIsoImpl<S, S, impl FallibleIso<S, S, GetterError = E, ReverseError = E>> {
+    mapped_fallible_iso(|x: &S| Ok(x.clone()), |x: &S| Ok(x.clone()))
+}

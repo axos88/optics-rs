@@ -163,7 +163,7 @@ fn foo() {
 
     let delay_seconds_prism = delay_lens.compose_with_prism(timespan_seconds_prism);
 
-    let delay_prism = mapped_prism(|c: &Config| Ok(c.delay.clone()), |c, v| c.delay = v);
+    let delay_prism = mapped_prism(|c: &Config| Ok::<_, ()>(c.delay.clone()), |c, v| c.delay = v);
 
     assert_eq!(delay_prism.try_get(&config), Ok(config.delay.clone()));
     assert_eq!(delay_seconds_prism.try_get(&config), Err(()));

@@ -104,5 +104,5 @@ pub fn new<S, A, SET>(set_fn: SET) -> SetterImpl<S, A, MappedSetter<S, A, SET>>
 where
     SET: Fn(&mut S, A),
 {
-    SetterImpl::new(MappedSetter::new(set_fn))
+    MappedSetter::new(set_fn).wrap()
 }

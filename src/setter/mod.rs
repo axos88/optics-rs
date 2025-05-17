@@ -21,12 +21,19 @@ pub use mapped::new as mapped_setter;
 /// - [`Prism`] — optional focus optic for sum types
 /// - [`Iso`] — reversible transformations
 /// - [`FallibleIso`] — reversible transformations with fallible forward mapping
-pub trait Setter<S, A>: HasSetter<S, A> {}
+pub trait Setter<S, A>: HasSetter<S, A> {
+    fn wrap(self) -> SetterImpl<S, A, Self>
+    where
+        Self: Sized,
+    {
+        SetterImpl::new(self)
+    }
+}
 
 pub struct SetterImpl<S, A, L: Setter<S, A>>(pub L, PhantomData<(S, A)>);
 
 impl<S, A, L: Setter<S, A>> SetterImpl<S, A, L> {
-    pub fn new(l: L) -> Self {
+    pub(crate) fn new(l: L) -> Self {
         SetterImpl(l, PhantomData)
     }
 }
@@ -39,4 +46,7 @@ impl<S, A, L: Setter<S, A>> HasSetter<S, A> for SetterImpl<S, A, L> {
 
 impl<S, A, L: Setter<S, A>> Setter<S, A> for SetterImpl<S, A, L> {}
 
-// Note that a setter cannot be composed with another setter, since we need to be able to retrieve the value that outer optic focuses on to be able to set the value the inner one focuses on.
+pub fn identity_setter<S, A> () -> SetterImpl<S, A, impl Setter<S, A>> {
+    mapped_setter(|_, _| ())
+}
+

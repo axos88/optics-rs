@@ -2,7 +2,7 @@ use crate::fallible_iso::{FallibleIso, FallibleIsoImpl};
 use crate::getter::composed::ComposedGetter;
 use crate::lens::{Lens, LensImpl};
 use crate::partial_getter::composed::ComposedPartialGetter;
-use crate::{HasGetter, HasPartialGetter, Prism};
+use crate::{mapped_iso, HasGetter, HasPartialGetter, Prism};
 use crate::{Iso, IsoImpl, infallible};
 use crate::{PartialGetter, PartialGetterImpl, PrismImpl};
 use core::convert::{Infallible, identity};
@@ -115,4 +115,8 @@ impl<S, I, G1: Getter<S, I>> GetterImpl<S, I, G1> {
     ) -> GetterImpl<S, A, ComposedGetter<Self, IsoImpl<I, A, ISO2>, S, I, A>> {
         GetterImpl::new(ComposedGetter::new(self, other))
     }
+}
+
+pub fn identity_getter<S: Clone> () -> GetterImpl<S, S, impl Getter<S, S>> {
+    mapped_getter(|x: &S| x.clone())
 }

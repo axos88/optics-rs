@@ -1,4 +1,4 @@
-use crate::HasPartialGetter;
+use crate::{mapped_setter, HasPartialGetter, Setter, SetterImpl};
 use crate::fallible_iso::{FallibleIso, FallibleIsoImpl};
 use crate::lens::{Lens, LensImpl};
 use crate::partial_getter::composed::ComposedPartialGetter;
@@ -188,4 +188,8 @@ impl<S, I, P1: PartialGetter<S, I>> PartialGetterImpl<S, I, P1> {
             self, other, identity, infallible,
         ))
     }
+}
+
+pub fn identity_partial_getter<S: Clone, E> () -> PartialGetterImpl<S, S, impl PartialGetter<S, S, GetterError = E>> {
+    mapped_partial_getter(|x: &S| Ok(x.clone()))
 }

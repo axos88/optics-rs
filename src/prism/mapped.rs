@@ -42,51 +42,6 @@ where
     GET: Fn(&S) -> Result<A, E>,
     SET: Fn(&mut S, A),
 {
-    /// Creates a new `LensImpl` with the provided getter and setter functions.
-    ///
-    /// # Arguments
-    ///
-    /// - `get_fn` — A function that retrieves the focus value `A` from the source `S`.
-    /// - `set_fn` — A function that sets the focus value `A` in the source `S`.
-    ///
-    /// # Returns
-    ///
-    /// A new `LensImpl` instance that can be used as a `Lens<S, A>`.
-    ///
-    /// # Examples
-    ///
-    // ```
-    /// use `optics::{Lens`, `MappedLens`, Optic};
-    ///
-    /// struct Point { x: i32, y: i32 }
-    /// let mut point = Point { x: 10, y: 20 };
-    /// let `x_lens` = `MappedLens::`<Point, `i32>::new`(
-    ///     |p| p.x,
-    ///     |p, `new_x`| p.x = `new_x`
-    /// );
-    /// let `x_value` = `x_lens.get(&point)`; // retrieves 10
-    /// `x_lens.set(&mut` point, 30); // sets x to 30
-    // ```
-    ///
-    /// # Capturing Closures
-    ///
-    /// You can also use capturing closures for more flexible behavior, such as when you
-    /// need to capture environment variables. In that case, you can specify the trailing
-    /// type parameters as `_`, and the compiler will infer them:
-    ///
-    // ```
-    /// use `optics::{Lens`, `MappedLens`, Optic};
-    ///
-    /// struct Point { x: i32, y: i32 }
-    /// let factor = 2;
-    /// let mut point = Point { x: 10, y: 20 };
-    /// let `x_lens` = `MappedLens::`<Point, i32, _, _>`::new`(
-    ///     move |p| p.x * factor,
-    ///     move |p, `new_x`| p.x = `new_x` / factor
-    /// );
-    /// let `x_value` = `x_lens.get(&point)`; // retrieves 10 * 2 = 20
-    /// `x_lens.set(&mut` point, 60); // sets x to 60 / 2 = 30
-    // ```
     pub(crate) fn new(get_fn: GET, set_fn: SET) -> Self {
         MappedPrism {
             get_fn,
@@ -125,6 +80,51 @@ where
 {
 }
 
+/// Creates a new `LensImpl` with the provided getter and setter functions.
+///
+/// # Arguments
+///
+/// - `get_fn` — A function that retrieves the focus value `A` from the source `S`.
+/// - `set_fn` — A function that sets the focus value `A` in the source `S`.
+///
+/// # Returns
+///
+/// A new `LensImpl` instance that can be used as a `Lens<S, A>`.
+///
+/// # Examples
+///
+// ```
+/// use `optics::{Lens`, `MappedLens`, Optic};
+///
+/// struct Point { x: i32, y: i32 }
+/// let mut point = Point { x: 10, y: 20 };
+/// let `x_lens` = `MappedLens::`<Point, `i32>::new`(
+///     |p| p.x,
+///     |p, `new_x`| p.x = `new_x`
+/// );
+/// let `x_value` = `x_lens.get(&point)`; // retrieves 10
+/// `x_lens.set(&mut` point, 30); // sets x to 30
+// ```
+///
+/// # Capturing Closures
+///
+/// You can also use capturing closures for more flexible behavior, such as when you
+/// need to capture environment variables. In that case, you can specify the trailing
+/// type parameters as `_`, and the compiler will infer them:
+///
+// ```
+/// use `optics::{Lens`, `MappedLens`, Optic};
+///
+/// struct Point { x: i32, y: i32 }
+/// let factor = 2;
+/// let mut point = Point { x: 10, y: 20 };
+/// let `x_lens` = `MappedLens::`<Point, i32, _, _>`::new`(
+///     move |p| p.x * factor,
+///     move |p, `new_x`| p.x = `new_x` / factor
+/// );
+/// let `x_value` = `x_lens.get(&point)`; // retrieves 10 * 2 = 20
+/// `x_lens.set(&mut` point, 60); // sets x to 60 / 2 = 30
+// ```
 pub fn new<S, A, E, GET, SET>(
     get_fn: GET,
     set_fn: SET,
@@ -133,5 +133,5 @@ where
     GET: Fn(&S) -> Result<A, E>,
     SET: Fn(&mut S, A),
 {
-    PrismImpl::new(MappedPrism::new(get_fn, set_fn))
+    MappedPrism::new(get_fn, set_fn).wrap()
 }

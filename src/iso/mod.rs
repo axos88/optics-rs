@@ -4,10 +4,7 @@ use crate::lens::Lens;
 use crate::lens::composed::ComposedLens;
 use crate::prism::Prism;
 use crate::prism::composed::ComposedPrism;
-use crate::{
-    FallibleIsoImpl, Getter, HasGetter, HasPartialGetter, HasPartialReversible, HasReversible,
-    HasSetter, LensImpl, PartialGetter, PrismImpl, Setter, infallible,
-};
+use crate::{FallibleIsoImpl, Getter, HasGetter, HasPartialGetter, HasPartialReversible, HasReversible, HasSetter, LensImpl, PartialGetter, PrismImpl, Setter, infallible, mapped_lens};
 use core::convert::{Infallible, identity};
 use core::marker::PhantomData;
 
@@ -38,12 +35,16 @@ pub use mapped::new as mapped_iso;
 /// - [`Prism`] — for partial optics.
 /// - [`FallibleIso`] — for reversible optics that can fail.
 /// - [`Optic`] — the base trait for all optics.
-pub trait Iso<S, A>: HasGetter<S, A> + HasSetter<S, A> + HasReversible<S, A> {}
+pub trait Iso<S, A>: HasGetter<S, A> + HasSetter<S, A> + HasReversible<S, A> {
+    fn wrap(self) -> IsoImpl<S, A, Self> where Self: Sized {
+        IsoImpl::new(self)
+    }
+}
 
 pub struct IsoImpl<S, A, ISO: Iso<S, A>>(pub ISO, PhantomData<(S, A)>);
 
 impl<S, A, ISO: Iso<S, A>> IsoImpl<S, A, ISO> {
-    pub fn new(i: ISO) -> Self {
+    fn new(i: ISO) -> Self {
         IsoImpl(i, PhantomData)
     }
 }
@@ -102,7 +103,7 @@ impl<S, I, ISO1: Iso<S, I>> IsoImpl<S, I, ISO1> {
         self,
         other: P2,
     ) -> PrismImpl<S, A, ComposedPrism<Self, P2, P2::GetterError, S, I, A>> {
-        PrismImpl::new(ComposedPrism::new(self, other, infallible, identity))
+        ComposedPrism::new(self, other, infallible, identity).wrap()
     }
 
     pub fn compose_with_fallible_iso<A, F2: FallibleIso<I, A>>(
@@ -132,4 +133,8 @@ impl<S, I, ISO1: Iso<S, I>> IsoImpl<S, I, ISO1> {
     ) -> IsoImpl<S, A, ComposedIso<Self, ISO2, S, I, A>> {
         IsoImpl::new(ComposedIso::new(self, other.0))
     }
+}
+
+pub fn identity_iso<S: Clone> () -> IsoImpl<S, S, impl Iso<S, S>> {
+    mapped_iso(|x: &S| x.clone(), |x: &S| x.clone())
 }

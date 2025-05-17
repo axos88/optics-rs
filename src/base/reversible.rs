@@ -1,40 +1,38 @@
-/// A bidirectional, fallible isomorphism between two types `S` and `A`.
+/// A base trait for optics that provides a total reversible operation.
 ///
-/// A `FallibleIso` is an optic that provides a potentially lossy, reversible mapping between a
-/// source type `S` and a focus type `A`, where **both** the forward (`S → A`) and reverse
-/// (`A → S`) transformations can fail independently.
+/// This trait defines the ability to reverse a value of type `A` back into a source of type `S`,
+/// without the possibility of failure. It serves as a foundational trait for constructing
+/// more complex optics like lenses and isomorphisms.
 ///
-/// This makes it suitable for conversions where neither direction is guaranteed to succeed in
-/// all cases. Examples include parsing, type coercion, or partial decoding tasks where values
-/// may not always be representable in the other form.
+/// # Notes
 ///
-/// # Supertraits
-/// - [`Optic<S, A>`] — provides the primary optic interface for fallible `get` and `set` operations.
-/// - [`Prism<S, A>`] — allows using this `FallibleIso` as a `Prism`.
+/// - Currently, you will likely need to clone or copy the value in order to reverse it into the source.
+/// - Logically a `Reversible<S, A>` should imply `Getter<A, S>`, but I have not yet found a way
+/// around the compiler trait cohesion limitations
+/// - One way could be to remove `Reversible` entirely, and use `Getter<A, S>` instead of
+/// `Reversible<S, A>`, but that comes with its own set of ergonomics issues, like how to
+/// disambuguate between the two `get` operations without too much boilerplate.
 ///
-/// # Error Semantics
-/// The associated `Error` type on the `Optic` supertrait defines the possible error value for
-/// both the `try_get` and `try_reverse_get` operations.
+/// # Implementors
 ///
-/// # See Also
-/// - [`Iso`] — for total, infallible isomorphisms.
-/// - [`Prism`] — for partial optics where only one direction may be partial.
-/// - [`Optic`] — the base trait for all optics.
+/// Types that implement `HasReversible` can be used to define optics that allow for
+/// total reversal of values back into a source, where the reversal is guaranteed to succeed.
+///
+///   - [`Iso`] — a reversible optic that allows for infallible retrieval and reversal of values.
+///   - [`Lens`] — a total optic that allows for infallible retrieval and reversal of values.
+///
+/// # Notes
+///
+/// Currently, you will likely need to clone or copy the value in order to reverse it into the source.
 pub trait HasReversible<S, A> {
-    /// Attempts to perform the reverse transformation from the focus type `A` back to the source type `S`.
+    /// Reverses a value of type `A` back into a source of type `S`.
     ///
-    /// Since this is a *fallible* isomorphism, the operation may fail if the provided `A` value
-    /// cannot be converted back into a valid `S`. The error type is defined by the `Error`
-    /// associated type of the [`Optic`] supertrait.
+    /// # Parameters
     ///
-    /// # Arguments
-    /// * `source` — A reference to the focus type value `A`.
+    /// - `value`: A reference to the value of type `A` to be reversed into the source.
     ///
     /// # Returns
-    /// `Ok(S)` if the reverse transformation succeeds,
     ///
-    /// # Errors
-    /// Returns `Err(Self::Error)` if the transformation fails.
-    ///
+    /// Returns the source of type `S`.
     fn reverse_get(&self, value: &A) -> S;
 }
