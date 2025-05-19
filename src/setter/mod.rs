@@ -1,11 +1,12 @@
-use core::marker::PhantomData;
+mod composed;
+mod mapped;
+mod wrapper;
 
-pub(crate) mod composed;
-pub(crate) mod mapped;
 use crate::HasSetter;
 
 pub use composed::new as composed_setter;
 pub use mapped::new as mapped_setter;
+pub use wrapper::SetterImpl;
 
 /// An optic for focusing on a value that is guaranteed to exist within a larger structure.
 ///
@@ -21,32 +22,10 @@ pub use mapped::new as mapped_setter;
 /// - [`Prism`] — optional focus optic for sum types
 /// - [`Iso`] — reversible transformations
 /// - [`FallibleIso`] — reversible transformations with fallible forward mapping
-pub trait Setter<S, A>: HasSetter<S, A> {
-    fn wrap(self) -> SetterImpl<S, A, Self>
-    where
-        Self: Sized,
-    {
-        SetterImpl::new(self)
-    }
-}
+pub trait Setter<S, A>: HasSetter<S, A> {}
 
-pub struct SetterImpl<S, A, L: Setter<S, A>>(pub L, PhantomData<(S, A)>);
+impl<S, A, SETTER: HasSetter<S, A>> Setter<S, A> for SETTER {}
 
-impl<S, A, L: Setter<S, A>> SetterImpl<S, A, L> {
-    pub(crate) fn new(l: L) -> Self {
-        SetterImpl(l, PhantomData)
-    }
-}
-
-impl<S, A, L: Setter<S, A>> HasSetter<S, A> for SetterImpl<S, A, L> {
-    fn set(&self, source: &mut S, value: A) {
-        self.0.set(source, value);
-    }
-}
-
-impl<S, A, L: Setter<S, A>> Setter<S, A> for SetterImpl<S, A, L> {}
-
-pub fn identity_setter<S, A> () -> SetterImpl<S, A, impl Setter<S, A>> {
+pub fn identity_setter<S, A>() -> SetterImpl<S, A, impl Setter<S, A>> {
     mapped_setter(|_, _| ())
 }
-

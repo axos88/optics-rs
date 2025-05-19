@@ -1,3 +1,4 @@
+use crate::partial_getter::wrapper::PartialGetterImpl;
 use crate::{HasPartialGetter, PartialGetter};
 use core::marker::PhantomData;
 
@@ -26,7 +27,7 @@ use core::marker::PhantomData;
 /// - [`crate::composers::ComposablePartialGetter`] — a trait for composing [`PartialGetter`] optics another [`Optic`]
 /// - [`crate::composers::ComposableIso`] — a trait for composing [`Iso`] optics into another [`Optic`]
 /// - [`crate::composers::ComposableFallibleIso`] — a trait for composing [`FallibleIso`] optics into another [`Optic`]
-pub struct ComposedPartialGetter<O1: PartialGetter<S, I>, O2: PartialGetter<I, A>, E, S, I, A> {
+struct ComposedPartialGetter<O1: PartialGetter<S, I>, O2: PartialGetter<I, A>, E, S, I, A> {
     optic1: O1,
     optic2: O2,
     error_fn_1: fn(O1::GetterError) -> E,
@@ -68,18 +69,11 @@ where
     }
 }
 
-impl<O1, O2, E, S, I, A> PartialGetter<S, A> for ComposedPartialGetter<O1, O2, E, S, I, A>
-where
-    O1: PartialGetter<S, I>,
-    O2: PartialGetter<I, A>,
-{
-}
-
 pub fn new<S, A, I, E, L1: PartialGetter<S, I>, L2: PartialGetter<I, A>>(
     l1: L1,
     l2: L2,
     error_fn_1: fn(L1::GetterError) -> E,
     error_fn_2: fn(L2::GetterError) -> E,
-) -> ComposedPartialGetter<L1, L2, E, S, I, A> {
-    ComposedPartialGetter::new(l1, l2, error_fn_1, error_fn_2)
+) -> PartialGetterImpl<S, A, impl PartialGetter<S, A, GetterError = E>> {
+    ComposedPartialGetter::new(l1, l2, error_fn_1, error_fn_2).into()
 }

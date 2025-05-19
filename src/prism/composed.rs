@@ -1,6 +1,7 @@
 use crate::HasPartialGetter;
 use crate::HasSetter;
 use crate::prism::Prism;
+use crate::prism::wrapper::PrismImpl;
 use core::marker::PhantomData;
 
 /// A `ComposedPrism` represents the composition of two optics, resulting in a `Prism` that focuses
@@ -27,7 +28,7 @@ use core::marker::PhantomData;
 /// - `optic2`: The second optic instance.
 /// - `error_fn_1`: A function to map `O1`'s getter error to the unified error type `E`.
 /// - `error_fn_2`: A function to map `O2`'s getter error to the unified error type `E`.
-pub struct ComposedPrism<O1: Prism<S, I>, O2: Prism<I, A>, E, S, I, A> {
+struct ComposedPrism<O1: Prism<S, I>, O2: Prism<I, A>, E, S, I, A> {
     optic1: O1,
     optic2: O2,
     error_fn_1: fn(O1::GetterError) -> E,
@@ -40,7 +41,7 @@ where
     O1: Prism<S, I>,
     O2: Prism<I, A>,
 {
-    pub(crate) fn new(
+    fn new(
         optic1: O1,
         optic2: O2,
         error_fn_1: fn(O1::GetterError) -> E,
@@ -82,13 +83,6 @@ where
     }
 }
 
-impl<O1, O2, E, S, I, A> Prism<S, A> for ComposedPrism<O1, O2, E, S, I, A>
-where
-    O1: Prism<S, I>,
-    O2: Prism<I, A>,
-{
-}
-
 /// Constructs a new `ComposedPrism` by composing two optics, resulting in a `Prism` that focuses
 /// from a source type `S` to a target type `A` through an intermediate type `I`.
 ///
@@ -122,6 +116,6 @@ pub fn new<S, A, I, E, P1: Prism<S, I>, P2: Prism<I, A>>(
     p2: P2,
     error_fn_1: fn(P1::GetterError) -> E,
     error_fn_2: fn(P2::GetterError) -> E,
-) -> ComposedPrism<P1, P2, E, S, I, A> {
-    ComposedPrism::new(p1, p2, error_fn_1, error_fn_2)
+) -> PrismImpl<S, A, impl Prism<S, A, GetterError = E>> {
+    ComposedPrism::new(p1, p2, error_fn_1, error_fn_2).into()
 }

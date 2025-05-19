@@ -1,6 +1,7 @@
 use crate::HasPartialGetter;
 use crate::HasSetter;
-use crate::prism::{Prism, PrismImpl};
+use crate::prism::Prism;
+use crate::prism::wrapper::PrismImpl;
 use core::marker::PhantomData;
 
 /// A concrete implementation of the [`Prism`] trait.
@@ -27,7 +28,7 @@ use core::marker::PhantomData;
 ///
 /// - [`Lens`] — a more restrictive optic type for focus values
 /// - [`Optic`] — base trait that all optics implement
-pub struct MappedPrism<S, A, E, GET = fn(&S) -> Result<A, E>, SET = fn(&mut S, A)>
+struct MappedPrism<S, A, E, GET = fn(&S) -> Result<A, E>, SET = fn(&mut S, A)>
 where
     GET: Fn(&S) -> Result<A, E>,
     SET: Fn(&mut S, A),
@@ -71,13 +72,6 @@ where
     fn set(&self, source: &mut S, value: A) {
         (self.set_fn)(source, value);
     }
-}
-
-impl<S, A, E, GET, SET> Prism<S, A> for MappedPrism<S, A, E, GET, SET>
-where
-    GET: Fn(&S) -> Result<A, E>,
-    SET: Fn(&mut S, A),
-{
 }
 
 /// Creates a new `LensImpl` with the provided getter and setter functions.
@@ -128,10 +122,10 @@ where
 pub fn new<S, A, E, GET, SET>(
     get_fn: GET,
     set_fn: SET,
-) -> PrismImpl<S, A, MappedPrism<S, A, E, GET, SET>>
+) -> PrismImpl<S, A, impl Prism<S, A, GetterError = E>>
 where
     GET: Fn(&S) -> Result<A, E>,
     SET: Fn(&mut S, A),
 {
-    MappedPrism::new(get_fn, set_fn).wrap()
+    MappedPrism::new(get_fn, set_fn).into()
 }

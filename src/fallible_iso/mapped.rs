@@ -1,5 +1,5 @@
 use crate::HasPartialReversible;
-use crate::fallible_iso::{FallibleIso, FallibleIsoImpl};
+use crate::fallible_iso::wrapper::FallibleIsoImpl;
 use crate::{HasPartialGetter, HasSetter};
 use core::marker::PhantomData;
 
@@ -145,13 +145,6 @@ where
     fn try_reverse_get(&self, source: &A) -> Result<S, Self::ReverseError> {
         (self.rev_fn)(source)
     }
-}
-
-impl<S, A, GE, RE, GET, REV> FallibleIso<S, A> for MappedFallibleIso<S, A, GE, RE, GET, REV>
-where
-    GET: Fn(&S) -> Result<A, GE>,
-    REV: Fn(&A) -> Result<S, RE>,
-{
 }
 
 pub fn new<S, A, GE, RE, GET, REV>(

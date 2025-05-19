@@ -1,6 +1,7 @@
-use crate::HasGetter;
 use crate::HasSetter;
 use crate::lens::Lens;
+use crate::{HasGetter, HasPartialGetter, LensImpl};
+use core::convert::Infallible;
 use core::marker::PhantomData;
 
 /// A composed `Lens` type, combining two optics into a single `Lens`.
@@ -30,7 +31,7 @@ use core::marker::PhantomData;
 /// - [`crate::composers::ComposablePrism`] — a trait for composing [`Prism`] optics another [`Optic`]
 /// - [`crate::composers::ComposableIso`] — a trait for composing [`Iso`] optics into another [`Optic`]
 /// - [`crate::composers::ComposableFallibleIso`] — a trait for composing [`FallibleIso`] optics into another [`Optic`]
-pub struct ComposedLens<O1: Lens<S, I>, O2: Lens<I, A>, S, I, A> {
+struct ComposedLens<O1: Lens<S, I>, O2: Lens<I, A>, S, I, A> {
     optic1: O1,
     optic2: O2,
     _phantom: PhantomData<(S, I, A)>,
@@ -41,12 +42,24 @@ where
     O1: Lens<S, I>,
     O2: Lens<I, A>,
 {
-    pub(crate) fn new(optic1: O1, optic2: O2) -> Self {
+    fn new(optic1: O1, optic2: O2) -> Self {
         ComposedLens {
             optic1,
             optic2,
             _phantom: PhantomData,
         }
+    }
+}
+
+impl<S, I, A, O1, O2> HasPartialGetter<S, A> for ComposedLens<O1, O2, S, I, A>
+where
+    O1: Lens<S, I>,
+    O2: Lens<I, A>,
+{
+    type GetterError = Infallible;
+
+    fn try_get(&self, source: &S) -> Result<A, Self::GetterError> {
+        Ok(self.get(source))
     }
 }
 
@@ -73,16 +86,9 @@ where
     }
 }
 
-impl<O1, O2, S, I, A> Lens<S, A> for ComposedLens<O1, O2, S, I, A>
-where
-    O1: Lens<S, I>,
-    O2: Lens<I, A>,
-{
-}
-
 pub fn new<S, A, I, L1: Lens<S, I>, L2: Lens<I, A>>(
     l1: L1,
     l2: L2,
-) -> ComposedLens<L1, L2, S, I, A> {
-    ComposedLens::new(l1, l2)
+) -> LensImpl<S, A, impl Lens<S, A>> {
+    ComposedLens::new(l1, l2).into()
 }

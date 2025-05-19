@@ -12,10 +12,10 @@
 /// # Notes
 ///
 /// - Currently, you will likely need to clone or copy the value in order to reverse it into the source.
-/// - Logically a `PartialReversible<S, A>` implies `PartialGetter<A, S>`, but I have not yet found a way 
-/// around the compiler trait cohesion limitations 
-/// - One way could be to remove `PartialReversible` entirely, and use `PartialGetter<A, S>` instead of 
-/// `PartialReversible<S, A>`, but that comes with its own set of ergonomics issues, like how to 
+/// - Logically a `PartialReversible<S, A>` implies `PartialGetter<A, S>`, but I have not yet found a way
+/// around the compiler trait cohesion limitations
+/// - One way could be to remove `PartialReversible` entirely, and use `PartialGetter<A, S>` instead of
+/// `PartialReversible<S, A>`, but that comes with its own set of ergonomics issues, like how to
 /// disambuguate between the two `try_get` operations without too much boilerplate.
 ///
 /// # Implementors

@@ -1,4 +1,5 @@
 use crate::HasSetter;
+use crate::setter::wrapper::SetterImpl;
 use crate::{PartialGetter, Setter};
 use core::marker::PhantomData;
 
@@ -29,7 +30,7 @@ use core::marker::PhantomData;
 /// - [`crate::composers::ComposablePrism`] — a trait for composing [`Prism`] optics another [`Optic`]
 /// - [`crate::composers::ComposableIso`] — a trait for composing [`Iso`] optics into another [`Optic`]
 /// - [`crate::composers::ComposableFallibleIso`] — a trait for composing [`FallibleIso`] optics into another [`Optic`]
-pub struct ComposedSetter<O1: PartialGetter<S, I> + Setter<S, I>, O2: Setter<I, A>, S, I, A> {
+struct ComposedSetter<O1: Setter<S, I>, O2: Setter<I, A>, S, I, A> {
     optic1: O1,
     optic2: O2,
     _phantom: PhantomData<(S, I, A)>,
@@ -37,10 +38,10 @@ pub struct ComposedSetter<O1: PartialGetter<S, I> + Setter<S, I>, O2: Setter<I, 
 
 impl<O1, O2, S, I, A> ComposedSetter<O1, O2, S, I, A>
 where
-    O1: PartialGetter<S, I> + Setter<S, I>,
+    O1: Setter<S, I>,
     O2: Setter<I, A>,
 {
-    pub(crate) fn new(optic1: O1, optic2: O2) -> Self {
+    pub(self) fn new(optic1: O1, optic2: O2) -> Self {
         ComposedSetter {
             optic1,
             optic2,
@@ -62,16 +63,9 @@ where
     }
 }
 
-impl<O1, O2, S, I, A> Setter<S, A> for ComposedSetter<O1, O2, S, I, A>
-where
-    O1: PartialGetter<S, I> + Setter<S, I>,
-    O2: Setter<I, A>,
-{
-}
-
 pub fn new<S, A, I, L1: PartialGetter<S, I> + Setter<S, I>, L2: Setter<I, A>>(
     l1: L1,
     l2: L2,
-) -> ComposedSetter<L1, L2, S, I, A> {
-    ComposedSetter::new(l1, l2)
+) -> SetterImpl<S, A, impl Setter<S, A>> {
+    ComposedSetter::new(l1, l2).into()
 }

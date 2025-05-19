@@ -1,15 +1,12 @@
-use crate::{mapped_setter, HasPartialGetter, Setter, SetterImpl};
-use crate::fallible_iso::{FallibleIso, FallibleIsoImpl};
-use crate::lens::{Lens, LensImpl};
-use crate::partial_getter::composed::ComposedPartialGetter;
-use crate::{Iso, IsoImpl, infallible};
-use core::convert::identity;
-use core::marker::PhantomData;
+use crate::HasPartialGetter;
 
-pub(crate) mod composed;
-pub(crate) mod mapped;
+mod composed;
+mod mapped;
+mod wrapper;
+
 pub use composed::new as composed_partial_getter;
 pub use mapped::new as mapped_partial_getter;
+pub use wrapper::PartialGetterImpl;
 
 /// A `PartialGetter` is an optic that focuses on a potential value inside a sum type.
 ///
@@ -41,155 +38,9 @@ pub use mapped::new as mapped_partial_getter;
 /// - [`NoFocus`] — the current error type returned by `PartialGetter::preview` on failure
 pub trait PartialGetter<S, A>: HasPartialGetter<S, A> {}
 
-pub struct PartialGetterImpl<S, A, P: PartialGetter<S, A>>(pub P, PhantomData<(S, A)>);
+impl<S, A, PG: HasPartialGetter<S, A>> PartialGetter<S, A> for PG {}
 
-impl<S, A, P: PartialGetter<S, A>> PartialGetterImpl<S, A, P> {
-    pub fn new(prism: P) -> Self {
-        PartialGetterImpl(prism, PhantomData)
-    }
-}
-
-impl<S, A, P: PartialGetter<S, A>> HasPartialGetter<S, A> for PartialGetterImpl<S, A, P> {
-    type GetterError = P::GetterError;
-
-    fn try_get(&self, source: &S) -> Result<A, Self::GetterError> {
-        self.0.try_get(source)
-    }
-}
-
-impl<S, A, P: PartialGetter<S, A>> PartialGetter<S, A> for PartialGetterImpl<S, A, P> {}
-
-impl<S, I, P1: PartialGetter<S, I>> PartialGetterImpl<S, I, P1> {
-    pub fn compose_with_partial_getter<
-        E: From<P1::GetterError> + From<P2::GetterError>,
-        A,
-        P2: PartialGetter<I, A>,
-    >(
-        self,
-        other: P2,
-    ) -> PartialGetterImpl<S, A, ComposedPartialGetter<Self, P2, E, S, I, A>> {
-        PartialGetterImpl::new(ComposedPartialGetter::new(
-            self,
-            other,
-            Into::into,
-            Into::into,
-        ))
-    }
-
-    pub fn compose_with_partial_getter_with_mappers<E, A, P2: PartialGetter<I, A>>(
-        self,
-        other: P2,
-        error_mapper1: fn(P1::GetterError) -> E,
-        error_mapper_2: fn(P2::GetterError) -> E,
-    ) -> PartialGetterImpl<S, A, ComposedPartialGetter<Self, P2, E, S, I, A>> {
-        PartialGetterImpl::new(ComposedPartialGetter::new(
-            self,
-            other,
-            error_mapper1,
-            error_mapper_2,
-        ))
-    }
-
-    pub fn compose_with_getter<A, O2: Lens<I, A>>(
-        self,
-        other: LensImpl<I, A, O2>,
-    ) -> PartialGetterImpl<
-        S,
-        A,
-        ComposedPartialGetter<Self, LensImpl<I, A, O2>, P1::GetterError, S, I, A>,
-    > {
-        PartialGetterImpl::new(ComposedPartialGetter::new(
-            self, other, identity, infallible,
-        ))
-    }
-
-    pub fn compose_with_prism<
-        E: From<P1::GetterError> + From<P2::GetterError>,
-        A,
-        P2: PartialGetter<I, A>,
-    >(
-        self,
-        other: P2,
-    ) -> PartialGetterImpl<S, A, ComposedPartialGetter<Self, P2, E, S, I, A>> {
-        PartialGetterImpl::new(ComposedPartialGetter::new(
-            self,
-            other,
-            Into::into,
-            Into::into,
-        ))
-    }
-
-    pub fn compose_with_prism_with_mappers<E, A, P2: PartialGetter<I, A>>(
-        self,
-        other: P2,
-        error_mapper1: fn(P1::GetterError) -> E,
-        error_mapper_2: fn(P2::GetterError) -> E,
-    ) -> PartialGetterImpl<S, A, ComposedPartialGetter<Self, P2, E, S, I, A>> {
-        PartialGetterImpl::new(ComposedPartialGetter::new(
-            self,
-            other,
-            error_mapper1,
-            error_mapper_2,
-        ))
-    }
-
-    pub fn compose_with_lens<A, O2: Lens<I, A>>(
-        self,
-        other: LensImpl<I, A, O2>,
-    ) -> PartialGetterImpl<
-        S,
-        A,
-        ComposedPartialGetter<Self, LensImpl<I, A, O2>, P1::GetterError, S, I, A>,
-    > {
-        PartialGetterImpl::new(ComposedPartialGetter::new(
-            self, other, identity, infallible,
-        ))
-    }
-
-    pub fn compose_with_fallible_iso<E, A, F2: FallibleIso<I, A>>(
-        self,
-        other: FallibleIsoImpl<I, A, F2>,
-    ) -> PartialGetterImpl<S, A, ComposedPartialGetter<Self, FallibleIsoImpl<I, A, F2>, E, S, I, A>>
-    where
-        E: From<F2::GetterError> + From<P1::GetterError>,
-    {
-        PartialGetterImpl::new(ComposedPartialGetter::new(
-            self,
-            other,
-            Into::into,
-            Into::into,
-        ))
-    }
-
-    pub fn compose_with_fallible_iso_with_mappers<E, A, F2: FallibleIso<I, A>>(
-        self,
-        other: FallibleIsoImpl<I, A, F2>,
-        getter_error_mapper_1: fn(P1::GetterError) -> E,
-        getter_error_mapper_2: fn(F2::GetterError) -> E,
-    ) -> PartialGetterImpl<S, A, ComposedPartialGetter<Self, FallibleIsoImpl<I, A, F2>, E, S, I, A>>
-    {
-        PartialGetterImpl::new(ComposedPartialGetter::new(
-            self,
-            other,
-            getter_error_mapper_1,
-            getter_error_mapper_2,
-        ))
-    }
-
-    pub fn compose_with_iso<A, ISO2: Iso<I, A>>(
-        self,
-        other: IsoImpl<I, A, ISO2>,
-    ) -> PartialGetterImpl<
-        S,
-        A,
-        ComposedPartialGetter<Self, IsoImpl<I, A, ISO2>, P1::GetterError, S, I, A>,
-    > {
-        PartialGetterImpl::new(ComposedPartialGetter::new(
-            self, other, identity, infallible,
-        ))
-    }
-}
-
-pub fn identity_partial_getter<S: Clone, E> () -> PartialGetterImpl<S, S, impl PartialGetter<S, S, GetterError = E>> {
+pub fn identity_partial_getter<S: Clone, E>()
+-> PartialGetterImpl<S, S, impl PartialGetter<S, S, GetterError = E>> {
     mapped_partial_getter(|x: &S| Ok(x.clone()))
 }

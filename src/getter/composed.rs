@@ -1,4 +1,6 @@
-use crate::{Getter, HasGetter};
+use crate::getter::wrapper::GetterImpl;
+use crate::{Getter, HasGetter, HasPartialGetter};
+use core::convert::Infallible;
 use core::marker::PhantomData;
 
 /// A composed `Getter` type, combining two optics into a single prism.
@@ -26,7 +28,7 @@ use core::marker::PhantomData;
 /// - [`crate::composers::ComposableGetter`] — a trait for composing [`Getter`] optics another [`Optic`]
 /// - [`crate::composers::ComposableIso`] — a trait for composing [`Iso`] optics into another [`Optic`]
 /// - [`crate::composers::ComposableFallibleIso`] — a trait for composing [`FallibleIso`] optics into another [`Optic`]
-pub struct ComposedGetter<G1: Getter<S, I>, G2: Getter<I, A>, S, I, A> {
+struct ComposedGetter<G1: Getter<S, I>, G2: Getter<I, A>, S, I, A> {
     optic1: G1,
     optic2: G2,
     _phantom: PhantomData<(S, I, A)>,
@@ -56,16 +58,21 @@ where
     }
 }
 
-impl<G1, G2, S, I, A> Getter<S, A> for ComposedGetter<G1, G2, S, I, A>
+impl<G1, G2, S, I, A> HasPartialGetter<S, A> for ComposedGetter<G1, G2, S, I, A>
 where
     G1: Getter<S, I>,
     G2: Getter<I, A>,
 {
+    type GetterError = Infallible;
+
+    fn try_get(&self, source: &S) -> Result<A, Self::GetterError> {
+        Ok(self.optic2.get(&self.optic1.get(source)))
+    }
 }
 
-pub fn new<S, A, I, E, L1: Getter<S, I>, L2: Getter<I, A>>(
+pub fn new<S, A, I, L1: Getter<S, I>, L2: Getter<I, A>>(
     l1: L1,
     l2: L2,
-) -> ComposedGetter<L1, L2, S, I, A> {
-    ComposedGetter::new(l1, l2)
+) -> GetterImpl<S, A, impl Getter<S, A>> {
+    ComposedGetter::new(l1, l2).into()
 }

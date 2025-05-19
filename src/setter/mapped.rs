@@ -24,7 +24,7 @@ use core::marker::PhantomData;
 /// - [`Prism`] — optional optic type for sum types
 /// - [`Optic`] — base trait that all optics implement
 ///
-pub struct MappedSetter<S, A, SET = fn(&mut S, A)>
+struct MappedSetter<S, A, SET = fn(&mut S, A)>
 where
     SET: Fn(&mut S, A),
 {
@@ -81,7 +81,7 @@ where
     /// let `x_value` = `x_lens.get(&point)`; // retrieves 10 * 2 = 20
     /// `x_lens.set(&mut` point, 60); // sets x to 60 / 2 = 30
     // ```
-    pub(crate) fn new(set_fn: SET) -> Self {
+    fn new(set_fn: SET) -> Self {
         MappedSetter {
             set_fn,
             phantom: PhantomData,
@@ -98,11 +98,9 @@ where
     }
 }
 
-impl<S, A, SET> Setter<S, A> for MappedSetter<S, A, SET> where SET: Fn(&mut S, A) {}
-
-pub fn new<S, A, SET>(set_fn: SET) -> SetterImpl<S, A, MappedSetter<S, A, SET>>
+pub fn new<S, A, SET>(set_fn: SET) -> SetterImpl<S, A, impl Setter<S, A>>
 where
     SET: Fn(&mut S, A),
 {
-    MappedSetter::new(set_fn).wrap()
+    MappedSetter::new(set_fn).into()
 }

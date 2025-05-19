@@ -1,5 +1,6 @@
 use crate::HasPartialReversible;
-use crate::fallible_iso::{FallibleIso, FallibleIsoImpl};
+use crate::fallible_iso::FallibleIso;
+use crate::fallible_iso::wrapper::FallibleIsoImpl;
 use crate::{HasPartialGetter, HasSetter};
 use core::marker::PhantomData;
 
@@ -26,7 +27,7 @@ use core::marker::PhantomData;
 /// - [`FallibleIso`] — the core optic type that the `ComposedFallibleIso` is based on
 /// - [`Prism`] — the optic type that `ComposedFallibleIso` also acts as
 /// - [`Optic`] — the base trait that all optic types implement
-pub struct ComposedFallibleIso<O1, O2, GE, RE, S, I, A>
+struct ComposedFallibleIso<O1, O2, GE, RE, S, I, A>
 where
     O1: FallibleIso<S, I>,
     O2: FallibleIso<I, A>,
@@ -114,13 +115,6 @@ where
     }
 }
 
-impl<O1, O2, GE, RE, S, I, A> FallibleIso<S, A> for ComposedFallibleIso<O1, O2, GE, RE, S, I, A>
-where
-    O1: FallibleIso<S, I>,
-    O2: FallibleIso<I, A>,
-{
-}
-
 pub fn new<S, A, I, GE, RE, F1: FallibleIso<S, I>, F2: FallibleIso<I, A>>(
     f1: F1,
     f2: F2,
@@ -128,7 +122,7 @@ pub fn new<S, A, I, GE, RE, F1: FallibleIso<S, I>, F2: FallibleIso<I, A>>(
     getter_error_fn_2: fn(F2::GetterError) -> GE,
     reverse_error_fn_1: fn(F1::ReverseError) -> RE,
     reverse_error_fn_2: fn(F2::ReverseError) -> RE,
-) -> FallibleIsoImpl<S, A, ComposedFallibleIso<F1, F2, GE, RE, S, I, A>>
+) -> FallibleIsoImpl<S, A, impl FallibleIso<S, A, GetterError = GE, ReverseError = RE>>
 where
 {
     FallibleIsoImpl::new(ComposedFallibleIso::new(

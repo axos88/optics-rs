@@ -1,6 +1,8 @@
-use crate::HasGetter;
 use crate::HasSetter;
-use crate::lens::{Lens, LensImpl};
+use crate::lens::Lens;
+use crate::lens::wrapper::LensImpl;
+use crate::{HasGetter, HasPartialGetter};
+use core::convert::Infallible;
 use core::marker::PhantomData;
 
 /// A concrete implementation of the [`Lens`] trait.
@@ -25,7 +27,7 @@ use core::marker::PhantomData;
 /// - [`Prism`] — optional optic type for sum types
 /// - [`Optic`] — base trait that all optics implement
 ///
-pub struct MappedLens<S, A, GET = fn(&S) -> A, SET = fn(&mut S, A)>
+struct MappedLens<S, A, GET = fn(&S) -> A, SET = fn(&mut S, A)>
 where
     GET: Fn(&S) -> A,
     SET: Fn(&mut S, A),
@@ -94,6 +96,18 @@ where
     }
 }
 
+impl<S, A, GET, SET> HasPartialGetter<S, A> for MappedLens<S, A, GET, SET>
+where
+    GET: Fn(&S) -> A,
+    SET: Fn(&mut S, A),
+{
+    type GetterError = Infallible;
+
+    fn try_get(&self, source: &S) -> Result<A, Self::GetterError> {
+        Ok(self.get(source))
+    }
+}
+
 impl<S, A, GET, SET> HasGetter<S, A> for MappedLens<S, A, GET, SET>
 where
     GET: Fn(&S) -> A,
@@ -114,17 +128,10 @@ where
     }
 }
 
-impl<S, A, GET, SET> Lens<S, A> for MappedLens<S, A, GET, SET>
+pub fn new<S, A, GET, SET>(get_fn: GET, set_fn: SET) -> LensImpl<S, A, impl Lens<S, A>>
 where
     GET: Fn(&S) -> A,
     SET: Fn(&mut S, A),
 {
-}
-
-pub fn new<S, A, GET, SET>(get_fn: GET, set_fn: SET) -> LensImpl<S, A, MappedLens<S, A, GET, SET>>
-where
-    GET: Fn(&S) -> A,
-    SET: Fn(&mut S, A),
-{
-    LensImpl::new(MappedLens::new(get_fn, set_fn))
+    MappedLens::new(get_fn, set_fn).into()
 }

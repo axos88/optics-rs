@@ -1,4 +1,6 @@
-use crate::{Getter, GetterImpl, HasGetter};
+use crate::getter::wrapper::GetterImpl;
+use crate::{Getter, HasGetter, HasPartialGetter};
+use core::convert::Infallible;
 use core::marker::PhantomData;
 
 /// A concrete implementation of the [`Prism`] trait.
@@ -25,7 +27,7 @@ use core::marker::PhantomData;
 ///
 /// - [`Lens`] — a more restrictive optic type for focus values
 /// - [`Optic`] — base trait that all optics implement
-pub struct MappedGetter<S, A, GET = fn(&S) -> A>
+struct MappedGetter<S, A, GET = fn(&S) -> A>
 where
     GET: Fn(&S) -> A,
 {
@@ -82,7 +84,7 @@ where
     /// let `x_value` = `x_lens.get(&point)`; // retrieves 10 * 2 = 20
     /// `x_lens.set(&mut` point, 60); // sets x to 60 / 2 = 30
     // ```
-    pub(crate) fn new(get_fn: GET) -> Self {
+    fn new(get_fn: GET) -> Self {
         MappedGetter {
             get_fn,
             phantom: PhantomData,
@@ -99,11 +101,20 @@ where
     }
 }
 
-impl<S, A, GET> Getter<S, A> for MappedGetter<S, A, GET> where GET: Fn(&S) -> A {}
-
-pub fn new<S, A, GET>(get_fn: GET) -> GetterImpl<S, A, MappedGetter<S, A, GET>>
+impl<S, A, GET> HasPartialGetter<S, A> for MappedGetter<S, A, GET>
 where
     GET: Fn(&S) -> A,
 {
-    GetterImpl::new(MappedGetter::new(get_fn))
+    type GetterError = Infallible;
+
+    fn try_get(&self, source: &S) -> Result<A, Self::GetterError> {
+        Ok(self.get(source))
+    }
+}
+
+pub fn new<S, A, GET>(get_fn: GET) -> GetterImpl<S, A, impl Getter<S, A>>
+where
+    GET: Fn(&S) -> A,
+{
+    MappedGetter::new(get_fn).into()
 }

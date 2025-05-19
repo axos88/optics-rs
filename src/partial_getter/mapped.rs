@@ -1,4 +1,5 @@
-use crate::{HasPartialGetter, PartialGetter, PartialGetterImpl};
+use crate::partial_getter::wrapper::PartialGetterImpl;
+use crate::{HasPartialGetter, PartialGetter};
 use core::marker::PhantomData;
 
 /// A concrete implementation of the [`PartialGetter`] trait.
@@ -25,7 +26,7 @@ use core::marker::PhantomData;
 ///
 /// - [`Lens`] — a more restrictive optic type for focus values
 /// - [`Optic`] — base trait that all optics implement
-pub struct MappedPartialGetter<S, A, E, GET = fn(&S) -> Result<A, E>>
+struct MappedPartialGetter<S, A, E, GET = fn(&S) -> Result<A, E>>
 where
     GET: Fn(&S) -> Result<A, E>,
 {
@@ -82,7 +83,7 @@ where
     /// let `x_value` = `x_lens.get(&point)`; // retrieves 10 * 2 = 20
     /// `x_lens.set(&mut` point, 60); // sets x to 60 / 2 = 30
     // ```
-    pub(crate) fn new(get_fn: GET) -> Self {
+    fn new(get_fn: GET) -> Self {
         MappedPartialGetter {
             get_fn,
             phantom: PhantomData,
@@ -101,16 +102,11 @@ where
     }
 }
 
-impl<S, A, E, GET> PartialGetter<S, A> for MappedPartialGetter<S, A, E, GET> where
-    GET: Fn(&S) -> Result<A, E>
-{
-}
-
 pub fn new<S, A, E, GET>(
     get_fn: GET,
-) -> PartialGetterImpl<S, A, MappedPartialGetter<S, A, E, GET>>
+) -> PartialGetterImpl<S, A, impl PartialGetter<S, A, GetterError = E>>
 where
     GET: Fn(&S) -> Result<A, E>,
 {
-    PartialGetterImpl::new(MappedPartialGetter::new(get_fn))
+    MappedPartialGetter::new(get_fn).into()
 }

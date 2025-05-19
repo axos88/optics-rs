@@ -12,7 +12,7 @@
 ///
 /// # Notes
 /// - Currently, you will likely need to Clone or Copy the result in order to extract it from the source.
-/// 
+///
 /// # Implementors
 ///
 /// Types that implement `HasPartialGetter` can be used to define optics that allow for

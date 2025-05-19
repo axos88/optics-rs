@@ -1,5 +1,7 @@
-use crate::iso::{Iso, IsoImpl};
-use crate::{HasGetter, HasReversible, HasSetter};
+use crate::iso::Iso;
+use crate::iso::wrapper::IsoImpl;
+use crate::{HasGetter, HasPartialGetter, HasPartialReversible, HasReversible, HasSetter};
+use core::convert::Infallible;
 use core::marker::PhantomData;
 
 /// A concrete implementation of a [`Iso`] between types `S` and `A`.
@@ -26,7 +28,7 @@ use core::marker::PhantomData;
 /// # See Also
 /// - [`Iso`] — The trait implemented by this struct.
 /// - [`Prism`] — The equivalent for partial optics.
-pub struct MappedIso<S, A, GET = fn(&S) -> A, REV = fn(&A) -> S>
+struct MappedIso<S, A, GET = fn(&S) -> A, REV = fn(&A) -> S>
 where
     GET: Fn(&S) -> A,
     REV: Fn(&A) -> S,
@@ -66,7 +68,7 @@ where
     ///   |i| if *i > 0 { `Ok(i.to_string())` } else { `Err("Negative".to_string())` },
     ///   |s| `s.parse::`<i32>().`map_err(|e`| `e.to_string()`)
     /// );
-    /// ```
+    // ```
     ///
     /// # Capturing Closures
     ///
@@ -113,6 +115,18 @@ where
     }
 }
 
+impl<S, A, GET, REV> HasPartialGetter<S, A> for MappedIso<S, A, GET, REV>
+where
+    GET: Fn(&S) -> A,
+    REV: Fn(&A) -> S,
+{
+    type GetterError = Infallible;
+
+    fn try_get(&self, source: &S) -> Result<A, Self::GetterError> {
+        Ok(self.get(source))
+    }
+}
+
 impl<S, A, GET, REV> HasSetter<S, A> for MappedIso<S, A, GET, REV>
 where
     GET: Fn(&S) -> A,
@@ -120,6 +134,18 @@ where
 {
     fn set(&self, source: &mut S, value: A) {
         *source = self.reverse_get(&value);
+    }
+}
+
+impl<S, A, GET, REV> HasPartialReversible<S, A> for MappedIso<S, A, GET, REV>
+where
+    GET: Fn(&S) -> A,
+    REV: Fn(&A) -> S,
+{
+    type ReverseError = Infallible;
+
+    fn try_reverse_get(&self, value: &A) -> Result<S, Self::ReverseError> {
+        Ok(self.reverse_get(value))
     }
 }
 
@@ -133,17 +159,10 @@ where
     }
 }
 
-impl<S, A, GET, REV> Iso<S, A> for MappedIso<S, A, GET, REV>
+pub fn new<S, A, GET, REV>(get_fn: GET, rev_fn: REV) -> IsoImpl<S, A, impl Iso<S, A>>
 where
     GET: Fn(&S) -> A,
     REV: Fn(&A) -> S,
 {
-}
-
-pub fn new<S, A, GET, REV>(get_fn: GET, rev_fn: REV) -> IsoImpl<S, A, MappedIso<S, A, GET, REV>>
-where
-    GET: Fn(&S) -> A,
-    REV: Fn(&A) -> S,
-{
-    IsoImpl::new(MappedIso::new(get_fn, rev_fn))
+    MappedIso::new(get_fn, rev_fn).into()
 }
