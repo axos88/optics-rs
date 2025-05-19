@@ -1,47 +1,48 @@
 use crate::{
-    FallibleIso, HasGetter, HasReverseGet, HasSetter, Iso, IsoImpl, Lens, LensImpl,
-    Prism, PrismImpl, composed_fallible_iso, composed_prism, infallible,
+    FallibleIso, HasGetter, HasReverseGet, HasSetter, Iso, IsoImpl, Lens, LensImpl, Prism,
+    PrismImpl, composed_fallible_iso, composed_prism, infallible,
 };
 use core::convert::identity;
 use core::marker::PhantomData;
 
-pub struct FallibleIsoImpl<S, A, F: FallibleIso<S, A>>(pub F, PhantomData<(S, A)>);
+pub struct FallibleIsoImpl<S, A, FI: FallibleIso<S, A>>(pub FI, PhantomData<(S, A)>);
 
-impl<S, A, F: FallibleIso<S, A>> FallibleIsoImpl<S, A, F> {
-    pub fn new(l: F) -> Self {
+impl<S, A, FI: FallibleIso<S, A>> FallibleIsoImpl<S, A, FI> {
+    pub fn new(l: FI) -> Self {
+        //TODO: Verify not to nest an Impl inside an Impl - currently seems to be impossible at compile time.
         FallibleIsoImpl(l, PhantomData)
     }
 }
 
-impl<S, A, F: FallibleIso<S, A>> HasGetter<S, A> for FallibleIsoImpl<S, A, F> {
-    type GetterError = F::GetterError;
+impl<S, A, FI: FallibleIso<S, A>> HasGetter<S, A> for FallibleIsoImpl<S, A, FI> {
+    type GetterError = FI::GetterError;
 
     fn try_get(&self, source: &S) -> Result<A, Self::GetterError> {
         self.0.try_get(source)
     }
 }
 
-impl<S, A, F: FallibleIso<S, A>> HasSetter<S, A> for FallibleIsoImpl<S, A, F> {
+impl<S, A, FI: FallibleIso<S, A>> HasSetter<S, A> for FallibleIsoImpl<S, A, FI> {
     fn set(&self, source: &mut S, value: A) {
         self.0.set(source, value);
     }
 }
 
-impl<S, A, F: FallibleIso<S, A>> HasReverseGet<S, A> for FallibleIsoImpl<S, A, F> {
-    type ReverseError = F::ReverseError;
+impl<S, A, FI: FallibleIso<S, A>> HasReverseGet<S, A> for FallibleIsoImpl<S, A, FI> {
+    type ReverseError = FI::ReverseError;
 
     fn try_reverse_get(&self, value: &A) -> Result<S, Self::ReverseError> {
         self.0.try_reverse_get(value)
     }
 }
 
-impl<S, I, F1: FallibleIso<S, I>> FallibleIsoImpl<S, I, F1> {
+impl<S, I, FI1: FallibleIso<S, I>> FallibleIsoImpl<S, I, FI1> {
     pub fn compose_with_prism<E, A, P2: Prism<I, A>>(
         self,
         other: P2,
     ) -> PrismImpl<S, A, impl Prism<S, A, GetterError = E>>
     where
-        E: From<F1::GetterError> + From<P2::GetterError>,
+        E: From<FI1::GetterError> + From<P2::GetterError>,
     {
         composed_prism(self, other, Into::into, Into::into)
     }
@@ -49,7 +50,7 @@ impl<S, I, F1: FallibleIso<S, I>> FallibleIsoImpl<S, I, F1> {
     pub fn compose_with_prism_with_mappers<E, A, P2: Prism<I, A>>(
         self,
         other: P2,
-        error_mapper_1: fn(F1::GetterError) -> E,
+        error_mapper_1: fn(FI1::GetterError) -> E,
         error_mapper_2: fn(P2::GetterError) -> E,
     ) -> PrismImpl<S, A, impl Prism<S, A, GetterError = E>> {
         composed_prism(self, other, error_mapper_1, error_mapper_2)
@@ -58,28 +59,28 @@ impl<S, I, F1: FallibleIso<S, I>> FallibleIsoImpl<S, I, F1> {
     pub fn compose_with_lens<A, L2: Lens<I, A>>(
         self,
         other: LensImpl<I, A, L2>,
-    ) -> PrismImpl<S, A, impl Prism<S, A, GetterError = F1::GetterError>> {
+    ) -> PrismImpl<S, A, impl Prism<S, A, GetterError = FI1::GetterError>> {
         composed_prism(self, other, identity, infallible)
     }
 
-    pub fn compose_with_fallible_iso<GE, RE, A, F2: FallibleIso<I, A>>(
+    pub fn compose_with_fallible_iso<GE, RE, A, FI2: FallibleIso<I, A>>(
         self,
-        other: F2,
+        other: FI2,
     ) -> FallibleIsoImpl<S, A, impl FallibleIso<S, A, GetterError = GE, ReverseError = RE>>
     where
-        GE: From<F1::GetterError> + From<F2::GetterError>,
-        RE: From<F1::ReverseError> + From<F2::ReverseError>,
+        GE: From<FI1::GetterError> + From<FI2::GetterError>,
+        RE: From<FI1::ReverseError> + From<FI2::ReverseError>,
     {
         composed_fallible_iso(self, other, Into::into, Into::into, Into::into, Into::into)
     }
 
-    pub fn compose_with_fallible_iso_with_mappers<GE, RE, A, F2: FallibleIso<I, A>>(
+    pub fn compose_with_fallible_iso_with_mappers<GE, RE, A, FI2: FallibleIso<I, A>>(
         self,
-        other: F2,
-        getter_error_mapper_1: fn(F1::GetterError) -> GE,
-        getter_error_mapper_2: fn(F2::GetterError) -> GE,
-        reverse_error_mapper_1: fn(F1::ReverseError) -> RE,
-        reverse_error_mapper_2: fn(F2::ReverseError) -> RE,
+        other: FI2,
+        getter_error_mapper_1: fn(FI1::GetterError) -> GE,
+        getter_error_mapper_2: fn(FI2::GetterError) -> GE,
+        reverse_error_mapper_1: fn(FI1::ReverseError) -> RE,
+        reverse_error_mapper_2: fn(FI2::ReverseError) -> RE,
     ) -> FallibleIsoImpl<S, A, impl FallibleIso<S, A, GetterError = GE, ReverseError = RE>> {
         composed_fallible_iso(
             self,

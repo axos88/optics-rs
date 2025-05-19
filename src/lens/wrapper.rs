@@ -1,6 +1,6 @@
 use crate::{
-    FallibleIso, FallibleIsoImpl, HasTotalGetter, HasGetter, HasSetter, Iso, IsoImpl, Lens,
-    Prism, PrismImpl, composed_lens, composed_prism, infallible,
+    FallibleIso, FallibleIsoImpl, HasGetter, HasSetter, HasTotalGetter, Iso, IsoImpl, Lens, Prism,
+    PrismImpl, composed_lens, composed_prism, infallible,
 };
 use core::convert::{Infallible, identity};
 use core::marker::PhantomData;
@@ -9,6 +9,7 @@ pub struct LensImpl<S, A, L: Lens<S, A>>(pub L, PhantomData<(S, A)>);
 
 impl<S, A, L: Lens<S, A>> LensImpl<S, A, L> {
     fn new(l: L) -> Self {
+        //TODO: Verify not to nest an Impl inside an Impl - currently seems to be impossible at compile time.
         LensImpl(l, PhantomData)
     }
 }
@@ -48,10 +49,10 @@ impl<S, I, L: Lens<S, I>> LensImpl<S, I, L> {
         composed_prism(self.0, other.0, infallible, identity)
     }
 
-    pub fn compose_with_fallible_iso<A, F2: FallibleIso<I, A>>(
+    pub fn compose_with_fallible_iso<A, FI2: FallibleIso<I, A>>(
         self,
-        other: FallibleIsoImpl<I, A, F2>,
-    ) -> PrismImpl<S, A, impl Prism<S, A, GetterError = F2::GetterError>> {
+        other: FallibleIsoImpl<I, A, FI2>,
+    ) -> PrismImpl<S, A, impl Prism<S, A, GetterError = FI2::GetterError>> {
         composed_prism(self, other, infallible, identity)
     }
 

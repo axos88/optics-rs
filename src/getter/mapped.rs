@@ -1,5 +1,5 @@
 use crate::getter::wrapper::GetterImpl;
-use crate::{Getter, HasTotalGetter, HasGetter};
+use crate::{Getter, HasGetter, HasTotalGetter};
 use core::convert::Infallible;
 use core::marker::PhantomData;
 
@@ -103,7 +103,8 @@ where
     }
 }
 
-#[must_use] pub fn new<S, A, GET>(get_fn: GET) -> GetterImpl<S, A, impl Getter<S, A>>
+#[must_use]
+pub fn new<S, A, GET>(get_fn: GET) -> GetterImpl<S, A, impl Getter<S, A>>
 where
     GET: Fn(&S) -> A,
 {

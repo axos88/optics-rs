@@ -1,6 +1,6 @@
 use crate::iso::Iso;
 use crate::iso::wrapper::IsoImpl;
-use crate::{mapped_iso, HasTotalGetter, HasGetter, HasReverseGet, HasTotalReverseGet, HasSetter};
+use crate::{HasGetter, HasReverseGet, HasSetter, HasTotalGetter, HasTotalReverseGet};
 use core::convert::Infallible;
 use core::marker::PhantomData;
 
@@ -27,22 +27,22 @@ use core::marker::PhantomData;
 /// - [`Iso`] — the core optic type that the `ComposedIso` is based on
 /// - [`Prism`] — the optic type that `ComposedIso` also acts as
 /// - [`Optic`] — the base trait that all optic types implement
-struct ComposedIso<O1, O2, S, I, A>
+struct ComposedIso<ISO1, ISO2, S, I, A>
 where
-    O1: Iso<S, I>,
-    O2: Iso<I, A>,
+    ISO1: Iso<S, I>,
+    ISO2: Iso<I, A>,
 {
-    optic1: O1,
-    optic2: O2,
+    optic1: ISO1,
+    optic2: ISO2,
     _phantom: PhantomData<(S, I, A)>,
 }
 
-impl<O1, O2, S, I, A> ComposedIso<O1, O2, S, I, A>
+impl<ISO1, ISO2, S, I, A> ComposedIso<ISO1, ISO2, S, I, A>
 where
-    O1: Iso<S, I>,
-    O2: Iso<I, A>,
+    ISO1: Iso<S, I>,
+    ISO2: Iso<I, A>,
 {
-    pub(crate) fn new(optic1: O1, optic2: O2) -> Self where {
+    pub(crate) fn new(optic1: ISO1, optic2: ISO2) -> Self where {
         ComposedIso {
             optic1,
             optic2,
@@ -51,10 +51,10 @@ where
     }
 }
 
-impl<O1, O2, S, I, A> HasGetter<S, A> for ComposedIso<O1, O2, S, I, A>
+impl<ISO1, ISO2, S, I, A> HasGetter<S, A> for ComposedIso<ISO1, ISO2, S, I, A>
 where
-    O1: Iso<S, I>,
-    O2: Iso<I, A>,
+    ISO1: Iso<S, I>,
+    ISO2: Iso<I, A>,
 {
     type GetterError = Infallible;
 
@@ -64,10 +64,10 @@ where
     }
 }
 
-impl<O1, O2, S, I, A> HasSetter<S, A> for ComposedIso<O1, O2, S, I, A>
+impl<ISO1, ISO2, S, I, A> HasSetter<S, A> for ComposedIso<ISO1, ISO2, S, I, A>
 where
-    O1: Iso<S, I>,
-    O2: Iso<I, A>,
+    ISO1: Iso<S, I>,
+    ISO2: Iso<I, A>,
 {
     fn set(&self, source: &mut S, value: A) {
         let mut i = self.optic1.get(source);
@@ -76,10 +76,10 @@ where
     }
 }
 
-impl<O1, O2, S, I, A> HasReverseGet<S, A> for ComposedIso<O1, O2, S, I, A>
+impl<ISO1, ISO2, S, I, A> HasReverseGet<S, A> for ComposedIso<ISO1, ISO2, S, I, A>
 where
-    O1: Iso<S, I>,
-    O2: Iso<I, A>,
+    ISO1: Iso<S, I>,
+    ISO2: Iso<I, A>,
 {
     type ReverseError = Infallible;
 
@@ -88,7 +88,11 @@ where
     }
 }
 
-#[must_use] pub fn new<S, A, I, F1: Iso<S, I>, F2: Iso<I, A>>(f1: F1, f2: F2) -> IsoImpl<S, A, impl Iso<S, A>>
+#[must_use]
+pub fn new<S, A, I, ISO1: Iso<S, I>, ISO2: Iso<I, A>>(
+    f1: ISO1,
+    f2: ISO2,
+) -> IsoImpl<S, A, impl Iso<S, A>>
 where
 {
     ComposedIso::new(f1, f2).into()

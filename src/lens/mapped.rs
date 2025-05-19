@@ -1,7 +1,7 @@
 use crate::HasSetter;
 use crate::lens::Lens;
 use crate::lens::wrapper::LensImpl;
-use crate::{HasTotalGetter, HasGetter};
+use crate::HasGetter;
 use core::convert::Infallible;
 use core::marker::PhantomData;
 
@@ -118,7 +118,8 @@ where
     }
 }
 
-#[must_use] pub fn new<S, A, GET, SET>(get_fn: GET, set_fn: SET) -> LensImpl<S, A, impl Lens<S, A>>
+#[must_use]
+pub fn new<S, A, GET, SET>(get_fn: GET, set_fn: SET) -> LensImpl<S, A, impl Lens<S, A>>
 where
     GET: Fn(&S) -> A,
     SET: Fn(&mut S, A),

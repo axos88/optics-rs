@@ -134,8 +134,7 @@ where
     }
 }
 
-impl<S, A, GE, RE, GET, REV> HasReverseGet<S, A>
-    for MappedFallibleIso<S, A, GE, RE, GET, REV>
+impl<S, A, GE, RE, GET, REV> HasReverseGet<S, A> for MappedFallibleIso<S, A, GE, RE, GET, REV>
 where
     GET: Fn(&S) -> Result<A, GE>,
     REV: Fn(&A) -> Result<S, RE>,
@@ -147,7 +146,8 @@ where
     }
 }
 
-#[must_use] pub fn new<S, A, GE, RE, GET, REV>(
+#[must_use]
+pub fn new<S, A, GE, RE, GET, REV>(
     get_fn: GET,
     rev_fn: REV,
 ) -> FallibleIsoImpl<S, A, MappedFallibleIso<S, A, GE, RE, GET, REV>>

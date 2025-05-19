@@ -1,5 +1,5 @@
+use crate::HasReverseGet;
 use core::convert::Infallible;
-use crate::{HasReverseGet};
 
 /// A base trait for optics that provides a total reversible operation.
 ///
@@ -40,11 +40,13 @@ pub trait HasTotalReverseGet<S, A> {
     fn reverse_get(&self, value: &A) -> S;
 }
 
-impl<S, A, T> HasTotalReverseGet<S, A> for T where T: HasReverseGet<S, A, ReverseError = Infallible>
+impl<S, A, T> HasTotalReverseGet<S, A> for T
+where
+    T: HasReverseGet<S, A, ReverseError = Infallible>,
 {
     fn reverse_get(&self, value: &A) -> S {
         match self.try_reverse_get(value) {
-            Ok(s) => s
+            Ok(s) => s,
         }
     }
 }

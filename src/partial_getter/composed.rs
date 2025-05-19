@@ -2,7 +2,49 @@ use crate::partial_getter::wrapper::PartialGetterImpl;
 use crate::{HasGetter, PartialGetter};
 use core::marker::PhantomData;
 
-/// A composed `PartialGetter` type, combining two optics into a single prism.
+struct ComposedPartialGetter<PG1: PartialGetter<S, I>, PG2: PartialGetter<I, A>, E, S, I, A> {
+    optic1: PG1,
+    optic2: PG2,
+    error_fn_1: fn(PG1::GetterError) -> E,
+    error_fn_2: fn(PG2::GetterError) -> E,
+    _phantom: PhantomData<(S, I, A, E)>,
+}
+
+impl<PG1, PG2, E, S, I, A> ComposedPartialGetter<PG1, PG2, E, S, I, A>
+where
+    PG1: PartialGetter<S, I>,
+    PG2: PartialGetter<I, A>,
+{
+    pub(crate) fn new(
+        optic1: PG1,
+        optic2: PG2,
+        error_fn_1: fn(PG1::GetterError) -> E,
+        error_fn_2: fn(PG2::GetterError) -> E,
+    ) -> Self {
+        ComposedPartialGetter {
+            optic1,
+            optic2,
+            error_fn_1,
+            error_fn_2,
+            _phantom: PhantomData,
+        }
+    }
+}
+
+impl<PG1, PG2, E, S, I, A> HasGetter<S, A> for ComposedPartialGetter<PG1, PG2, E, S, I, A>
+where
+    PG1: PartialGetter<S, I>,
+    PG2: PartialGetter<I, A>,
+{
+    type GetterError = E;
+
+    fn try_get(&self, source: &S) -> Result<A, Self::GetterError> {
+        let i = self.optic1.try_get(source).map_err(self.error_fn_1)?;
+        self.optic2.try_get(&i).map_err(self.error_fn_2)
+    }
+}
+
+/// Returns a `PartialGetter` combined from two optics applied one after another.
 ///
 /// This struct is automatically created by composing two existing optics, and is **not** intended
 /// to be directly constructed outside the crate. Instead, it is generated through composition of
@@ -27,53 +69,13 @@ use core::marker::PhantomData;
 /// - [`crate::composers::ComposablePartialGetter`] — a trait for composing [`PartialGetter`] optics another [`Optic`]
 /// - [`crate::composers::ComposableIso`] — a trait for composing [`Iso`] optics into another [`Optic`]
 /// - [`crate::composers::ComposableFallibleIso`] — a trait for composing [`FallibleIso`] optics into another [`Optic`]
-struct ComposedPartialGetter<O1: PartialGetter<S, I>, O2: PartialGetter<I, A>, E, S, I, A> {
-    optic1: O1,
-    optic2: O2,
-    error_fn_1: fn(O1::GetterError) -> E,
-    error_fn_2: fn(O2::GetterError) -> E,
-    _phantom: PhantomData<(S, I, A, E)>,
-}
 
-impl<O1, O2, E, S, I, A> ComposedPartialGetter<O1, O2, E, S, I, A>
-where
-    O1: PartialGetter<S, I>,
-    O2: PartialGetter<I, A>,
-{
-    pub(crate) fn new(
-        optic1: O1,
-        optic2: O2,
-        error_fn_1: fn(O1::GetterError) -> E,
-        error_fn_2: fn(O2::GetterError) -> E,
-    ) -> Self {
-        ComposedPartialGetter {
-            optic1,
-            optic2,
-            error_fn_1,
-            error_fn_2,
-            _phantom: PhantomData,
-        }
-    }
-}
-
-impl<O1, O2, E, S, I, A> HasGetter<S, A> for ComposedPartialGetter<O1, O2, E, S, I, A>
-where
-    O1: PartialGetter<S, I>,
-    O2: PartialGetter<I, A>,
-{
-    type GetterError = E;
-
-    fn try_get(&self, source: &S) -> Result<A, Self::GetterError> {
-        let i = self.optic1.try_get(source).map_err(self.error_fn_1)?;
-        self.optic2.try_get(&i).map_err(self.error_fn_2)
-    }
-}
-
-#[must_use] pub fn new<S, A, I, E, L1: PartialGetter<S, I>, L2: PartialGetter<I, A>>(
-    l1: L1,
-    l2: L2,
-    error_fn_1: fn(L1::GetterError) -> E,
-    error_fn_2: fn(L2::GetterError) -> E,
+#[must_use]
+pub fn new<S, A, I, E, PG1: PartialGetter<S, I>, PG2: PartialGetter<I, A>>(
+    l1: PG1,
+    l2: PG2,
+    error_fn_1: fn(PG1::GetterError) -> E,
+    error_fn_2: fn(PG2::GetterError) -> E,
 ) -> PartialGetterImpl<S, A, impl PartialGetter<S, A, GetterError = E>> {
     ComposedPartialGetter::new(l1, l2, error_fn_1, error_fn_2).into()
 }

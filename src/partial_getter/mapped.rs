@@ -102,7 +102,8 @@ where
     }
 }
 
-#[must_use] pub fn new<S, A, E, GET>(
+#[must_use]
+pub fn new<S, A, E, GET>(
     get_fn: GET,
 ) -> PartialGetterImpl<S, A, impl PartialGetter<S, A, GetterError = E>>
 where

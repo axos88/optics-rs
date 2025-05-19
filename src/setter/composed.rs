@@ -1,7 +1,40 @@
-use crate::HasSetter;
 use crate::setter::wrapper::SetterImpl;
-use crate::{PartialGetter, Setter};
+use crate::{HasSetter, Prism};
+use crate::{Setter};
 use core::marker::PhantomData;
+
+struct ComposedSetter<SETTER1: Setter<S, I>, SETTER2: Setter<I, A>, S, I, A> {
+    optic1: SETTER1,
+    optic2: SETTER2,
+    _phantom: PhantomData<(S, I, A)>,
+}
+
+impl<SETTER1, SETTER2, S, I, A> ComposedSetter<SETTER1, SETTER2, S, I, A>
+where
+    SETTER1: Setter<S, I>,
+    SETTER2: Setter<I, A>,
+{
+    pub(self) fn new(optic1: SETTER1, optic2: SETTER2) -> Self {
+        ComposedSetter {
+            optic1,
+            optic2,
+            _phantom: PhantomData,
+        }
+    }
+}
+
+impl<S, I, A, P, SETTER2> HasSetter<S, A> for ComposedSetter<P, SETTER2, S, I, A>
+where
+    P: Prism<S, I>,
+    SETTER2: Setter<I, A>,
+{
+    fn set(&self, source: &mut S, value: A) {
+        if let Ok(mut i) = self.optic1.try_get(source) {
+            self.optic2.set(&mut i, value);
+            self.optic1.set(source, i);
+        }
+    }
+}
 
 /// A composed `Setter` type, combining two optics into a single `Setter`.
 ///
@@ -30,42 +63,10 @@ use core::marker::PhantomData;
 /// - [`crate::composers::ComposablePrism`] — a trait for composing [`Prism`] optics another [`Optic`]
 /// - [`crate::composers::ComposableIso`] — a trait for composing [`Iso`] optics into another [`Optic`]
 /// - [`crate::composers::ComposableFallibleIso`] — a trait for composing [`FallibleIso`] optics into another [`Optic`]
-struct ComposedSetter<O1: Setter<S, I>, O2: Setter<I, A>, S, I, A> {
-    optic1: O1,
-    optic2: O2,
-    _phantom: PhantomData<(S, I, A)>,
-}
-
-impl<O1, O2, S, I, A> ComposedSetter<O1, O2, S, I, A>
-where
-    O1: Setter<S, I>,
-    O2: Setter<I, A>,
-{
-    pub(self) fn new(optic1: O1, optic2: O2) -> Self {
-        ComposedSetter {
-            optic1,
-            optic2,
-            _phantom: PhantomData,
-        }
-    }
-}
-
-impl<S, I, A, O1, O2> HasSetter<S, A> for ComposedSetter<O1, O2, S, I, A>
-where
-    O1: PartialGetter<S, I> + Setter<S, I>,
-    O2: Setter<I, A>,
-{
-    fn set(&self, source: &mut S, value: A) {
-        if let Ok(mut i) = self.optic1.try_get(source) {
-            self.optic2.set(&mut i, value);
-            self.optic1.set(source, i);
-        }
-    }
-}
-
-#[must_use] pub fn new<S, A, I, L1: PartialGetter<S, I> + Setter<S, I>, L2: Setter<I, A>>(
-    l1: L1,
-    l2: L2,
+#[must_use]
+pub fn new<S, A, I, P1: Prism<S, I>, SETTER2: Setter<I, A>>(
+    l1: P1,
+    l2: SETTER2,
 ) -> SetterImpl<S, A, impl Setter<S, A>> {
     ComposedSetter::new(l1, l2).into()
 }

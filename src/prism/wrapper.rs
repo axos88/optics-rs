@@ -64,6 +64,7 @@ impl<S, A, P: Prism<S, A>> PrismImpl<S, A, P> {
     ///
     /// Generally only used directly when prism implementations are created outside the crate
     fn new(prism: P) -> Self {
+        //TODO: Verify not to nest an Impl inside an Impl - currently seems to be impossible at compile time.
         PrismImpl(prism, PhantomData)
     }
 }
@@ -222,12 +223,12 @@ impl<S, I, P1: Prism<S, I>> PrismImpl<S, I, P1> {
     /// This method uses `Into::into` to convert the errors from both prisms into the
     /// common error type `E`. If you need custom error mapping, consider using
     /// [`compose_with_fallible_iso_with_mappers`](Self::compose_with_fallible_iso_with_mappers).
-    pub fn compose_with_fallible_iso<E, A, F2: FallibleIso<I, A>>(
+    pub fn compose_with_fallible_iso<E, A, FI2: FallibleIso<I, A>>(
         self,
-        other: FallibleIsoImpl<I, A, F2>,
+        other: FallibleIsoImpl<I, A, FI2>,
     ) -> PrismImpl<S, A, impl Prism<S, A, GetterError = E>>
     where
-        F2::GetterError: Into<E>,
+        FI2::GetterError: Into<E>,
         P1::GetterError: Into<E>,
     {
         composed_prism(self, other, Into::into, Into::into)
@@ -261,11 +262,11 @@ impl<S, I, P1: Prism<S, I>> PrismImpl<S, I, P1> {
     /// This method is similar to [`compose_with_fallible_iso`](Self::compose_with_fallible_iso), but
     /// provides the ability to specify custom functions to map the errors from each
     /// prism into a common error type.
-    pub fn compose_with_fallible_iso_with_mappers<E, A, F2: FallibleIso<I, A>>(
+    pub fn compose_with_fallible_iso_with_mappers<E, A, FI2: FallibleIso<I, A>>(
         self,
-        other: FallibleIsoImpl<I, A, F2>,
+        other: FallibleIsoImpl<I, A, FI2>,
         getter_error_mapper_1: fn(P1::GetterError) -> E,
-        getter_error_mapper_2: fn(F2::GetterError) -> E,
+        getter_error_mapper_2: fn(FI2::GetterError) -> E,
     ) -> PrismImpl<S, A, impl Prism<S, A, GetterError = E>> {
         composed_prism(self, other, getter_error_mapper_1, getter_error_mapper_2)
     }

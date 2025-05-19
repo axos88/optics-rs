@@ -1,6 +1,6 @@
 use crate::{
-    FallibleIso, FallibleIsoImpl, HasTotalGetter, HasGetter, HasReverseGet, HasTotalReverseGet,
-    HasSetter, Iso, Lens, LensImpl, Prism, PrismImpl, composed_fallible_iso, composed_iso,
+    FallibleIso, FallibleIsoImpl, HasGetter, HasReverseGet, HasSetter, HasTotalGetter,
+    HasTotalReverseGet, Iso, Lens, LensImpl, Prism, PrismImpl, composed_fallible_iso, composed_iso,
     composed_lens, composed_prism, infallible,
 };
 use core::convert::{Infallible, identity};
@@ -10,6 +10,7 @@ pub struct IsoImpl<S, A, ISO: Iso<S, A>>(pub ISO, PhantomData<(S, A)>);
 
 impl<S, A, ISO: Iso<S, A>> IsoImpl<S, A, ISO> {
     fn new(i: ISO) -> Self {
+        //TODO: Verify not to nest an Impl inside an Impl - currently seems to be impossible at compile time.
         IsoImpl(i, PhantomData)
     }
 }
@@ -57,13 +58,13 @@ impl<S, I, ISO1: Iso<S, I>> IsoImpl<S, I, ISO1> {
         composed_prism(self, other, infallible, identity)
     }
 
-    pub fn compose_with_fallible_iso<A, F2: FallibleIso<I, A>>(
+    pub fn compose_with_fallible_iso<A, FI2: FallibleIso<I, A>>(
         self,
-        other: FallibleIsoImpl<I, A, F2>,
+        other: FallibleIsoImpl<I, A, FI2>,
     ) -> FallibleIsoImpl<
         S,
         A,
-        impl FallibleIso<S, A, GetterError = F2::GetterError, ReverseError = F2::ReverseError>,
+        impl FallibleIso<S, A, GetterError = FI2::GetterError, ReverseError = FI2::ReverseError>,
     > {
         composed_fallible_iso(self, other, infallible, identity, infallible, identity)
     }

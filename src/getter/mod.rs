@@ -2,7 +2,7 @@ mod composed;
 mod mapped;
 mod wrapper;
 
-use crate::{HasGetter};
+use crate::HasGetter;
 pub use composed::new as composed_getter;
 use core::convert::Infallible;
 pub use mapped::new as mapped_getter;
@@ -38,11 +38,9 @@ pub use wrapper::GetterImpl;
 /// - [`NoFocus`] — the current error type returned by `Getter::preview` on failure
 pub trait Getter<S, A>: HasGetter<S, A, GetterError = Infallible> {}
 
-impl<S, A, G: HasGetter<S, A, GetterError = Infallible>> Getter<S, A>
-    for G
-{
-}
+impl<S, A, G: HasGetter<S, A, GetterError = Infallible>> Getter<S, A> for G {}
 
-#[must_use] pub fn identity_getter<S: Clone>() -> GetterImpl<S, S, impl Getter<S, S>> {
+#[must_use]
+pub fn identity_getter<S: Clone>() -> GetterImpl<S, S, impl Getter<S, S>> {
     mapped_getter(|x: &S| x.clone())
 }

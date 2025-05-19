@@ -28,24 +28,24 @@ use core::marker::PhantomData;
 /// - `optic2`: The second optic instance.
 /// - `error_fn_1`: A function to map `O1`'s getter error to the unified error type `E`.
 /// - `error_fn_2`: A function to map `O2`'s getter error to the unified error type `E`.
-struct ComposedPrism<O1: Prism<S, I>, O2: Prism<I, A>, E, S, I, A> {
-    optic1: O1,
-    optic2: O2,
-    error_fn_1: fn(O1::GetterError) -> E,
-    error_fn_2: fn(O2::GetterError) -> E,
+struct ComposedPrism<P1: Prism<S, I>, P2: Prism<I, A>, E, S, I, A> {
+    optic1: P1,
+    optic2: P2,
+    error_fn_1: fn(P1::GetterError) -> E,
+    error_fn_2: fn(P2::GetterError) -> E,
     _phantom: PhantomData<(S, I, A, E)>,
 }
 
-impl<O1, O2, E, S, I, A> ComposedPrism<O1, O2, E, S, I, A>
+impl<P1, P2, E, S, I, A> ComposedPrism<P1, P2, E, S, I, A>
 where
-    O1: Prism<S, I>,
-    O2: Prism<I, A>,
+    P1: Prism<S, I>,
+    P2: Prism<I, A>,
 {
     fn new(
-        optic1: O1,
-        optic2: O2,
-        error_fn_1: fn(O1::GetterError) -> E,
-        error_fn_2: fn(O2::GetterError) -> E,
+        optic1: P1,
+        optic2: P2,
+        error_fn_1: fn(P1::GetterError) -> E,
+        error_fn_2: fn(P2::GetterError) -> E,
     ) -> Self {
         ComposedPrism {
             optic1,
@@ -57,10 +57,10 @@ where
     }
 }
 
-impl<O1, O2, E, S, I, A> HasGetter<S, A> for ComposedPrism<O1, O2, E, S, I, A>
+impl<P1, P2, E, S, I, A> HasGetter<S, A> for ComposedPrism<P1, P2, E, S, I, A>
 where
-    O1: Prism<S, I>,
-    O2: Prism<I, A>,
+    P1: Prism<S, I>,
+    P2: Prism<I, A>,
 {
     type GetterError = E;
 
@@ -70,10 +70,10 @@ where
     }
 }
 
-impl<O1, O2, E, S, I, A> HasSetter<S, A> for ComposedPrism<O1, O2, E, S, I, A>
+impl<P1, P2, E, S, I, A> HasSetter<S, A> for ComposedPrism<P1, P2, E, S, I, A>
 where
-    O1: Prism<S, I>,
-    O2: Prism<I, A>,
+    P1: Prism<S, I>,
+    P2: Prism<I, A>,
 {
     fn set(&self, source: &mut S, value: A) {
         if let Ok(mut i) = self.optic1.try_get(source).map_err(self.error_fn_1) {
@@ -111,7 +111,8 @@ where
 /// # Returns
 /// A new `ComposedPrism<P1, P2, E, S, I, A>` instance.
 ///
-#[must_use] pub fn new<S, A, I, E, P1: Prism<S, I>, P2: Prism<I, A>>(
+#[must_use]
+pub fn new<S, A, I, E, P1: Prism<S, I>, P2: Prism<I, A>>(
     p1: P1,
     p2: P2,
     error_fn_1: fn(P1::GetterError) -> E,

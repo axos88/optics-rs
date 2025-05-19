@@ -1,6 +1,6 @@
 use crate::HasSetter;
 use crate::lens::Lens;
-use crate::{HasTotalGetter, HasGetter, LensImpl};
+use crate::{HasGetter, HasTotalGetter, LensImpl};
 use core::convert::Infallible;
 use core::marker::PhantomData;
 
@@ -31,18 +31,18 @@ use core::marker::PhantomData;
 /// - [`crate::composers::ComposablePrism`] — a trait for composing [`Prism`] optics another [`Optic`]
 /// - [`crate::composers::ComposableIso`] — a trait for composing [`Iso`] optics into another [`Optic`]
 /// - [`crate::composers::ComposableFallibleIso`] — a trait for composing [`FallibleIso`] optics into another [`Optic`]
-struct ComposedLens<O1: Lens<S, I>, O2: Lens<I, A>, S, I, A> {
-    optic1: O1,
-    optic2: O2,
+struct ComposedLens<L1: Lens<S, I>, L2: Lens<I, A>, S, I, A> {
+    optic1: L1,
+    optic2: L2,
     _phantom: PhantomData<(S, I, A)>,
 }
 
-impl<O1, O2, S, I, A> ComposedLens<O1, O2, S, I, A>
+impl<L1, L2, S, I, A> ComposedLens<L1, L2, S, I, A>
 where
-    O1: Lens<S, I>,
-    O2: Lens<I, A>,
+    L1: Lens<S, I>,
+    L2: Lens<I, A>,
 {
-    fn new(optic1: O1, optic2: O2) -> Self {
+    fn new(optic1: L1, optic2: L2) -> Self {
         ComposedLens {
             optic1,
             optic2,
@@ -51,10 +51,10 @@ where
     }
 }
 
-impl<S, I, A, O1, O2> HasGetter<S, A> for ComposedLens<O1, O2, S, I, A>
+impl<S, I, A, L1, L2> HasGetter<S, A> for ComposedLens<L1, L2, S, I, A>
 where
-    O1: Lens<S, I>,
-    O2: Lens<I, A>,
+    L1: Lens<S, I>,
+    L2: Lens<I, A>,
 {
     type GetterError = Infallible;
 
@@ -64,10 +64,10 @@ where
     }
 }
 
-impl<S, I, A, O1, O2> HasSetter<S, A> for ComposedLens<O1, O2, S, I, A>
+impl<S, I, A, L1, L2> HasSetter<S, A> for ComposedLens<L1, L2, S, I, A>
 where
-    O1: Lens<S, I>,
-    O2: Lens<I, A>,
+    L1: Lens<S, I>,
+    L2: Lens<I, A>,
 {
     fn set(&self, source: &mut S, value: A) {
         let mut i = self.optic1.get(source);
@@ -76,7 +76,8 @@ where
     }
 }
 
-#[must_use] pub fn new<S, A, I, L1: Lens<S, I>, L2: Lens<I, A>>(
+#[must_use]
+pub fn new<S, A, I, L1: Lens<S, I>, L2: Lens<I, A>>(
     l1: L1,
     l2: L2,
 ) -> LensImpl<S, A, impl Lens<S, A>> {

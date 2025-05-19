@@ -1,6 +1,4 @@
-use crate::{
-    HasTotalGetter, HasGetter, HasReverseGet, HasTotalReverseGet, HasSetter,
-};
+use crate::{HasGetter, HasReverseGet, HasSetter};
 use core::convert::Infallible;
 
 mod composed;
@@ -49,6 +47,7 @@ impl<
 {
 }
 
-#[must_use] pub fn identity_iso<S: Clone>() -> IsoImpl<S, S, impl Iso<S, S>> {
+#[must_use]
+pub fn identity_iso<S: Clone>() -> IsoImpl<S, S, impl Iso<S, S>> {
     mapped_iso(|x: &S| x.clone(), |x: &S| x.clone())
 }

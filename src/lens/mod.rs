@@ -1,4 +1,3 @@
-use crate::HasTotalGetter;
 use crate::HasGetter;
 use crate::HasSetter;
 use core::convert::Infallible;
@@ -25,16 +24,11 @@ pub use wrapper::LensImpl;
 /// - [`Prism`] — optional focus optic for sum types
 /// - [`Iso`] — reversible transformations
 /// - [`FallibleIso`] — reversible transformations with fallible forward mapping
-pub trait Lens<S, A>:
-    HasGetter<S, A, GetterError = Infallible> + HasSetter<S, A>
-{
-}
+pub trait Lens<S, A>: HasGetter<S, A, GetterError = Infallible> + HasSetter<S, A> {}
 
-impl<S, A, L: HasGetter<S, A, GetterError = Infallible> + HasSetter<S, A>>
-    Lens<S, A> for L
-{
-}
+impl<S, A, L: HasGetter<S, A, GetterError = Infallible> + HasSetter<S, A>> Lens<S, A> for L {}
 
-#[must_use] pub fn identity_lens<S: Clone, E>() -> LensImpl<S, S, impl Lens<S, S>> {
+#[must_use]
+pub fn identity_lens<S: Clone, E>() -> LensImpl<S, S, impl Lens<S, S>> {
     mapped_lens(|x: &S| x.clone(), |_, _| ())
 }

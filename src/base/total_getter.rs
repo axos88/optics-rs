@@ -1,5 +1,5 @@
-use core::convert::Infallible;
 use crate::HasGetter;
+use core::convert::Infallible;
 
 /// A base trait for optics that provides a total getter operation.
 ///
@@ -31,7 +31,9 @@ pub trait HasTotalGetter<S, A> {
     fn get(&self, source: &S) -> A;
 }
 
-impl<S, A, T> HasTotalGetter<S, A> for T where T: HasGetter<S, A, GetterError=Infallible>
+impl<S, A, T> HasTotalGetter<S, A> for T
+where
+    T: HasGetter<S, A, GetterError = Infallible>,
 {
     fn get(&self, source: &S) -> A {
         match self.try_get(source) {

@@ -1,5 +1,5 @@
 use crate::getter::wrapper::GetterImpl;
-use crate::{Getter, HasTotalGetter, HasGetter};
+use crate::{Getter, HasGetter, HasTotalGetter};
 use core::convert::Infallible;
 use core::marker::PhantomData;
 
@@ -60,9 +60,10 @@ where
     }
 }
 
-#[must_use] pub fn new<S, A, I, L1: Getter<S, I>, L2: Getter<I, A>>(
-    l1: L1,
-    l2: L2,
+#[must_use]
+pub fn new<S, A, I, G1: Getter<S, I>, G2: Getter<I, A>>(
+    l1: G1,
+    l2: G2,
 ) -> GetterImpl<S, A, impl Getter<S, A>> {
     ComposedGetter::new(l1, l2).into()
 }

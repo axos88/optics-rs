@@ -1,6 +1,6 @@
 use crate::iso::Iso;
 use crate::iso::wrapper::IsoImpl;
-use crate::{HasTotalGetter, HasGetter, HasReverseGet, HasTotalReverseGet, HasSetter};
+use crate::{HasGetter, HasReverseGet, HasSetter, HasTotalReverseGet};
 use core::convert::Infallible;
 use core::marker::PhantomData;
 
@@ -139,7 +139,8 @@ where
     }
 }
 
-#[must_use] pub fn new<S, A, GET, REV>(get_fn: GET, rev_fn: REV) -> IsoImpl<S, A, impl Iso<S, A>>
+#[must_use]
+pub fn new<S, A, GET, REV>(get_fn: GET, rev_fn: REV) -> IsoImpl<S, A, impl Iso<S, A>>
 where
     GET: Fn(&S) -> A,
     REV: Fn(&A) -> S,

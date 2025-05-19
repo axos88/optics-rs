@@ -98,7 +98,8 @@ where
     }
 }
 
-#[must_use] pub fn new<S, A, SET>(set_fn: SET) -> SetterImpl<S, A, impl Setter<S, A>>
+#[must_use]
+pub fn new<S, A, SET>(set_fn: SET) -> SetterImpl<S, A, impl Setter<S, A>>
 where
     SET: Fn(&mut S, A),
 {

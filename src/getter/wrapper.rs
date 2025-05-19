@@ -1,13 +1,12 @@
 use crate::getter::composed::new as composed_getter;
 use crate::{
-    FallibleIso, FallibleIsoImpl, Getter, HasTotalGetter, HasGetter, Iso, IsoImpl, Lens,
-    LensImpl, PartialGetter, PartialGetterImpl, Prism, PrismImpl, composed_partial_getter,
-    infallible,
+    FallibleIso, FallibleIsoImpl, Getter, HasGetter, HasTotalGetter, Iso, IsoImpl, Lens, LensImpl,
+    PartialGetter, PartialGetterImpl, Prism, PrismImpl, composed_partial_getter, infallible,
 };
 use core::convert::{Infallible, identity};
 use core::marker::PhantomData;
 
-pub struct GetterImpl<S, A, P: Getter<S, A>>(pub P, PhantomData<(S, A)>);
+pub struct GetterImpl<S, A, G: Getter<S, A>>(pub G, PhantomData<(S, A)>);
 
 impl<S, A, G: Getter<S, A>> From<G> for GetterImpl<S, A, G> {
     fn from(value: G) -> Self {
@@ -17,11 +16,12 @@ impl<S, A, G: Getter<S, A>> From<G> for GetterImpl<S, A, G> {
 
 impl<S, A, G: Getter<S, A>> GetterImpl<S, A, G> {
     fn new(prism: G) -> Self {
+        //TODO: Verify not to nest an Impl inside an Impl - currently seems to be impossible at compile time.
         GetterImpl(prism, PhantomData)
     }
 }
 
-impl<S, A, P: Getter<S, A>> HasGetter<S, A> for GetterImpl<S, A, P> {
+impl<S, A, G: Getter<S, A>> HasGetter<S, A> for GetterImpl<S, A, G> {
     type GetterError = Infallible;
 
     fn try_get(&self, source: &S) -> Result<A, Self::GetterError> {
@@ -51,10 +51,10 @@ impl<S, I, G1: Getter<S, I>> GetterImpl<S, I, G1> {
         composed_getter(self, other.0)
     }
 
-    pub fn compose_with_fallible_iso<A, F2: FallibleIso<I, A>>(
+    pub fn compose_with_fallible_iso<A, FI2: FallibleIso<I, A>>(
         self,
-        other: FallibleIsoImpl<I, A, F2>,
-    ) -> PartialGetterImpl<S, A, impl PartialGetter<S, A, GetterError = F2::GetterError>> {
+        other: FallibleIsoImpl<I, A, FI2>,
+    ) -> PartialGetterImpl<S, A, impl PartialGetter<S, A, GetterError = FI2::GetterError>> {
         composed_partial_getter(self, other.0, infallible, identity)
     }
 

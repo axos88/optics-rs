@@ -30,17 +30,12 @@ pub use wrapper::FallibleIsoImpl;
 /// - [`Iso`] — for total, infallible isomorphisms.
 /// - [`Prism`] — for partial optics where only one direction may be partial.
 /// - [`Optic`] — the base trait for all optics.
-pub trait FallibleIso<S, A>:
-    HasGetter<S, A> + HasSetter<S, A> + HasReverseGet<S, A>
-{
-}
+pub trait FallibleIso<S, A>: HasGetter<S, A> + HasSetter<S, A> + HasReverseGet<S, A> {}
 
-impl<S, A, FI: HasGetter<S, A> + HasSetter<S, A> + HasReverseGet<S, A>>
-    FallibleIso<S, A> for FI
-{
-}
+impl<S, A, FI: HasGetter<S, A> + HasSetter<S, A> + HasReverseGet<S, A>> FallibleIso<S, A> for FI {}
 
-#[must_use] pub fn identity_fallible_iso<S: Clone, E>()
+#[must_use]
+pub fn identity_fallible_iso<S: Clone, E>()
 -> FallibleIsoImpl<S, S, impl FallibleIso<S, S, GetterError = E, ReverseError = E>> {
     mapped_fallible_iso(|x: &S| Ok(x.clone()), |x: &S| Ok(x.clone()))
 }
