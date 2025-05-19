@@ -104,7 +104,7 @@ where
     type GetterError = Infallible;
 
     fn try_get(&self, source: &S) -> Result<A, Self::GetterError> {
-        Ok(self.get(source))
+        Ok((self.get_fn)(source))
     }
 }
 

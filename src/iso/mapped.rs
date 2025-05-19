@@ -113,7 +113,7 @@ where
     type GetterError = Infallible;
 
     fn try_get(&self, source: &S) -> Result<A, Self::GetterError> {
-        Ok(self.get(source))
+        Ok((self.get_fn)(source))
     }
 }
 
@@ -135,7 +135,7 @@ where
     type ReverseError = Infallible;
 
     fn try_reverse_get(&self, value: &A) -> Result<S, Self::ReverseError> {
-        Ok(self.reverse_get(value))
+        Ok((self.rev_fn)(value))
     }
 }
 

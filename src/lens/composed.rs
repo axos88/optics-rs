@@ -59,7 +59,8 @@ where
     type GetterError = Infallible;
 
     fn try_get(&self, source: &S) -> Result<A, Self::GetterError> {
-        Ok(self.get(source))
+        let i = self.optic1.try_get(source)?;
+        self.optic2.try_get(&i)
     }
 }
 
