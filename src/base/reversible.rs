@@ -1,3 +1,6 @@
+use core::convert::Infallible;
+use crate::{HasPartialReversible};
+
 /// A base trait for optics that provides a total reversible operation.
 ///
 /// This trait defines the ability to reverse a value of type `A` back into a source of type `S`,
@@ -35,4 +38,13 @@ pub trait HasReversible<S, A> {
     ///
     /// Returns the source of type `S`.
     fn reverse_get(&self, value: &A) -> S;
+}
+
+impl<S, A, T> HasReversible<S, A> for T where T: HasPartialReversible<S, A, ReverseError = Infallible>
+{
+    fn reverse_get(&self, value: &A) -> S {
+        match self.try_reverse_get(value) {
+            Ok(s) => s
+        }
+    }
 }

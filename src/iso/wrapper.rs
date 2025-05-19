@@ -28,12 +28,6 @@ impl<S, A, ISO: Iso<S, A>> HasPartialGetter<S, A> for IsoImpl<S, A, ISO> {
     }
 }
 
-impl<S, A, ISO: Iso<S, A>> HasGetter<S, A> for IsoImpl<S, A, ISO> {
-    fn get(&self, source: &S) -> A {
-        self.0.get(source)
-    }
-}
-
 impl<S, A, ISO: Iso<S, A>> HasSetter<S, A> for IsoImpl<S, A, ISO> {
     fn set(&self, source: &mut S, value: A) {
         self.0.set(source, value);
@@ -45,12 +39,6 @@ impl<S, A, ISO: Iso<S, A>> HasPartialReversible<S, A> for IsoImpl<S, A, ISO> {
 
     fn try_reverse_get(&self, value: &A) -> Result<S, Self::ReverseError> {
         Ok(self.0.reverse_get(value))
-    }
-}
-
-impl<S, A, ISO: Iso<S, A>> HasReversible<S, A> for IsoImpl<S, A, ISO> {
-    fn reverse_get(&self, value: &A) -> S {
-        self.0.reverse_get(value)
     }
 }
 

@@ -48,16 +48,6 @@ where
     }
 }
 
-impl<G1, G2, S, I, A> HasGetter<S, A> for ComposedGetter<G1, G2, S, I, A>
-where
-    G1: Getter<S, I>,
-    G2: Getter<I, A>,
-{
-    fn get(&self, source: &S) -> A {
-        self.optic2.get(&self.optic1.get(source))
-    }
-}
-
 impl<G1, G2, S, I, A> HasPartialGetter<S, A> for ComposedGetter<G1, G2, S, I, A>
 where
     G1: Getter<S, I>,

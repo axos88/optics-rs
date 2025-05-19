@@ -63,17 +63,6 @@ where
     }
 }
 
-impl<O1, O2, S, I, A> HasGetter<S, A> for ComposedIso<O1, O2, S, I, A>
-where
-    O1: Iso<S, I>,
-    O2: Iso<I, A>,
-{
-    fn get(&self, source: &S) -> A {
-        let i = self.optic1.get(source);
-        self.optic2.get(&i)
-    }
-}
-
 impl<O1, O2, S, I, A> HasSetter<S, A> for ComposedIso<O1, O2, S, I, A>
 where
     O1: Iso<S, I>,
@@ -95,17 +84,6 @@ where
 
     fn try_reverse_get(&self, value: &A) -> Result<S, Self::ReverseError> {
         Ok(self.reverse_get(value))
-    }
-}
-
-impl<O1, O2, S, I, A> HasReversible<S, A> for ComposedIso<O1, O2, S, I, A>
-where
-    O1: Iso<S, I>,
-    O2: Iso<I, A>,
-{
-    fn reverse_get(&self, value: &A) -> S {
-        let i = self.optic2.reverse_get(value);
-        self.optic1.reverse_get(&i)
     }
 }
 

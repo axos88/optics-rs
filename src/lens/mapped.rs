@@ -108,16 +108,6 @@ where
     }
 }
 
-impl<S, A, GET, SET> HasGetter<S, A> for MappedLens<S, A, GET, SET>
-where
-    GET: Fn(&S) -> A,
-    SET: Fn(&mut S, A),
-{
-    fn get(&self, source: &S) -> A {
-        (self.get_fn)(source)
-    }
-}
-
 impl<S, A, GET, SET> HasSetter<S, A> for MappedLens<S, A, GET, SET>
 where
     GET: Fn(&S) -> A,

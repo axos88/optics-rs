@@ -92,15 +92,6 @@ where
     }
 }
 
-impl<S, A, GET> HasGetter<S, A> for MappedGetter<S, A, GET>
-where
-    GET: Fn(&S) -> A,
-{
-    fn get(&self, source: &S) -> A {
-        (self.get_fn)(source)
-    }
-}
-
 impl<S, A, GET> HasPartialGetter<S, A> for MappedGetter<S, A, GET>
 where
     GET: Fn(&S) -> A,

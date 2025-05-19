@@ -1,3 +1,6 @@
+use core::convert::Infallible;
+use crate::HasPartialGetter;
+
 /// A base trait for optics that provides a total getter operation.
 ///
 /// This trait defines the ability to retrieve a value of type `A` from a source of type `S`,
@@ -26,4 +29,13 @@ pub trait HasGetter<S, A> {
     ///
     /// Returns the value of type `A` that the optic focuses on.
     fn get(&self, source: &S) -> A;
+}
+
+impl<S, A, T> HasGetter<S, A> for T where T: HasPartialGetter<S, A, GetterError=Infallible>
+{
+    fn get(&self, source: &S) -> A {
+        match self.try_get(source) {
+            Ok(value) => value,
+        }
+    }
 }

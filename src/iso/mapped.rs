@@ -105,16 +105,6 @@ where
     }
 }
 
-impl<S, A, GET, REV> HasGetter<S, A> for MappedIso<S, A, GET, REV>
-where
-    GET: Fn(&S) -> A,
-    REV: Fn(&A) -> S,
-{
-    fn get(&self, source: &S) -> A {
-        (self.get_fn)(source)
-    }
-}
-
 impl<S, A, GET, REV> HasPartialGetter<S, A> for MappedIso<S, A, GET, REV>
 where
     GET: Fn(&S) -> A,
@@ -146,16 +136,6 @@ where
 
     fn try_reverse_get(&self, value: &A) -> Result<S, Self::ReverseError> {
         Ok(self.reverse_get(value))
-    }
-}
-
-impl<S, A, GET, REV> HasReversible<S, A> for MappedIso<S, A, GET, REV>
-where
-    GET: Fn(&S) -> A,
-    REV: Fn(&A) -> S,
-{
-    fn reverse_get(&self, source: &A) -> S {
-        (self.rev_fn)(source)
     }
 }
 

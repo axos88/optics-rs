@@ -19,12 +19,6 @@ impl<S, A, L: Lens<S, A>> From<L> for LensImpl<S, A, L> {
     }
 }
 
-impl<S, A, L: Lens<S, A>> HasGetter<S, A> for LensImpl<S, A, L> {
-    fn get(&self, source: &S) -> A {
-        self.0.get(source)
-    }
-}
-
 impl<S, A, L: Lens<S, A>> HasPartialGetter<S, A> for LensImpl<S, A, L> {
     type GetterError = Infallible;
 

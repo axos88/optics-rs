@@ -29,12 +29,6 @@ impl<S, A, P: Getter<S, A>> HasPartialGetter<S, A> for GetterImpl<S, A, P> {
     }
 }
 
-impl<S, A, P: Getter<S, A>> HasGetter<S, A> for GetterImpl<S, A, P> {
-    fn get(&self, source: &S) -> A {
-        self.0.get(source)
-    }
-}
-
 impl<S, I, G1: Getter<S, I>> GetterImpl<S, I, G1> {
     pub fn compose_with_getter<A, G2: Getter<I, A>>(
         self,

@@ -63,17 +63,6 @@ where
     }
 }
 
-impl<S, I, A, O1, O2> HasGetter<S, A> for ComposedLens<O1, O2, S, I, A>
-where
-    O1: Lens<S, I>,
-    O2: Lens<I, A>,
-{
-    fn get(&self, source: &S) -> A {
-        let i = self.optic1.get(source);
-        self.optic2.get(&i)
-    }
-}
-
 impl<S, I, A, O1, O2> HasSetter<S, A> for ComposedLens<O1, O2, S, I, A>
 where
     O1: Lens<S, I>,

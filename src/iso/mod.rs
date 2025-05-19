@@ -34,10 +34,8 @@ pub use wrapper::IsoImpl;
 /// - [`Optic`] — the base trait for all optics.
 pub trait Iso<S, A>:
     HasPartialGetter<S, A, GetterError = Infallible>
-    + HasGetter<S, A>
     + HasSetter<S, A>
     + HasPartialReversible<S, A, ReverseError = Infallible>
-    + HasReversible<S, A>
 {
 }
 
@@ -45,10 +43,8 @@ impl<
     S,
     A,
     ISO: HasPartialGetter<S, A, GetterError = Infallible>
-        + HasGetter<S, A>
         + HasSetter<S, A>
-        + HasPartialReversible<S, A, ReverseError = Infallible>
-        + HasReversible<S, A>,
+        + HasPartialReversible<S, A, ReverseError = Infallible>,
 > Iso<S, A> for ISO
 {
 }
