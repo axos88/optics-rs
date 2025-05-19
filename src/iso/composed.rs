@@ -109,7 +109,7 @@ where
     }
 }
 
-pub fn new<S, A, I, F1: Iso<S, I>, F2: Iso<I, A>>(f1: F1, f2: F2) -> IsoImpl<S, A, impl Iso<S, A>>
+#[must_use] pub fn new<S, A, I, F1: Iso<S, I>, F2: Iso<I, A>>(f1: F1, f2: F2) -> IsoImpl<S, A, impl Iso<S, A>>
 where
 {
     ComposedIso::new(f1, f2).into()

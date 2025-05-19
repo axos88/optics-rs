@@ -147,7 +147,7 @@ where
     }
 }
 
-pub fn new<S, A, GE, RE, GET, REV>(
+#[must_use] pub fn new<S, A, GE, RE, GET, REV>(
     get_fn: GET,
     rev_fn: REV,
 ) -> FallibleIsoImpl<S, A, MappedFallibleIso<S, A, GE, RE, GET, REV>>

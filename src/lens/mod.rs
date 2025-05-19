@@ -35,6 +35,6 @@ impl<S, A, L: HasPartialGetter<S, A, GetterError = Infallible> + HasGetter<S, A>
 {
 }
 
-pub fn identity_lens<S: Clone, E>() -> LensImpl<S, S, impl Lens<S, S>> {
+#[must_use] pub fn identity_lens<S: Clone, E>() -> LensImpl<S, S, impl Lens<S, S>> {
     mapped_lens(|x: &S| x.clone(), |_, _| ())
 }

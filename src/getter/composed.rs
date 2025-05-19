@@ -70,7 +70,7 @@ where
     }
 }
 
-pub fn new<S, A, I, L1: Getter<S, I>, L2: Getter<I, A>>(
+#[must_use] pub fn new<S, A, I, L1: Getter<S, I>, L2: Getter<I, A>>(
     l1: L1,
     l2: L2,
 ) -> GetterImpl<S, A, impl Getter<S, A>> {

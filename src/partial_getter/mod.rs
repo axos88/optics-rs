@@ -40,7 +40,7 @@ pub trait PartialGetter<S, A>: HasPartialGetter<S, A> {}
 
 impl<S, A, PG: HasPartialGetter<S, A>> PartialGetter<S, A> for PG {}
 
-pub fn identity_partial_getter<S: Clone, E>()
+#[must_use] pub fn identity_partial_getter<S: Clone, E>()
 -> PartialGetterImpl<S, S, impl PartialGetter<S, S, GetterError = E>> {
     mapped_partial_getter(|x: &S| Ok(x.clone()))
 }

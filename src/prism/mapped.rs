@@ -119,7 +119,7 @@ where
 /// let `x_value` = `x_lens.get(&point)`; // retrieves 10 * 2 = 20
 /// `x_lens.set(&mut` point, 60); // sets x to 60 / 2 = 30
 // ```
-pub fn new<S, A, E, GET, SET>(
+#[must_use] pub fn new<S, A, E, GET, SET>(
     get_fn: GET,
     set_fn: SET,
 ) -> PrismImpl<S, A, impl Prism<S, A, GetterError = E>>

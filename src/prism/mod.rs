@@ -59,6 +59,6 @@ impl<S, A, P: HasPartialGetter<S, A> + HasSetter<S, A>> Prism<S, A> for P {}
 ///
 /// # Returns
 /// a new prism that focuses on the entire value of type `S`.
-pub fn identity_prism<S: Clone>() -> PrismImpl<S, S, impl Prism<S, S, GetterError = Infallible>> {
+#[must_use] pub fn identity_prism<S: Clone>() -> PrismImpl<S, S, impl Prism<S, S, GetterError = Infallible>> {
     mapped_prism(|s: &S| Ok::<_, Infallible>(s.clone()), |_, _| ())
 }

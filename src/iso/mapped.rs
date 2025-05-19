@@ -159,7 +159,7 @@ where
     }
 }
 
-pub fn new<S, A, GET, REV>(get_fn: GET, rev_fn: REV) -> IsoImpl<S, A, impl Iso<S, A>>
+#[must_use] pub fn new<S, A, GET, REV>(get_fn: GET, rev_fn: REV) -> IsoImpl<S, A, impl Iso<S, A>>
 where
     GET: Fn(&S) -> A,
     REV: Fn(&A) -> S,

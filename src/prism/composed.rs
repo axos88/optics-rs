@@ -111,7 +111,7 @@ where
 /// # Returns
 /// A new `ComposedPrism<P1, P2, E, S, I, A>` instance.
 ///
-pub fn new<S, A, I, E, P1: Prism<S, I>, P2: Prism<I, A>>(
+#[must_use] pub fn new<S, A, I, E, P1: Prism<S, I>, P2: Prism<I, A>>(
     p1: P1,
     p2: P2,
     error_fn_1: fn(P1::GetterError) -> E,

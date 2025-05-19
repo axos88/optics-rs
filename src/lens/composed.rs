@@ -86,7 +86,7 @@ where
     }
 }
 
-pub fn new<S, A, I, L1: Lens<S, I>, L2: Lens<I, A>>(
+#[must_use] pub fn new<S, A, I, L1: Lens<S, I>, L2: Lens<I, A>>(
     l1: L1,
     l2: L2,
 ) -> LensImpl<S, A, impl Lens<S, A>> {

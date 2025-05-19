@@ -115,7 +115,7 @@ where
     }
 }
 
-pub fn new<S, A, I, GE, RE, F1: FallibleIso<S, I>, F2: FallibleIso<I, A>>(
+#[must_use] pub fn new<S, A, I, GE, RE, F1: FallibleIso<S, I>, F2: FallibleIso<I, A>>(
     f1: F1,
     f2: F2,
     getter_error_fn_1: fn(F1::GetterError) -> GE,

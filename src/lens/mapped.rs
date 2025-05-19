@@ -128,7 +128,7 @@ where
     }
 }
 
-pub fn new<S, A, GET, SET>(get_fn: GET, set_fn: SET) -> LensImpl<S, A, impl Lens<S, A>>
+#[must_use] pub fn new<S, A, GET, SET>(get_fn: GET, set_fn: SET) -> LensImpl<S, A, impl Lens<S, A>>
 where
     GET: Fn(&S) -> A,
     SET: Fn(&mut S, A),

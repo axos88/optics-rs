@@ -63,7 +63,7 @@ where
     }
 }
 
-pub fn new<S, A, I, L1: PartialGetter<S, I> + Setter<S, I>, L2: Setter<I, A>>(
+#[must_use] pub fn new<S, A, I, L1: PartialGetter<S, I> + Setter<S, I>, L2: Setter<I, A>>(
     l1: L1,
     l2: L2,
 ) -> SetterImpl<S, A, impl Setter<S, A>> {

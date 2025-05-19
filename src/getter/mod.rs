@@ -43,6 +43,6 @@ impl<S, A, G: HasPartialGetter<S, A, GetterError = Infallible> + HasGetter<S, A>
 {
 }
 
-pub fn identity_getter<S: Clone>() -> GetterImpl<S, S, impl Getter<S, S>> {
+#[must_use] pub fn identity_getter<S: Clone>() -> GetterImpl<S, S, impl Getter<S, S>> {
     mapped_getter(|x: &S| x.clone())
 }

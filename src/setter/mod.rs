@@ -26,6 +26,6 @@ pub trait Setter<S, A>: HasSetter<S, A> {}
 
 impl<S, A, SETTER: HasSetter<S, A>> Setter<S, A> for SETTER {}
 
-pub fn identity_setter<S, A>() -> SetterImpl<S, A, impl Setter<S, A>> {
+#[must_use] pub fn identity_setter<S, A>() -> SetterImpl<S, A, impl Setter<S, A>> {
     mapped_setter(|_, _| ())
 }

@@ -40,7 +40,7 @@ impl<S, A, FI: HasPartialGetter<S, A> + HasSetter<S, A> + HasPartialReversible<S
 {
 }
 
-pub fn identity_fallible_iso<S: Clone, E>()
+#[must_use] pub fn identity_fallible_iso<S: Clone, E>()
 -> FallibleIsoImpl<S, S, impl FallibleIso<S, S, GetterError = E, ReverseError = E>> {
     mapped_fallible_iso(|x: &S| Ok(x.clone()), |x: &S| Ok(x.clone()))
 }

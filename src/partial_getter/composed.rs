@@ -69,7 +69,7 @@ where
     }
 }
 
-pub fn new<S, A, I, E, L1: PartialGetter<S, I>, L2: PartialGetter<I, A>>(
+#[must_use] pub fn new<S, A, I, E, L1: PartialGetter<S, I>, L2: PartialGetter<I, A>>(
     l1: L1,
     l2: L2,
     error_fn_1: fn(L1::GetterError) -> E,
