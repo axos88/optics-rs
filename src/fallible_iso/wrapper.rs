@@ -1,5 +1,5 @@
 use crate::{
-    FallibleIso, HasPartialGetter, HasPartialReversible, HasSetter, Iso, IsoImpl, Lens, LensImpl,
+    FallibleIso, HasGetter, HasReverseGet, HasSetter, Iso, IsoImpl, Lens, LensImpl,
     Prism, PrismImpl, composed_fallible_iso, composed_prism, infallible,
 };
 use core::convert::identity;
@@ -13,7 +13,7 @@ impl<S, A, F: FallibleIso<S, A>> FallibleIsoImpl<S, A, F> {
     }
 }
 
-impl<S, A, F: FallibleIso<S, A>> HasPartialGetter<S, A> for FallibleIsoImpl<S, A, F> {
+impl<S, A, F: FallibleIso<S, A>> HasGetter<S, A> for FallibleIsoImpl<S, A, F> {
     type GetterError = F::GetterError;
 
     fn try_get(&self, source: &S) -> Result<A, Self::GetterError> {
@@ -27,7 +27,7 @@ impl<S, A, F: FallibleIso<S, A>> HasSetter<S, A> for FallibleIsoImpl<S, A, F> {
     }
 }
 
-impl<S, A, F: FallibleIso<S, A>> HasPartialReversible<S, A> for FallibleIsoImpl<S, A, F> {
+impl<S, A, F: FallibleIso<S, A>> HasReverseGet<S, A> for FallibleIsoImpl<S, A, F> {
     type ReverseError = F::ReverseError;
 
     fn try_reverse_get(&self, value: &A) -> Result<S, Self::ReverseError> {

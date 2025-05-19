@@ -1,4 +1,4 @@
-use crate::HasPartialGetter;
+use crate::HasGetter;
 use crate::HasSetter;
 use core::convert::Infallible;
 
@@ -21,9 +21,9 @@ pub use wrapper::PrismImpl;
 ///
 /// # Trait Definition
 ///
-/// The `Prism` trait extends the [`HasPartialGetter`] and [`HasSetter`] traits:
+/// The `Prism` trait extends the [`HasGetter`] and [`HasSetter`] traits:
 ///
-/// - [`HasPartialGetter<S, A>`]: Provides the `try_get` method to attempt extraction of a value of type `A` from `S`.
+/// - [`HasGetter<S, A>`]: Provides the `try_get` method to attempt extraction of a value of type `A` from `S`.
 /// - [`HasSetter<S, A>`]: Provides the `set` method to construct a value of type `S` from `A`.
 ///
 /// Together, these traits allow for partial access and construction, embodying the essence of a `Prism`.
@@ -42,12 +42,12 @@ pub use wrapper::PrismImpl;
 ///
 /// # See Also
 ///
-/// - [`HasPartialGetter`]: A trait for types that can partially extract a value.
+/// - [`HasGetter`]: A trait for types that can partially extract a value.
 /// - [`Setter`]: A trait for types that can set a value.
 ///
-pub trait Prism<S, A>: HasPartialGetter<S, A> + HasSetter<S, A> {}
+pub trait Prism<S, A>: HasGetter<S, A> + HasSetter<S, A> {}
 
-impl<S, A, P: HasPartialGetter<S, A> + HasSetter<S, A>> Prism<S, A> for P {}
+impl<S, A, P: HasGetter<S, A> + HasSetter<S, A>> Prism<S, A> for P {}
 
 /// Constructs an identity `PrismImpl` that focuses on the entire value of type `S`.
 ///

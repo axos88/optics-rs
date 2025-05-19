@@ -1,6 +1,6 @@
-use crate::HasPartialReversible;
+use crate::HasReverseGet;
 use crate::fallible_iso::wrapper::FallibleIsoImpl;
-use crate::{HasPartialGetter, HasSetter};
+use crate::{HasGetter, HasSetter};
 use core::marker::PhantomData;
 
 /// A concrete implementation of a [`FallibleIso`] between types `S` and `A`.
@@ -110,7 +110,7 @@ where
     }
 }
 
-impl<S, A, GE, RE, GET, REV> HasPartialGetter<S, A> for MappedFallibleIso<S, A, GE, RE, GET, REV>
+impl<S, A, GE, RE, GET, REV> HasGetter<S, A> for MappedFallibleIso<S, A, GE, RE, GET, REV>
 where
     GET: Fn(&S) -> Result<A, GE>,
     REV: Fn(&A) -> Result<S, RE>,
@@ -134,7 +134,7 @@ where
     }
 }
 
-impl<S, A, GE, RE, GET, REV> HasPartialReversible<S, A>
+impl<S, A, GE, RE, GET, REV> HasReverseGet<S, A>
     for MappedFallibleIso<S, A, GE, RE, GET, REV>
 where
     GET: Fn(&S) -> Result<A, GE>,

@@ -2,7 +2,7 @@ mod composed;
 mod mapped;
 mod wrapper;
 
-use crate::{HasPartialGetter};
+use crate::{HasGetter};
 pub use composed::new as composed_getter;
 use core::convert::Infallible;
 pub use mapped::new as mapped_getter;
@@ -36,9 +36,9 @@ pub use wrapper::GetterImpl;
 /// - [`Iso`] — an isomorphism optic representing a reversible one-to-one transformation between two types
 ///
 /// - [`NoFocus`] — the current error type returned by `Getter::preview` on failure
-pub trait Getter<S, A>: HasPartialGetter<S, A, GetterError = Infallible> {}
+pub trait Getter<S, A>: HasGetter<S, A, GetterError = Infallible> {}
 
-impl<S, A, G: HasPartialGetter<S, A, GetterError = Infallible>> Getter<S, A>
+impl<S, A, G: HasGetter<S, A, GetterError = Infallible>> Getter<S, A>
     for G
 {
 }

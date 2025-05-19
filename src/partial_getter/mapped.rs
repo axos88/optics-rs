@@ -1,5 +1,5 @@
 use crate::partial_getter::wrapper::PartialGetterImpl;
-use crate::{HasPartialGetter, PartialGetter};
+use crate::{HasGetter, PartialGetter};
 use core::marker::PhantomData;
 
 /// A concrete implementation of the [`PartialGetter`] trait.
@@ -91,7 +91,7 @@ where
     }
 }
 
-impl<S, A, E, GET> HasPartialGetter<S, A> for MappedPartialGetter<S, A, E, GET>
+impl<S, A, E, GET> HasGetter<S, A> for MappedPartialGetter<S, A, E, GET>
 where
     GET: Fn(&S) -> Result<A, E>,
 {

@@ -1,5 +1,5 @@
 use crate::getter::wrapper::GetterImpl;
-use crate::{Getter, HasGetter, HasPartialGetter};
+use crate::{Getter, HasTotalGetter, HasGetter};
 use core::convert::Infallible;
 use core::marker::PhantomData;
 
@@ -92,7 +92,7 @@ where
     }
 }
 
-impl<S, A, GET> HasPartialGetter<S, A> for MappedGetter<S, A, GET>
+impl<S, A, GET> HasGetter<S, A> for MappedGetter<S, A, GET>
 where
     GET: Fn(&S) -> A,
 {

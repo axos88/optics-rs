@@ -1,6 +1,6 @@
 use crate::iso::Iso;
 use crate::iso::wrapper::IsoImpl;
-use crate::{HasGetter, HasPartialGetter, HasPartialReversible, HasReversible, HasSetter};
+use crate::{HasTotalGetter, HasGetter, HasReverseGet, HasTotalReverseGet, HasSetter};
 use core::convert::Infallible;
 use core::marker::PhantomData;
 
@@ -105,7 +105,7 @@ where
     }
 }
 
-impl<S, A, GET, REV> HasPartialGetter<S, A> for MappedIso<S, A, GET, REV>
+impl<S, A, GET, REV> HasGetter<S, A> for MappedIso<S, A, GET, REV>
 where
     GET: Fn(&S) -> A,
     REV: Fn(&A) -> S,
@@ -127,7 +127,7 @@ where
     }
 }
 
-impl<S, A, GET, REV> HasPartialReversible<S, A> for MappedIso<S, A, GET, REV>
+impl<S, A, GET, REV> HasReverseGet<S, A> for MappedIso<S, A, GET, REV>
 where
     GET: Fn(&S) -> A,
     REV: Fn(&A) -> S,

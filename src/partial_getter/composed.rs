@@ -1,5 +1,5 @@
 use crate::partial_getter::wrapper::PartialGetterImpl;
-use crate::{HasPartialGetter, PartialGetter};
+use crate::{HasGetter, PartialGetter};
 use core::marker::PhantomData;
 
 /// A composed `PartialGetter` type, combining two optics into a single prism.
@@ -56,7 +56,7 @@ where
     }
 }
 
-impl<O1, O2, E, S, I, A> HasPartialGetter<S, A> for ComposedPartialGetter<O1, O2, E, S, I, A>
+impl<O1, O2, E, S, I, A> HasGetter<S, A> for ComposedPartialGetter<O1, O2, E, S, I, A>
 where
     O1: PartialGetter<S, I>,
     O2: PartialGetter<I, A>,

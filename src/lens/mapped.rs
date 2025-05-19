@@ -1,7 +1,7 @@
 use crate::HasSetter;
 use crate::lens::Lens;
 use crate::lens::wrapper::LensImpl;
-use crate::{HasGetter, HasPartialGetter};
+use crate::{HasTotalGetter, HasGetter};
 use core::convert::Infallible;
 use core::marker::PhantomData;
 
@@ -96,7 +96,7 @@ where
     }
 }
 
-impl<S, A, GET, SET> HasPartialGetter<S, A> for MappedLens<S, A, GET, SET>
+impl<S, A, GET, SET> HasGetter<S, A> for MappedLens<S, A, GET, SET>
 where
     GET: Fn(&S) -> A,
     SET: Fn(&mut S, A),

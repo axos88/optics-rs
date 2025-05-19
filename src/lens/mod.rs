@@ -1,5 +1,5 @@
+use crate::HasTotalGetter;
 use crate::HasGetter;
-use crate::HasPartialGetter;
 use crate::HasSetter;
 use core::convert::Infallible;
 
@@ -26,11 +26,11 @@ pub use wrapper::LensImpl;
 /// - [`Iso`] — reversible transformations
 /// - [`FallibleIso`] — reversible transformations with fallible forward mapping
 pub trait Lens<S, A>:
-    HasPartialGetter<S, A, GetterError = Infallible> + HasSetter<S, A>
+    HasGetter<S, A, GetterError = Infallible> + HasSetter<S, A>
 {
 }
 
-impl<S, A, L: HasPartialGetter<S, A, GetterError = Infallible> + HasSetter<S, A>>
+impl<S, A, L: HasGetter<S, A, GetterError = Infallible> + HasSetter<S, A>>
     Lens<S, A> for L
 {
 }

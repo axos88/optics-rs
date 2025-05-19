@@ -1,6 +1,6 @@
 use crate::HasSetter;
 use crate::lens::Lens;
-use crate::{HasGetter, HasPartialGetter, LensImpl};
+use crate::{HasTotalGetter, HasGetter, LensImpl};
 use core::convert::Infallible;
 use core::marker::PhantomData;
 
@@ -51,7 +51,7 @@ where
     }
 }
 
-impl<S, I, A, O1, O2> HasPartialGetter<S, A> for ComposedLens<O1, O2, S, I, A>
+impl<S, I, A, O1, O2> HasGetter<S, A> for ComposedLens<O1, O2, S, I, A>
 where
     O1: Lens<S, I>,
     O2: Lens<I, A>,

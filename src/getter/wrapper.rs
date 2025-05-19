@@ -1,6 +1,6 @@
 use crate::getter::composed::new as composed_getter;
 use crate::{
-    FallibleIso, FallibleIsoImpl, Getter, HasGetter, HasPartialGetter, Iso, IsoImpl, Lens,
+    FallibleIso, FallibleIsoImpl, Getter, HasTotalGetter, HasGetter, Iso, IsoImpl, Lens,
     LensImpl, PartialGetter, PartialGetterImpl, Prism, PrismImpl, composed_partial_getter,
     infallible,
 };
@@ -21,7 +21,7 @@ impl<S, A, G: Getter<S, A>> GetterImpl<S, A, G> {
     }
 }
 
-impl<S, A, P: Getter<S, A>> HasPartialGetter<S, A> for GetterImpl<S, A, P> {
+impl<S, A, P: Getter<S, A>> HasGetter<S, A> for GetterImpl<S, A, P> {
     type GetterError = Infallible;
 
     fn try_get(&self, source: &S) -> Result<A, Self::GetterError> {

@@ -1,6 +1,6 @@
 use crate::iso::Iso;
 use crate::iso::wrapper::IsoImpl;
-use crate::{HasGetter, HasPartialGetter, HasPartialReversible, HasReversible, HasSetter};
+use crate::{mapped_iso, HasTotalGetter, HasGetter, HasReverseGet, HasTotalReverseGet, HasSetter};
 use core::convert::Infallible;
 use core::marker::PhantomData;
 
@@ -51,7 +51,7 @@ where
     }
 }
 
-impl<O1, O2, S, I, A> HasPartialGetter<S, A> for ComposedIso<O1, O2, S, I, A>
+impl<O1, O2, S, I, A> HasGetter<S, A> for ComposedIso<O1, O2, S, I, A>
 where
     O1: Iso<S, I>,
     O2: Iso<I, A>,
@@ -76,7 +76,7 @@ where
     }
 }
 
-impl<O1, O2, S, I, A> HasPartialReversible<S, A> for ComposedIso<O1, O2, S, I, A>
+impl<O1, O2, S, I, A> HasReverseGet<S, A> for ComposedIso<O1, O2, S, I, A>
 where
     O1: Iso<S, I>,
     O2: Iso<I, A>,

@@ -1,9 +1,9 @@
-use crate::{HasPartialGetter, HasSetter};
+use crate::{HasGetter, HasSetter};
 pub(crate) mod composed;
 pub(crate) mod mapped;
 mod wrapper;
 
-use crate::HasPartialReversible;
+use crate::HasReverseGet;
 pub use composed::new as composed_fallible_iso;
 pub use mapped::new as mapped_fallible_iso;
 pub use wrapper::FallibleIsoImpl;
@@ -31,11 +31,11 @@ pub use wrapper::FallibleIsoImpl;
 /// - [`Prism`] — for partial optics where only one direction may be partial.
 /// - [`Optic`] — the base trait for all optics.
 pub trait FallibleIso<S, A>:
-    HasPartialGetter<S, A> + HasSetter<S, A> + HasPartialReversible<S, A>
+    HasGetter<S, A> + HasSetter<S, A> + HasReverseGet<S, A>
 {
 }
 
-impl<S, A, FI: HasPartialGetter<S, A> + HasSetter<S, A> + HasPartialReversible<S, A>>
+impl<S, A, FI: HasGetter<S, A> + HasSetter<S, A> + HasReverseGet<S, A>>
     FallibleIso<S, A> for FI
 {
 }

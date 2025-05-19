@@ -1,4 +1,4 @@
-use crate::HasPartialGetter;
+use crate::HasGetter;
 use crate::HasSetter;
 use crate::prism::Prism;
 use crate::prism::wrapper::PrismImpl;
@@ -57,7 +57,7 @@ where
     }
 }
 
-impl<O1, O2, E, S, I, A> HasPartialGetter<S, A> for ComposedPrism<O1, O2, E, S, I, A>
+impl<O1, O2, E, S, I, A> HasGetter<S, A> for ComposedPrism<O1, O2, E, S, I, A>
 where
     O1: Prism<S, I>,
     O2: Prism<I, A>,

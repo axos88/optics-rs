@@ -1,6 +1,6 @@
 use crate::partial_getter::composed::new as composed_partial_getter;
 use crate::{
-    FallibleIso, FallibleIsoImpl, HasPartialGetter, Iso, IsoImpl, Lens, LensImpl, PartialGetter,
+    FallibleIso, FallibleIsoImpl, HasGetter, Iso, IsoImpl, Lens, LensImpl, PartialGetter,
     Prism, PrismImpl, infallible,
 };
 use core::convert::identity;
@@ -20,7 +20,7 @@ impl<S, A, PG: PartialGetter<S, A>> From<PG> for PartialGetterImpl<S, A, PG> {
     }
 }
 
-impl<S, A, P: PartialGetter<S, A>> HasPartialGetter<S, A> for PartialGetterImpl<S, A, P> {
+impl<S, A, P: PartialGetter<S, A>> HasGetter<S, A> for PartialGetterImpl<S, A, P> {
     type GetterError = P::GetterError;
 
     fn try_get(&self, source: &S) -> Result<A, Self::GetterError> {

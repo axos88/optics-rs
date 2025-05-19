@@ -1,5 +1,5 @@
 use crate::getter::wrapper::GetterImpl;
-use crate::{Getter, HasGetter, HasPartialGetter};
+use crate::{Getter, HasTotalGetter, HasGetter};
 use core::convert::Infallible;
 use core::marker::PhantomData;
 
@@ -48,7 +48,7 @@ where
     }
 }
 
-impl<G1, G2, S, I, A> HasPartialGetter<S, A> for ComposedGetter<G1, G2, S, I, A>
+impl<G1, G2, S, I, A> HasGetter<S, A> for ComposedGetter<G1, G2, S, I, A>
 where
     G1: Getter<S, I>,
     G2: Getter<I, A>,

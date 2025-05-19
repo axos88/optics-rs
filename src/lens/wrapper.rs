@@ -1,5 +1,5 @@
 use crate::{
-    FallibleIso, FallibleIsoImpl, HasGetter, HasPartialGetter, HasSetter, Iso, IsoImpl, Lens,
+    FallibleIso, FallibleIsoImpl, HasTotalGetter, HasGetter, HasSetter, Iso, IsoImpl, Lens,
     Prism, PrismImpl, composed_lens, composed_prism, infallible,
 };
 use core::convert::{Infallible, identity};
@@ -19,7 +19,7 @@ impl<S, A, L: Lens<S, A>> From<L> for LensImpl<S, A, L> {
     }
 }
 
-impl<S, A, L: Lens<S, A>> HasPartialGetter<S, A> for LensImpl<S, A, L> {
+impl<S, A, L: Lens<S, A>> HasGetter<S, A> for LensImpl<S, A, L> {
     type GetterError = Infallible;
 
     fn try_get(&self, source: &S) -> Result<A, Self::GetterError> {

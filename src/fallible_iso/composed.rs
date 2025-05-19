@@ -1,7 +1,7 @@
-use crate::HasPartialReversible;
+use crate::HasReverseGet;
 use crate::fallible_iso::FallibleIso;
 use crate::fallible_iso::wrapper::FallibleIsoImpl;
-use crate::{HasPartialGetter, HasSetter};
+use crate::{HasGetter, HasSetter};
 use core::marker::PhantomData;
 
 /// A composed `FallibleIso` type, combining two optics into a single `FallibleIso`.
@@ -66,7 +66,7 @@ where
     }
 }
 
-impl<O1, O2, GE, RE, S, I, A> HasPartialGetter<S, A>
+impl<O1, O2, GE, RE, S, I, A> HasGetter<S, A>
     for ComposedFallibleIso<O1, O2, GE, RE, S, I, A>
 where
     O1: FallibleIso<S, I>,
@@ -83,7 +83,7 @@ where
     }
 }
 
-impl<O1, O2, GE, RE, S, I, A> HasPartialReversible<S, A>
+impl<O1, O2, GE, RE, S, I, A> HasReverseGet<S, A>
     for ComposedFallibleIso<O1, O2, GE, RE, S, I, A>
 where
     O1: FallibleIso<S, I>,

@@ -1,4 +1,4 @@
-use crate::HasPartialGetter;
+use crate::HasGetter;
 
 mod composed;
 mod mapped;
@@ -36,9 +36,9 @@ pub use wrapper::PartialGetterImpl;
 /// - [`Iso`] — an isomorphism optic representing a reversible one-to-one transformation between two types
 ///
 /// - [`NoFocus`] — the current error type returned by `PartialGetter::preview` on failure
-pub trait PartialGetter<S, A>: HasPartialGetter<S, A> {}
+pub trait PartialGetter<S, A>: HasGetter<S, A> {}
 
-impl<S, A, PG: HasPartialGetter<S, A>> PartialGetter<S, A> for PG {}
+impl<S, A, PG: HasGetter<S, A>> PartialGetter<S, A> for PG {}
 
 #[must_use] pub fn identity_partial_getter<S: Clone, E>()
 -> PartialGetterImpl<S, S, impl PartialGetter<S, S, GetterError = E>> {

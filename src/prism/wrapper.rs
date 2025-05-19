@@ -1,6 +1,6 @@
 use crate::prism::composed::new as composed_prism;
 use crate::{
-    FallibleIso, FallibleIsoImpl, HasPartialGetter, HasSetter, Iso, IsoImpl, Lens, LensImpl, Prism,
+    FallibleIso, FallibleIsoImpl, HasGetter, HasSetter, Iso, IsoImpl, Lens, LensImpl, Prism,
     infallible,
 };
 use core::convert::identity;
@@ -74,7 +74,7 @@ impl<S, A, P: Prism<S, A>> From<P> for PrismImpl<S, A, P> {
     }
 }
 
-impl<S, A, P: Prism<S, A>> HasPartialGetter<S, A> for PrismImpl<S, A, P> {
+impl<S, A, P: Prism<S, A>> HasGetter<S, A> for PrismImpl<S, A, P> {
     type GetterError = P::GetterError;
 
     fn try_get(&self, source: &S) -> Result<A, Self::GetterError> {

@@ -1,5 +1,5 @@
 use crate::{
-    HasGetter, HasPartialGetter, HasPartialReversible, HasReversible, HasSetter,
+    HasTotalGetter, HasGetter, HasReverseGet, HasTotalReverseGet, HasSetter,
 };
 use core::convert::Infallible;
 
@@ -33,18 +33,18 @@ pub use wrapper::IsoImpl;
 /// - [`FallibleIso`] — for reversible optics that can fail.
 /// - [`Optic`] — the base trait for all optics.
 pub trait Iso<S, A>:
-    HasPartialGetter<S, A, GetterError = Infallible>
+    HasGetter<S, A, GetterError = Infallible>
     + HasSetter<S, A>
-    + HasPartialReversible<S, A, ReverseError = Infallible>
+    + HasReverseGet<S, A, ReverseError = Infallible>
 {
 }
 
 impl<
     S,
     A,
-    ISO: HasPartialGetter<S, A, GetterError = Infallible>
+    ISO: HasGetter<S, A, GetterError = Infallible>
         + HasSetter<S, A>
-        + HasPartialReversible<S, A, ReverseError = Infallible>,
+        + HasReverseGet<S, A, ReverseError = Infallible>,
 > Iso<S, A> for ISO
 {
 }

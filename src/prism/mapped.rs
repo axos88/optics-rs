@@ -1,4 +1,4 @@
-use crate::HasPartialGetter;
+use crate::HasGetter;
 use crate::HasSetter;
 use crate::prism::Prism;
 use crate::prism::wrapper::PrismImpl;
@@ -52,7 +52,7 @@ where
     }
 }
 
-impl<S, A, E, GET, SET> HasPartialGetter<S, A> for MappedPrism<S, A, E, GET, SET>
+impl<S, A, E, GET, SET> HasGetter<S, A> for MappedPrism<S, A, E, GET, SET>
 where
     GET: Fn(&S) -> Result<A, E>,
     SET: Fn(&mut S, A),
