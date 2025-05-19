@@ -1,5 +1,5 @@
 use crate::getter::wrapper::GetterImpl;
-use crate::{Getter, HasGetter, HasTotalGetter};
+use crate::{Getter, HasGetter};
 use core::convert::Infallible;
 use core::marker::PhantomData;
 
@@ -99,7 +99,7 @@ where
     type GetterError = Infallible;
 
     fn try_get(&self, source: &S) -> Result<A, Self::GetterError> {
-        Ok(self.get(source))
+        Ok((self.get_fn)(source))
     }
 }
 
