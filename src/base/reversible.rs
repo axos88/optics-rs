@@ -24,9 +24,10 @@
 /// partial reversal of values back into a source, where the reversal may fail.
 ///
 ///   - [`FallibleIso`] — a reversible optic that can fail in both directions.
+///   - [`Iso`] — a reversible optic that never fails.
 ///
 pub trait HasReverseGet<S, A> {
-    /// The type of error that may occur during the reverse operation.
+    /// The type of error that may occur during the reverse operation. Use `Infallible` for infallible optics.
     type ReverseError;
 
     /// Attempts to reverse a value of type `A` back into a source of type `S`.

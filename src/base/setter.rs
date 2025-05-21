@@ -1,4 +1,4 @@
-//TODO: Consider returning a bool here, or adding a PartialSetter trait
+//TODO: Consider returning a bool here, or adding a SetterError associated type
 /// A base trait for optics that provides a setter operation.
 ///
 /// This trait defines the ability to set a value of type `A` into a mutable source of type `S`.

@@ -7,7 +7,14 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 ## [Unreleased]
 
 ### Breaking changes
+  - refactored type hierarchy again.
+    - HasPartialGetter is now the HasGetter base trait, HasGetter is not HasTotalGetter
+    - HasPartialReversible is now the HasReverseGet base trait, HasReversible is not HasTotalReverseGet
+    - HasTotalGetter and HasTotalReverseGet are now blanked implemented by all structs that implement HasGetter and HasReverseGet with an infallible error.
+    - Added blanket implementations so that implementing the required set of base traits now auto-implements the corresponding optic types, the optic types basically became a sort of auto-trait. User-defined optic types only have to implement the correct base traits now. Same for the *Impl structs. They   
+    - reduced API surface are by making concrete implemnetations opqaue, and only exposing functions to construct them. The only public structs are now the `XXImpl` struct and the `XX` traits   
   - move base traits to base trait
+  - 
 ### Changed
 ### Added
   - add implementations for getter, partialgetter and setter optics.

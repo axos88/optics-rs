@@ -1,5 +1,6 @@
 #![doc = include_str!("../README.md")]
-#![no_std]
+
+// #![cfg_attr(not(test), no_std)]
 // #![deny(missing_docs)]
 #![warn(clippy::all)]
 #![warn(clippy::pedantic)]
@@ -15,30 +16,24 @@ fn infallible<E>(e: Infallible) -> E {
 }
 
 mod base;
-
-mod fallible_iso;
-mod getter;
-mod iso;
-mod lens;
-mod partial_getter;
-mod prism;
-mod setter;
-// mod traversal;
+mod extensions;
+mod optics;
 
 #[cfg(test)]
 mod test;
 
-pub use base::{HasGetter, HasReverseGet, HasSetter, HasTotalGetter, HasTotalReverseGet};
+pub use base::{HasGetter, HasReverseGet, HasSetter};
+pub use extensions::{HasOver, HasTotalGetter, HasTotalReverseGet};
 
-pub use fallible_iso::{
-    FallibleIso, FallibleIsoImpl, composed_fallible_iso, identity_fallible_iso, mapped_fallible_iso,
+pub use optics::fallible_iso::{
+  composed_fallible_iso, identity_fallible_iso, mapped_fallible_iso, FallibleIso, FallibleIsoImpl,
 };
-pub use getter::{Getter, GetterImpl, composed_getter, identity_getter, mapped_getter};
-pub use iso::{Iso, IsoImpl, composed_iso, identity_iso, mapped_iso};
-pub use lens::{Lens, LensImpl, composed_lens, identity_lens, mapped_lens};
-pub use partial_getter::{
-    PartialGetter, PartialGetterImpl, composed_partial_getter, identity_partial_getter,
-    mapped_partial_getter,
+pub use optics::getter::{composed_getter, identity_getter, mapped_getter, Getter, GetterImpl};
+pub use optics::iso::{composed_iso, identity_iso, mapped_iso, Iso, IsoImpl};
+pub use optics::lens::{composed_lens, identity_lens, mapped_lens, Lens, LensImpl};
+pub use optics::partial_getter::{
+  composed_partial_getter, identity_partial_getter, mapped_partial_getter, PartialGetter,
+  PartialGetterImpl,
 };
-pub use prism::{Prism, PrismImpl, composed_prism, identity_prism, mapped_prism};
-pub use setter::{Setter, SetterImpl, composed_setter, identity_setter, mapped_setter};
+pub use optics::prism::{composed_prism, identity_prism, mapped_prism, Prism, PrismImpl};
+pub use optics::setter::{composed_setter, identity_setter, mapped_setter, Setter, SetterImpl};
