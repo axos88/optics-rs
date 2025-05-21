@@ -6,7 +6,27 @@ use crate::{
 use core::convert::identity;
 use core::marker::PhantomData;
 
-
+/// A wrapper of the [`PartialGetter`] optic implementations, encapsulating a getter function.
+///
+/// `PartialGetterImpl` provides a way to define partial getters - optics that attempt to retrieve
+/// a value of type `A` from a source of type `S`, potentially failing with an error.
+/// This struct is particularly useful in scenarios where you need to compose or reuse getter logic
+/// that might not always succeed.
+/// 
+/// # Note
+/// 
+/// This struct is not intended to be created by users directly, but it implements a From<PartialGetter<S,A>> so
+/// that implementors of new optic types can wrap their concrete implementation of a PartialGetter optic.
+///
+/// # Type Parameters
+///
+/// - `S`: The source type from which the value is to be retrieved.
+/// - `A`: The target type of the value to be retrieved.
+///
+/// # See Also
+///
+/// - [`PartialGetter`] trait for defining custom partial getters.
+/// - [`mapped_partial_getter`] function for creating `PartialGetterImpl` instances from mapping functions.
 pub struct PartialGetterImpl<S, A, PG: PartialGetter<S, A>>(pub PG, PhantomData<(S, A)>);
 
 impl<S, A, PG: PartialGetter<S, A>> PartialGetterImpl<S, A, PG> {
