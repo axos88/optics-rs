@@ -86,7 +86,6 @@ where
 ///
 /// assert_eq!(ipv4_partial_getter.try_get(&addr), Ok("8.8.4.4".to_string()));
 /// ```
-
 #[must_use]
 pub fn new<S, A, E, GET>(
     get_fn: GET,

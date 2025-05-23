@@ -3,30 +3,6 @@ use crate::optics::fallible_iso::wrapper::FallibleIsoImpl;
 use crate::{HasGetter, HasSetter};
 use core::marker::PhantomData;
 
-/// A concrete implementation of a [`FallibleIso`] between types `S` and `A`.
-///
-/// /// `FallibleIsoImpl` allows the user to create a simple bidirectional, fallible isomorphism by
-/// providing two potentially fallible functions: one to convert from `S` to `A`, and one to convert back from `A` to `S`.
-///
-/// This is the primary way for users to define custom `FallibleIso` optics manually.
-///
-/// # Type Parameters
-/// - `S` — The source type.
-/// - `A` — The focus type.
-/// - `E` - The error type
-/// - `GET` — The function type used for the `get` operation. Defaults to `fn(&S) -> Result<A, E>`.
-/// - `REV` — The function type used for the `reverse_get` operation. Defaults to `fn(&A) -> Result<S, E>`.
-///
-/// # Construction
-///
-/// The usual way to construct am `FallibleIsoImpl` is to use `FallibleIsoImpl::<S, A>::new()`, which
-/// will use non-capturing closures by default. Alternatively, you can specify the
-/// getter and setter type parameters as `FallibleIsoImpl::<S, A,_, _>::new()` for more complex use cases,
-/// such as captruring closures.
-///
-/// # See Also
-/// - [`FallibleIso`] — The trait implemented by this struct.
-/// - [`Prism`] — The equivalent for partial optics.
 struct MappedFallibleIso<
     S,
     A,
@@ -48,60 +24,7 @@ where
     GET: Fn(&S) -> Result<A, GE>,
     REV: Fn(&A) -> Result<S, RE>,
 {
-    /// Creates a new [`MappedFallibleIso`] instance from the provided fallible conversion functions.
-    ///
-    /// This is the primary way to construct a [`MappedFallibleIso`], by supplying two fallible
-    /// functions — one for converting from `S` to `A`, and another for converting back from `A` to `S`.
-    /// Both conversions may fail, returning a value of type `E`.
-    ///
-    /// # Arguments
-    /// - `get_fn` — A function or closure of type `Fn(&S) -> Result<A, E>` that attempts to extract a
-    ///   value of type `A` from a value of type `S`.
-    /// - `rev_fn` — A function or closure of type `Fn(&A) -> Result<S, E>` that attempts to reconstruct
-    ///   a value of type `S` from a value of type `A`.
-    ///
-    /// # Returns
-    ///
-    /// A new `FallibleIsoImpl` instance that can be used as a `FallibleIso<S, A>`.
-    ///
-    /// # Examples
-    ///
-    // ```
-    /// use `optics::FallibleIsoImpl`;
-    ///
-    /// let `fallible_iso` = `FallibleIsoImpl::`<i32, String, `String>::new`(
-    ///   |i| if *i > 0 { `Ok(i.to_string())` } else { `Err("Negative".to_string())` },
-    ///   |s| `s.parse::`<i32>().`map_err(|e`| `e.to_string()`)
-    /// );
-    // ```
-    ///
-    /// # Capturing Closures
-    ///
-    /// You can also use capturing closures for more flexible behavior, such as when you
-    /// need to capture environment variables. In that case, you can specify the trailing
-    /// type parameters as `_`, and the compiler will infer them:
-    ///
-    // ```
-    /// use `optics::FallibleIsoImpl`;
-    ///
-    /// let `max_value` = 100;
-    ///
-    /// let iso = `FallibleIsoImpl::`<i32, String, _, _, _>`::new`(
-    ///     move |v| {
-    ///         if *v <= `max_value` {
-    ///             `Ok(v.to_string())`
-    ///         } else {
-    ///             Err(format!("Value {} exceeds maximum {}", v, `max_value`))
-    ///         }
-    ///     },
-    ///     move |s| {
-    ///         `s.parse::`<i32>()
-    ///             .`map_err`(|_| format!("Failed to parse '{}'", s))
-    ///     },
-    /// );
-    ///
-    // ```
-    pub(crate) fn new(get_fn: GET, rev_fn: REV) -> Self {
+    fn new(get_fn: GET, rev_fn: REV) -> Self {
         MappedFallibleIso {
             get_fn,
             rev_fn,
@@ -146,6 +69,53 @@ where
     }
 }
 
+
+/// Creates a new `FallibleIso` with the provided getter function.
+///
+/// # Type Parameters
+/// - `S`: The source type of the optic
+/// - `A`: The target type of the optic
+/// - `GE`: The error type returned when the forward mapping fails
+/// - `RE`: The error type returned when the reverse mapping fails
+
+/// # Arguments
+///
+/// - `get_fn` — A function that faillibly maps the value of type `S` to a value of type `A`.
+/// - `rev_fn` — A function that faillibly maps the value of type `A` back to a value of type `S`.
+///
+/// # Returns
+///
+/// A new `FallibleIsoImpl` instance that can be used as a `FallibleIso<S, A>`.
+///
+/// # Examples
+///
+/// ```
+/// use std::net::IpAddr;
+/// use optics::{mapped_fallible_iso, HasGetter, HasReverseGet, HasSetter};
+///
+/// fn s2port(s: &String) -> Result<u16, ()> {
+///     match s.parse::<u16>() {
+///         Ok(n) if n > 0 => Ok(n),
+///         _ => Err(()),
+///     }
+/// }
+///
+/// fn port2s(port: &u16) -> Result<String, ()> {
+///     if *port > 0 {
+///         Ok(port.to_string())
+///     } else {
+///         Err(())
+///     }
+/// }
+/// let string_to_port = mapped_fallible_iso(s2port, port2s);
+///
+/// let mut s = "8081".to_string();
+///
+/// assert_eq!(string_to_port.try_get(&s), Ok(8081));
+/// assert_eq!(string_to_port.try_reverse_get(&8081), Ok("8081".to_string()));
+/// string_to_port.set(&mut s, 8082u16);
+/// assert_eq!(s, "8082".to_string());
+/// ```
 #[must_use]
 pub fn new<S, A, GE, RE, GET, REV>(
     get_fn: GET,

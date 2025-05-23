@@ -1,11 +1,28 @@
-use crate::{
-    FallibleIso, FallibleIsoImpl, HasGetter, HasReverseGet, HasSetter, HasTotalGetter,
-    HasTotalReverseGet, Iso, Lens, LensImpl, Prism, PrismImpl, composed_fallible_iso, composed_iso,
-    composed_lens, composed_prism, infallible,
-};
+use crate::{FallibleIso, FallibleIsoImpl, HasGetter, HasReverseGet, HasSetter, HasTotalGetter, HasTotalReverseGet, Iso, Lens, LensImpl, Prism, PrismImpl, composed_fallible_iso, composed_iso, composed_lens, composed_prism, infallible, PartialGetter};
 use core::convert::{Infallible, identity};
 use core::marker::PhantomData;
 
+/// A wrapper of the [`Iso`] optic implementations, encapsulating a reversible bijective conversion.
+///
+/// `IsoImpl` provides a way to define a reversible bijective conversion - optics that can be used to
+/// convert between values of type `A` and of type `S`.
+/// This struct is particularly useful in scenarios where you need to deal with data types that have
+/// multiple representations, such as a Point in cartesian and polar coordinates.
+///
+/// # Note
+///
+/// This struct is not intended to be created by users directly, but it implements a From<Iso<S,A>> so
+/// that implementors of new optic types can wrap their concrete implementation of an Iso optic.
+///
+/// # Type Parameters
+///
+/// - `S`: The type the optic converts from 
+/// - `A`: The type the optic converts to
+///
+/// # See Also
+///
+/// - [`Iso`] trait for defining bijective conversions.
+/// - [`mapped_iso`] function for creating `IsoImpl` instances from mapping functions.
 pub struct IsoImpl<S, A, ISO: Iso<S, A>>(pub ISO, PhantomData<(S, A)>);
 
 impl<S, A, ISO: Iso<S, A>> IsoImpl<S, A, ISO> {

@@ -1,32 +1,9 @@
 use crate::optics::iso::Iso;
 use crate::optics::iso::wrapper::IsoImpl;
-use crate::{HasGetter, HasReverseGet, HasSetter, HasTotalGetter, HasTotalReverseGet};
+use crate::{HasGetter, HasReverseGet, HasSetter, HasTotalGetter, HasTotalReverseGet, PartialGetter};
 use core::convert::Infallible;
 use core::marker::PhantomData;
 
-/// A composed `Iso` type, combining two optics into a single `Iso`.
-///
-/// This struct is automatically created by composing two existing optics, and is **not** intended
-/// to be directly constructed outside the crate. Instead, it is generated through composition of
-/// two optics via the corresponding `ComposableXXX` traits, where each optic can be any
-/// valid optic type where the result is a `Iso`.
-///
-/// A `Composed` not only combines two optics into a single lens, but it also inherently
-/// acts as a `Prism` and `Optic`. This behavior arises from the fact that a `Iso` is itself a
-/// more specific form of an optic, and prism and thus any `Iso` composition will also be usable as
-/// a `Prism` and an `Optic`.
-///
-/// # Construction
-///
-/// This struct **cannot** be manually constructed by users. Instead, it is created via
-/// composition of two optics using the appropriate `ComposableXXX` trait for each optic type.
-/// The `ComposedIso` structure is provided internally by the crate after you compose valid optics.
-///
-/// # See Also
-///
-/// - [`Iso`] — the core optic type that the `ComposedIso` is based on
-/// - [`Prism`] — the optic type that `ComposedIso` also acts as
-/// - [`Optic`] — the base trait that all optic types implement
 struct ComposedIso<ISO1, ISO2, S, I, A>
 where
     ISO1: Iso<S, I>,
@@ -88,12 +65,35 @@ where
     }
 }
 
+/// Creates an `Iso<S,A>` combined from two optics <S, I>, <I, A> applied one after another.
+///
+/// This struct is automatically created by composing two existing optics, and is **not** intended
+/// to be directly constructed outside the crate. Instead, it is generated through composition of
+/// two optics via the corresponding `composable_with_XXX` methods, where the two optics can be of any
+/// valid optic type that results in a `Iso`.
+///
+/// # Type Parameters
+/// - `S`: The source type of the first optic
+/// - `A`: The target type of the second optic
+/// - `I`: The intermediate type: the target type of the first optic and the source type of the second optic
+///
+/// # Arguments
+/// - `i1`: The first optic of type `Iso<S, I>`
+/// - `i2`: The second optic of type `Iso<I, A>`
+///
+/// This struct **should not** be manually constructed by users. Instead, it is created via
+/// composition of two optics using the appropriate `compose_with_XXX` methods on each optic impl.
+/// The `ComposedIso` structure is provided internally by the crate after you compose valid optics.
+///
+/// # See Also
+///
+/// - [`Iso`] — the optic type that `ComposedIso` is based on
 #[must_use]
 pub fn new<S, A, I, ISO1: Iso<S, I>, ISO2: Iso<I, A>>(
-    f1: ISO1,
-    f2: ISO2,
+    i1: ISO1,
+    i2: ISO2,
 ) -> IsoImpl<S, A, impl Iso<S, A>>
 where
 {
-    ComposedIso::new(f1, f2).into()
+    ComposedIso::new(i1, i2).into()
 }

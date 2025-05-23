@@ -1,36 +1,10 @@
-use crate::HasReverseGet;
+use crate::{HasReverseGet, Iso, PartialGetter};
 use crate::optics::fallible_iso::FallibleIso;
 use crate::optics::fallible_iso::wrapper::FallibleIsoImpl;
 use crate::{HasGetter, HasSetter};
 use core::marker::PhantomData;
 
-/// A composed `FallibleIso` type, combining two optics into a single `FallibleIso`.
-///
-/// This struct is automatically created by composing two existing optics, and is **not** intended
-/// to be directly constructed outside the crate. Instead, it is generated through composition of
-/// two optics via the corresponding `ComposableXXX` traits, where each optic can be any
-/// valid optic type where the result is a `FallibleIso`.
-///
-/// A `ComposedFallible` not only combines two optics into a single lens, but it also inherently
-/// acts as a `Prism` and `Optic`. This behavior arises from the fact that a `FallibleIso` is itself a
-/// more specific form of an optic, and prism and thus any `FallibleIso` composition will also be usable as
-/// a `Prism` and an `Optic`.
-///
-/// # Construction
-///
-/// This struct **cannot** be manually constructed by users. Instead, it is created via
-/// composition of two optics using the appropriate `ComposableXXX` trait for each optic type.
-/// The `ComposedFallibleIso` structure is provided internally by the crate after you compose valid optics.
-///
-/// # See Also
-///
-/// - [`FallibleIso`] — the core optic type that the `ComposedFallibleIso` is based on
-/// - [`Prism`] — the optic type that `ComposedFallibleIso` also acts as
-/// - [`Optic`] — the base trait that all optic types implement
-struct ComposedFallibleIso<FI1, FI2, GE, RE, S, I, A>
-where
-    FI1: FallibleIso<S, I>,
-    FI2: FallibleIso<I, A>,
+struct ComposedFallibleIso<S, I, A, GE, RE, FI1: FallibleIso<S, I>, FI2: FallibleIso<I, A>>
 {
     optic1: FI1,
     optic2: FI2,
@@ -41,10 +15,7 @@ where
     _phantom: PhantomData<(S, I, A, GE, RE)>,
 }
 
-impl<FI1, FI2, S, I, A, GE, RE> ComposedFallibleIso<FI1, FI2, GE, RE, S, I, A>
-where
-    FI1: FallibleIso<S, I>,
-    FI2: FallibleIso<I, A>,
+impl<S, I, A, GE, RE, FI1: FallibleIso<S, I>, FI2: FallibleIso<I, A>> ComposedFallibleIso<S, I, A, GE, RE, FI1, FI2>
 {
     pub(crate) fn new(
         optic1: FI1,
@@ -66,10 +37,7 @@ where
     }
 }
 
-impl<FI1, FI2, GE, RE, S, I, A> HasGetter<S, A> for ComposedFallibleIso<FI1, FI2, GE, RE, S, I, A>
-where
-    FI1: FallibleIso<S, I>,
-    FI2: FallibleIso<I, A>,
+impl<S, I, A, GE, RE, FI1: FallibleIso<S, I>, FI2: FallibleIso<I, A>> HasGetter<S, A> for ComposedFallibleIso<S, I, A, GE, RE, FI1, FI2>
 {
     type GetterError = GE;
 
@@ -82,11 +50,8 @@ where
     }
 }
 
-impl<FI1, FI2, GE, RE, S, I, A> HasReverseGet<S, A>
-    for ComposedFallibleIso<FI1, FI2, GE, RE, S, I, A>
-where
-    FI1: FallibleIso<S, I>,
-    FI2: FallibleIso<I, A>,
+impl<S, I, A, GE, RE, FI1: FallibleIso<S, I>, FI2: FallibleIso<I, A>> HasReverseGet<S, A>
+    for ComposedFallibleIso<S, I, A, GE, RE, FI1, FI2>
 {
     type ReverseError = RE;
 
@@ -101,10 +66,7 @@ where
     }
 }
 
-impl<FI1, FI2, GE, RE, S, I, A> HasSetter<S, A> for ComposedFallibleIso<FI1, FI2, GE, RE, S, I, A>
-where
-    FI1: FallibleIso<S, I>,
-    FI2: FallibleIso<I, A>,
+impl<S, I, A, GE, RE, FI1: FallibleIso<S, I>, FI2: FallibleIso<I, A>> HasSetter<S, A> for ComposedFallibleIso<S, I, A, GE, RE, FI1, FI2>
 {
     fn set(&self, source: &mut S, value: A) {
         if let Ok(mut i) = self.optic1.try_get(source).map_err(self.getter_error_fn_1) {
@@ -114,6 +76,35 @@ where
     }
 }
 
+/// Creates a `FallibleIso<S,A>` combined from two optics <S, I>, <I, A> applied one after another.
+///
+/// This struct is automatically created by composing two existing optics, and is **not** intended
+/// to be directly constructed outside the crate. Instead, it is generated through composition of
+/// two optics via the corresponding `composable_with_XXX` methods, where the two optics can be of any
+/// valid optic type that results in a `FallibleIso`.
+///
+/// # Type Parameters
+/// - `S`: The source type of the first optic
+/// - `A`: The target type of the second optic
+/// - `I`: The intermediate type: the target type of the first optic and the source type of the second optic
+/// - `GE`: The common forward mapping error type for both optics
+/// - `RE`: The common reverse mapping error type for both optics
+///
+/// # Arguments
+/// - `f1`: The first optic of type `FallibleIso<S, I>`
+/// - `f2`: The second optic of type `FallibleIso<I, A>`
+/// - `getter_error_fn_1`: A function that maps the forward error type of the first optic to a common error type `GE`
+/// - `getter_error_fn_2`: A function that maps the forward error type of the second optic to a common error type `GE`
+/// - `reverse_error_fn_1`: A function that maps the reverse error type of the second optic to a common error type `RE`
+/// - `reverse_error_fn_2`: A function that maps the reverse error type of the second optic to a common error type `RE`
+///
+/// This struct **should not** be manually constructed by users. Instead, it is created via
+/// composition of two optics using the appropriate `compose_with_XXX` methods on each optic impl.
+/// The `ComposedFallibleIso` structure is provided internally by the crate after you compose valid optics.
+///
+/// # See Also
+///
+/// - [`FallibleIso`] — the optic type that `ComposedFallibleIso` is based on
 #[must_use]
 pub fn new<S, A, I, GE, RE, FI1: FallibleIso<S, I>, FI2: FallibleIso<I, A>>(
     f1: FI1,

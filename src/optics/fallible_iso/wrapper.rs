@@ -5,6 +5,33 @@ use crate::{
 use core::convert::identity;
 use core::marker::PhantomData;
 
+/// A wrapper of the [`FallibleIso`] optic implementations, encapsulating a potentially failing,
+/// reversible bijective conversion.
+///
+/// `FallibleIsoImpl` provides a way to define a potentially failing reversible bijective conversion
+/// optics that can be used to convert between values of type `A` and of type `S` where the
+/// conversion may fail.
+/// This struct is particularly useful in scenarios where you need to deal with data types that can
+/// be converted to and from other types, but the conversion may not always succeed, such as an
+/// IpAddress and a String.
+///
+/// # Note
+///
+/// This struct is not intended to be created by users directly, but it implements a From<Iso<S,A>> so
+/// that implementors of new optic types can wrap their concrete implementation of an Iso optic.
+///
+/// # Type Parameters
+///
+/// - `S`: The type the optic converts from
+/// - `A`: The type the optic converts to
+/// - `GE`: The error type that can occur during the forward mapping.
+/// - `RE`: The error type that can occur during the reverse mapping.
+///
+/// # See Also
+///
+/// - [`FallibleIso`] trait for defining bijective conversions.
+/// - [`mapped_fallible_iso`] function for creating `FallibleIsoImpl` instances from mapping functions.
+///
 pub struct FallibleIsoImpl<S, A, FI: FallibleIso<S, A>>(pub FI, PhantomData<(S, A)>);
 
 impl<S, A, FI: FallibleIso<S, A>> FallibleIsoImpl<S, A, FI> {

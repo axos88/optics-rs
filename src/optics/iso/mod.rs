@@ -9,27 +9,27 @@ pub use composed::new as composed_iso;
 pub use mapped::new as mapped_iso;
 pub use wrapper::IsoImpl;
 
-/// An isomorphism between two types `S` and `A`.
+/// An `Iso` defines an isomorphism between two type, which is a bijective, reversible conversion between the members of two types.
 ///
-/// An `Iso` is a bidirectional optic that provides a one-to-one, lossless, and reversible mapping
-/// between a source type `S` and a focus type `A`. Unlike general `Prism` or `Lens` optics, an
-/// `Iso` guarantees that for every `S` there exists exactly one corresponding `A`, and vice versa.
+/// It provides:
+/// - `get` to convert a value of type `S` to type `A`
+/// - `set` to change the value the optic operates on
+/// - `reverse_get` to convert a value of type `A` to type `S`
 ///
-/// Because it is total and invertible, an `Iso` is both a `Lens` and a `Prism`, as well as a
-/// `FallibleIso` with an infallible error type (`Infallible`). This means it participates fully
-/// in the optic hierarchy, providing total reads, total writes, and reversible transformations.
+/// This is useful when working with a data structure that can be represented in two different ways,
+/// such as a Point in XY coordinates and polar coordinates.
 ///
-/// # Supertraits
-/// - [`Optic<S, A, Error = Infallible>`] — ensures that operations on the `Iso` cannot fail.
-/// - [`FallibleIso<S, A>`] — provides the fallible isomorphism API, but with `Infallible` error.
-/// - [`Prism<S, A>`] — allows using this `Iso` as a `Prism`.
-/// - [`Lens<S, A>`] — allows using this `Iso` as a `Lens`.
+/// Type Arguments
+///   - `S`: The data type the optic operates on
+///   - `A`: The data type the optic focuses on
+///
+/// # Note
+///
+/// This is a marker trait that is blanket implemented for all structs that satisfy the requirements.
 ///
 /// # See Also
-/// - [`Lens`] — for total, read/write optics.
-/// - [`Prism`] — for partial optics.
-/// - [`FallibleIso`] — for reversible optics that can fail.
-/// - [`Optic`] — the base trait for all optics.
+/// - [`FallibleIso`] — a variant of `Iso` where the mapping might fail, returning an error
+/// - [`IsoImpl`] — the wrapper of opaque struct that implement the `Iso` trait
 pub trait Iso<S, A>:
     HasGetter<S, A, GetterError = Infallible>
     + HasSetter<S, A>
@@ -47,6 +47,38 @@ impl<
 {
 }
 
+
+/// Creates an `Iso` that maps an input to itself.
+///
+/// It can be useful in cases where you need an identity optic within
+/// a composition chain, or as a trivial iso implementation.
+///
+/// # Type Parameters
+///
+/// - `S`: The type of the input and output value. Must implement `Clone`.
+///
+/// # Returns
+///
+/// An `IsoImpl` instance that implements `Iso<S, S>`
+/// and always returns the cloned input value.
+///
+/// # Example
+///
+/// ```rust
+/// use optics::{identity_iso, HasSetter, HasTotalGetter, HasTotalReverseGet};
+///
+/// let iso = identity_iso::<i32>();
+/// let mut v = 42i32;
+///
+/// assert_eq!(iso.get(&v), 42);
+/// iso.set(&mut v, 43);
+/// assert_eq!(iso.get(&v), 43);
+/// assert_eq!(v, 43);
+/// ```
+///
+/// # See Also
+///
+/// - [`mapped_iso`] for constructing custom `Iso`s from arbitrary mapping functions.
 #[must_use]
 pub fn identity_iso<S: Clone>() -> IsoImpl<S, S, impl Iso<S, S>> {
     mapped_iso(|x: &S| x.clone(), |x: &S| x.clone())
