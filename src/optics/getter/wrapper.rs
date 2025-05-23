@@ -6,7 +6,6 @@ use crate::{
 use core::convert::{Infallible, identity};
 use core::marker::PhantomData;
 
-
 /// A wrapper of the [`Getter`] optic implementations, encapsulating a total getter function.
 ///
 /// `GetterImpl` provides a way to define total getters - optics that retrieve

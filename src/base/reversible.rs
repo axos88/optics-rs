@@ -7,16 +7,16 @@
 /// # Associated Types
 ///
 /// - `ReverseError`: The type of the error that may occur during the reverse operation. This will propagete
-/// as the error type of reverse retrieval of concrete optics that implement this trait.
+///   as the error type of reverse retrieval of concrete optics that implement this trait.
 ///
 /// # Notes
 ///
 /// - Currently, you will likely need to clone or copy the value in order to reverse it into the source.
 /// - Logically a `PartialReversible<S, A>` implies `PartialGetter<A, S>`, but I have not yet found a way
-/// around the compiler trait cohesion limitations
+///   around the compiler trait cohesion limitations
 /// - One way could be to remove `PartialReversible` entirely, and use `PartialGetter<A, S>` instead of
-/// `PartialReversible<S, A>`, but that comes with its own set of ergonomics issues, like how to
-/// disambuguate between the two `try_get` operations without too much boilerplate.
+///   `PartialReversible<S, A>`, but that comes with its own set of ergonomics issues, like how to
+///   disambuguate between the two `try_get` operations without too much boilerplate.
 ///
 /// # Implementors
 ///
@@ -35,6 +35,11 @@ pub trait HasReverseGet<S, A> {
     /// # Parameters
     ///
     /// - `value`: A reference to the value of type `A` to be reversed into the source.
+    ///
+    /// # Errors
+    ///
+    /// When the reverse conversion fails, it returns an instance of the Reverse type defined by the
+    /// implementing trait.
     ///
     /// # Returns
     ///

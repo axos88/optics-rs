@@ -1,11 +1,10 @@
-use crate::{HasReverseGet, Iso, PartialGetter};
+use crate::HasReverseGet;
 use crate::optics::fallible_iso::FallibleIso;
 use crate::optics::fallible_iso::wrapper::FallibleIsoImpl;
 use crate::{HasGetter, HasSetter};
 use core::marker::PhantomData;
 
-struct ComposedFallibleIso<S, I, A, GE, RE, FI1: FallibleIso<S, I>, FI2: FallibleIso<I, A>>
-{
+struct ComposedFallibleIso<S, I, A, GE, RE, FI1: FallibleIso<S, I>, FI2: FallibleIso<I, A>> {
     optic1: FI1,
     optic2: FI2,
     getter_error_fn_1: fn(FI1::GetterError) -> GE,
@@ -15,7 +14,8 @@ struct ComposedFallibleIso<S, I, A, GE, RE, FI1: FallibleIso<S, I>, FI2: Fallibl
     _phantom: PhantomData<(S, I, A, GE, RE)>,
 }
 
-impl<S, I, A, GE, RE, FI1: FallibleIso<S, I>, FI2: FallibleIso<I, A>> ComposedFallibleIso<S, I, A, GE, RE, FI1, FI2>
+impl<S, I, A, GE, RE, FI1: FallibleIso<S, I>, FI2: FallibleIso<I, A>>
+    ComposedFallibleIso<S, I, A, GE, RE, FI1, FI2>
 {
     pub(crate) fn new(
         optic1: FI1,
@@ -37,7 +37,8 @@ impl<S, I, A, GE, RE, FI1: FallibleIso<S, I>, FI2: FallibleIso<I, A>> ComposedFa
     }
 }
 
-impl<S, I, A, GE, RE, FI1: FallibleIso<S, I>, FI2: FallibleIso<I, A>> HasGetter<S, A> for ComposedFallibleIso<S, I, A, GE, RE, FI1, FI2>
+impl<S, I, A, GE, RE, FI1: FallibleIso<S, I>, FI2: FallibleIso<I, A>> HasGetter<S, A>
+    for ComposedFallibleIso<S, I, A, GE, RE, FI1, FI2>
 {
     type GetterError = GE;
 
@@ -66,7 +67,8 @@ impl<S, I, A, GE, RE, FI1: FallibleIso<S, I>, FI2: FallibleIso<I, A>> HasReverse
     }
 }
 
-impl<S, I, A, GE, RE, FI1: FallibleIso<S, I>, FI2: FallibleIso<I, A>> HasSetter<S, A> for ComposedFallibleIso<S, I, A, GE, RE, FI1, FI2>
+impl<S, I, A, GE, RE, FI1: FallibleIso<S, I>, FI2: FallibleIso<I, A>> HasSetter<S, A>
+    for ComposedFallibleIso<S, I, A, GE, RE, FI1, FI2>
 {
     fn set(&self, source: &mut S, value: A) {
         if let Ok(mut i) = self.optic1.try_get(source).map_err(self.getter_error_fn_1) {

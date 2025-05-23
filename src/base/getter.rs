@@ -7,7 +7,7 @@
 /// # Associated Types
 ///
 /// - `GetterError`: The type of the error that may occur during retrieval. This will propagete
-/// as the error type of retrieval of concrete optics that implement this trait.
+///   as the error type of retrieval of concrete optics that implement this trait.
 ///
 /// # Notes
 /// - Currently, you will likely need to Clone or Copy the result in order to extract it from the source.
@@ -33,6 +33,10 @@ pub trait HasGetter<S, A> {
     /// # Parameters
     ///
     /// - `source`: A reference to the source of type `S` from which the value is to be retrieved.
+    ///
+    /// # Errors
+    ///
+    /// It returns an error specified by the implementing optic if the focus fails.
     ///
     /// # Returns
     ///

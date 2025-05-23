@@ -2,7 +2,7 @@ mod composed;
 mod mapped;
 mod wrapper;
 
-use crate::{mapped_partial_getter, HasGetter};
+use crate::HasGetter;
 pub use composed::new as composed_getter;
 use core::convert::Infallible;
 pub use mapped::new as mapped_getter;
@@ -30,8 +30,6 @@ pub use wrapper::GetterImpl;
 pub trait Getter<S, A>: HasGetter<S, A, GetterError = Infallible> {}
 
 impl<S, A, G: HasGetter<S, A, GetterError = Infallible>> Getter<S, A> for G {}
-
-
 
 /// Creates a `Getter` that focuses on the entire input.
 ///

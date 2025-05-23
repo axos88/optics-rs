@@ -31,13 +31,11 @@ where
     }
 }
 
-
 /// Creates a new `Setter` with the provided setter function.
 ///
 /// # Type Parameters
 /// - `S`: The source type of the optic
 /// - `A`: The target type of the optic
-
 /// # Arguments
 ///
 /// - `set_fn` — A function that sets the focus value `A` from the source `S`.

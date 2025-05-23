@@ -1,7 +1,7 @@
+use crate::HasGetter;
 use crate::HasSetter;
 use crate::optics::lens::Lens;
 use crate::optics::lens::wrapper::LensImpl;
-use crate::HasGetter;
 use core::convert::Infallible;
 use core::marker::PhantomData;
 
@@ -56,7 +56,6 @@ where
 /// # Type Parameters
 /// - `S`: The source type of the optic
 /// - `A`: The target type of the optic
-
 /// # Arguments
 ///
 /// - `get_fn` — A function that retrieves the focus value `A` from the source `S`.
@@ -84,7 +83,6 @@ where
 /// x_lens.set(&mut p, 42);
 /// assert_eq!(x_lens.get(&p), 42);
 /// ```
-
 #[must_use]
 pub fn new<S, A, GET, SET>(get_fn: GET, set_fn: SET) -> LensImpl<S, A, impl Lens<S, A>>
 where

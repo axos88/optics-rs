@@ -1,4 +1,4 @@
-use crate::{HasSetter};
+use crate::HasSetter;
 use crate::optics::lens::Lens;
 use crate::{HasGetter, HasTotalGetter, LensImpl};
 use core::convert::Infallible;

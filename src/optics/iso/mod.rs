@@ -47,7 +47,6 @@ impl<
 {
 }
 
-
 /// Creates an `Iso` that maps an input to itself.
 ///
 /// It can be useful in cases where you need an identity optic within

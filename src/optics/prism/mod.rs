@@ -1,4 +1,4 @@
-use crate::{mapped_partial_getter, HasGetter};
+use crate::HasGetter;
 use crate::HasSetter;
 use core::convert::Infallible;
 

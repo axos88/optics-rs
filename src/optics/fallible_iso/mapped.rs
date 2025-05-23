@@ -1,16 +1,10 @@
-use crate::{FallibleIso, HasReverseGet};
 use crate::optics::fallible_iso::wrapper::FallibleIsoImpl;
+use crate::{FallibleIso, HasReverseGet};
 use crate::{HasGetter, HasSetter};
 use core::marker::PhantomData;
 
-struct MappedFallibleIso<
-    S,
-    A,
-    GE,
-    RE,
-    GET = fn(&S) -> Result<A, GE>,
-    REV = fn(&A) -> Result<S, RE>,
-> where
+struct MappedFallibleIso<S, A, GE, RE, GET = fn(&S) -> Result<A, GE>, REV = fn(&A) -> Result<S, RE>>
+where
     GET: Fn(&S) -> Result<A, GE>,
     REV: Fn(&A) -> Result<S, RE>,
 {
@@ -69,7 +63,6 @@ where
     }
 }
 
-
 /// Creates a new `FallibleIso` with the provided getter function.
 ///
 /// # Type Parameters
@@ -77,7 +70,6 @@ where
 /// - `A`: The target type of the optic
 /// - `GE`: The error type returned when the forward mapping fails
 /// - `RE`: The error type returned when the reverse mapping fails
-
 /// # Arguments
 ///
 /// - `get_fn` — A function that faillibly maps the value of type `S` to a value of type `A`.

@@ -1,12 +1,12 @@
-pub mod helpers;
 mod code_quality;
+pub mod helpers;
 
 use crate::HasGetter;
 use crate::HasSetter;
+use crate::HasTotalGetter;
 use crate::optics::lens::{Lens, mapped_lens};
 use crate::optics::prism::{Prism, mapped_prism};
 use crate::{FallibleIso, HasReverseGet, Iso, mapped_fallible_iso, mapped_iso};
-use crate::{HasTotalGetter};
 use alloc::string::{String, ToString};
 use alloc::vec;
 use alloc::vec::Vec;
@@ -145,7 +145,7 @@ fn test_over() {
 
     main_lens.over(&mut config, |v| match v {
         Timespan::Minutes(s) => Timespan::Minutes(s + 1),
-        s => s
+        s => s,
     });
 
     assert_eq!(config.delay, Timespan::Minutes(15));

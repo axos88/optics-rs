@@ -12,11 +12,11 @@ use core::marker::PhantomData;
 /// a value of type `A` from a source of type `S`, potentially failing with an error.
 /// This struct is particularly useful in scenarios where you need to compose or reuse getter logic
 /// that might not always succeed.
-/// 
+///
 /// # Note
-/// 
-/// This struct is not intended to be created by users directly, but it implements a From<PartialGetter<S,A>> so
-/// that implementors of new optic types can wrap their concrete implementation of a PartialGetter optic.
+///
+/// This struct is not intended to be created by users directly, but it implements a From<`PartialGetter`<S,A>> so
+/// that implementors of new optic types can wrap their concrete implementation of a `PartialGetter` optic.
 ///
 /// # Type Parameters
 ///

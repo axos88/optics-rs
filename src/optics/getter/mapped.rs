@@ -8,7 +8,6 @@ use core::marker::PhantomData;
 /// # Type Parameters
 /// - `S`: The source type of the optic
 /// - `A`: The target type of the optic
-
 /// # Arguments
 ///
 /// - `get_fn` — A function that retrieves the focus value `A` from the source `S`.
@@ -31,7 +30,6 @@ use core::marker::PhantomData;
 ///
 /// assert_eq!(x_partial_getter.get(&point), 10);
 /// ```
-
 struct MappedGetter<S, A, GET = fn(&S) -> A>
 where
     GET: Fn(&S) -> A,

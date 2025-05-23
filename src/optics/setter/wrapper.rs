@@ -1,9 +1,9 @@
-use crate::{HasSetter, PartialGetter, Setter};
+use crate::{HasSetter, Setter};
 use core::marker::PhantomData;
 
 /// A wrapper of the [`Setter`] optic implementations, encapsulating a setter function.
 ///
-/// `SetterImpl` provides a way to define setters - optics that are able to write to a focued  value 
+/// `SetterImpl` provides a way to define setters - optics that are able to write to a focued  value
 /// of type `A` from a source of type `S`.
 /// This struct is particularly useful in scenarios where you need to allow a callee to write into a
 /// struct without being able to read its contents.

@@ -1,6 +1,6 @@
+use crate::Setter;
 use crate::optics::setter::wrapper::SetterImpl;
-use crate::{HasSetter, PartialGetter, Prism};
-use crate::{Setter};
+use crate::{HasSetter, Prism};
 use core::marker::PhantomData;
 
 struct ComposedSetter<SETTER1: Setter<S, I>, SETTER2: Setter<I, A>, S, I, A> {
@@ -42,7 +42,7 @@ where
 /// to be directly constructed outside the crate. Instead, it is generated through composition of
 /// two optics via the corresponding `composable_with_XXX` methods, where the two optics can be of any
 /// valid optic type that results in a `PartialGetter`.
-/// 
+///
 /// This composer is a bit different from the other optics, as it requires the first optic to also
 /// have have a `Getter`, so be a `Prism`, as it requires to read the intermediate value so that it can change its focused value.
 ///
@@ -52,7 +52,7 @@ where
 /// - `I`: The intermediate type: the target type of the first optic and the source type of the second optic
 ///
 /// # Arguments
-/// - `p1`: The first optic of type `Prism<S, I>` 
+/// - `p1`: The first optic of type `Prism<S, I>`
 /// - `s2`: The second optic of type `Setter<I, A>`
 ///
 /// This struct **should not** be manually constructed by users. Instead, it is created via

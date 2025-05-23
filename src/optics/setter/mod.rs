@@ -2,7 +2,7 @@ mod composed;
 mod mapped;
 mod wrapper;
 
-use crate::{mapped_partial_getter, HasSetter};
+use crate::HasSetter;
 
 pub use composed::new as composed_setter;
 pub use mapped::new as mapped_setter;
@@ -64,7 +64,7 @@ impl<S, A, SETTER: HasSetter<S, A>> Setter<S, A> for SETTER {}
 ///  // We have no way to access what val currently is, we don't even know it's type!
 ///  setter.set(val, T::default());
 /// }
-/// 
+///
 /// let mut s = Foo(142);
 ///
 /// set_to_default(&mut s, identity_setter());

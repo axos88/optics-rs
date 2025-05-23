@@ -56,7 +56,6 @@ where
 /// - `S`: The source type of the optic
 /// - `A`: The target type of the optic
 /// - `E`: The error type returned when the focus fails
-
 /// # Arguments
 ///
 /// - `get_fn` — A function that faillibly retrieves the focus value `A` from the source `S`.

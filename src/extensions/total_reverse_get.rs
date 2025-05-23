@@ -1,4 +1,4 @@
-use crate::{HasGetter, HasReverseGet};
+use crate::HasReverseGet;
 use core::convert::Infallible;
 
 /// Provides a simplified interface for optics with infallible reverse-get operations.

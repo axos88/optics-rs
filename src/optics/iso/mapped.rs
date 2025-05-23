@@ -67,7 +67,6 @@ where
 /// # Type Parameters
 /// - `S`: The source type of the optic
 /// - `A`: The target type of the optic
-
 /// # Arguments
 ///
 /// - `get_fn` — A function that converts a value of type `S` to a value of type `A`.

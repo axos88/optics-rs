@@ -1,6 +1,6 @@
 use crate::optics::iso::Iso;
 use crate::optics::iso::wrapper::IsoImpl;
-use crate::{HasGetter, HasReverseGet, HasSetter, HasTotalGetter, HasTotalReverseGet, PartialGetter};
+use crate::{HasGetter, HasReverseGet, HasSetter, HasTotalGetter, HasTotalReverseGet};
 use core::convert::Infallible;
 use core::marker::PhantomData;
 

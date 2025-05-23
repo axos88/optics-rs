@@ -1,4 +1,4 @@
-use crate::{HasGetter, PartialGetter};
+use crate::HasGetter;
 use crate::HasSetter;
 use crate::optics::prism::Prism;
 use crate::optics::prism::wrapper::PrismImpl;

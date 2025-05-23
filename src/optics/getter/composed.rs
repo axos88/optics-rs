@@ -1,5 +1,5 @@
 use crate::optics::getter::wrapper::GetterImpl;
-use crate::{Getter, HasGetter, HasTotalGetter, PartialGetter};
+use crate::{Getter, HasGetter, HasTotalGetter};
 use core::convert::Infallible;
 use core::marker::PhantomData;
 
@@ -34,7 +34,6 @@ where
         Ok(self.optic2.get(&self.optic1.get(source)))
     }
 }
-
 
 /// Creates a `Getter<S,A>` combined from two optics <S, I>, <I, A> applied one after another.
 ///

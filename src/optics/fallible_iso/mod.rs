@@ -1,4 +1,4 @@
-use crate::{mapped_iso, HasGetter, HasSetter, IsoImpl};
+use crate::{HasGetter, HasSetter};
 pub(crate) mod composed;
 pub(crate) mod mapped;
 mod wrapper;
@@ -11,12 +11,12 @@ pub use wrapper::FallibleIsoImpl;
 /// A `FallibleIso` defines a reversible, but potentially failing conversion between two types.
 ///
 /// It provides:
-/// - `try_get` to convert a value of type `S` to type `A`, possibly failing with an error of type GetterError
+/// - `try_get` to convert a value of type `S` to type `A`, possibly failing with an error of type `GetterError`
 /// - `set` to change the value the optic operates on
-/// - `try_reverse_get` to convert a value of type `A` to type `S`, possibly failing with an error of type ReverseError
+/// - `try_reverse_get` to convert a value of type `A` to type `S`, possibly failing with an error of type `ReverseError`
 ///
 /// This is useful when working with a data structure that can be represented in two different ways,
-/// but conversion between the two types might fail, such as a String and an IpAddress
+/// but conversion between the two types might fail, such as a String and an `IpAddress`
 ///
 /// Type Arguments
 ///   - `S`: The data type the optic operates on
@@ -32,7 +32,6 @@ pub use wrapper::FallibleIsoImpl;
 pub trait FallibleIso<S, A>: HasGetter<S, A> + HasSetter<S, A> + HasReverseGet<S, A> {}
 
 impl<S, A, FI: HasGetter<S, A> + HasSetter<S, A> + HasReverseGet<S, A>> FallibleIso<S, A> for FI {}
-
 
 /// Creates a `FallibleIso` that maps an input to itself. This is actually an `Iso`.
 ///

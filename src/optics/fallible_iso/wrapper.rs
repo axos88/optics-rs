@@ -13,7 +13,7 @@ use core::marker::PhantomData;
 /// conversion may fail.
 /// This struct is particularly useful in scenarios where you need to deal with data types that can
 /// be converted to and from other types, but the conversion may not always succeed, such as an
-/// IpAddress and a String.
+/// `IpAddress` and a String.
 ///
 /// # Note
 ///

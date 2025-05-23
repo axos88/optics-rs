@@ -1,5 +1,5 @@
-use std::convert::Infallible;
 use crate::HasGetter;
+use std::convert::Infallible;
 
 mod composed;
 mod mapped;
@@ -34,8 +34,6 @@ pub use wrapper::PartialGetterImpl;
 pub trait PartialGetter<S, A>: HasGetter<S, A> {}
 
 impl<S, A, PG: HasGetter<S, A>> PartialGetter<S, A> for PG {}
-
-
 
 /// Creates a `PartialGetter` that focuses on the entire input.
 ///

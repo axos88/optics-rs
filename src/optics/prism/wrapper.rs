@@ -1,5 +1,8 @@
 use crate::optics::prism::composed::new as composed_prism;
-use crate::{FallibleIso, FallibleIsoImpl, HasGetter, HasSetter, Iso, IsoImpl, Lens, LensImpl, Prism, infallible, PartialGetter};
+use crate::{
+    FallibleIso, FallibleIsoImpl, HasGetter, HasSetter, Iso, IsoImpl, Lens, LensImpl, Prism,
+    infallible,
+};
 use core::convert::identity;
 use core::marker::PhantomData;
 
@@ -10,8 +13,8 @@ use core::marker::PhantomData;
 ///
 /// # Note
 ///
-/// This struct is not intended to be created by users directly, but it implements a From<PartialGetter<S,A>> so
-/// that implementors of new optic types can wrap their concrete implementation of a PartialGetter optic.
+/// This struct is not intended to be created by users directly, but it implements a From<`PartialGetter`<S,A>> so
+/// that implementors of new optic types can wrap their concrete implementation of a `PartialGetter` optic.
 ///
 /// # Type Parameters
 ///

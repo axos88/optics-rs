@@ -1,4 +1,8 @@
-use crate::{FallibleIso, FallibleIsoImpl, HasGetter, HasReverseGet, HasSetter, HasTotalGetter, HasTotalReverseGet, Iso, Lens, LensImpl, Prism, PrismImpl, composed_fallible_iso, composed_iso, composed_lens, composed_prism, infallible, PartialGetter};
+use crate::{
+    FallibleIso, FallibleIsoImpl, HasGetter, HasReverseGet, HasSetter, HasTotalGetter,
+    HasTotalReverseGet, Iso, Lens, LensImpl, Prism, PrismImpl, composed_fallible_iso, composed_iso,
+    composed_lens, composed_prism, infallible,
+};
 use core::convert::{Infallible, identity};
 use core::marker::PhantomData;
 
@@ -16,7 +20,7 @@ use core::marker::PhantomData;
 ///
 /// # Type Parameters
 ///
-/// - `S`: The type the optic converts from 
+/// - `S`: The type the optic converts from
 /// - `A`: The type the optic converts to
 ///
 /// # See Also
