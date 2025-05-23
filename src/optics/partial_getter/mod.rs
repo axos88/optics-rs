@@ -1,5 +1,5 @@
 use crate::HasGetter;
-use std::convert::Infallible;
+use core::convert::Infallible;
 
 mod composed;
 mod mapped;
