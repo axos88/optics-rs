@@ -77,14 +77,14 @@ where
 /// ```
 /// use optics::{mapped_partial_getter, HasGetter};
 ///
-/// struct Point { x: i32, y: i32 }
-/// let x_partial_getter = mapped_partial_getter(
-///     |p: &Point| Ok::<_, ()>(p.x)
+/// enum IpAddress { Ipv4(String), Ipv6(String) }
+/// let ipv4_partial_getter = mapped_partial_getter(
+///     |s: &IpAddress| if let IpAddress::Ipv4(ip) = s { Ok(ip.clone()) } else { Err(()) }
 /// );
 ///
-/// let point = Point { x: 10, y: 20 };
+/// let addr = IpAddress::Ipv4("8.8.4.4".to_string());
 ///
-/// assert_eq!(x_partial_getter.try_get(&point), Ok(10));
+/// assert_eq!(ipv4_partial_getter.try_get(&addr), Ok("8.8.4.4".to_string()));
 /// ```
 
 #[must_use]

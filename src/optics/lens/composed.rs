@@ -1,36 +1,9 @@
-use crate::HasSetter;
+use crate::{HasSetter};
 use crate::optics::lens::Lens;
 use crate::{HasGetter, HasTotalGetter, LensImpl};
 use core::convert::Infallible;
 use core::marker::PhantomData;
 
-/// A composed `Lens` type, combining two optics into a single `Lens`.
-///
-/// This struct is automatically created by composing two existing optics, and is **not** intended
-/// to be directly constructed outside the crate. Instead, it is generated through composition of
-/// two optics via the corresponding `ComposableXXX` traits, where each optic can be any
-/// valid optic type where the result is a `Lens`.
-///
-/// A `ComposedLens` not only combines two optics into a single lens, but it also inherently
-/// acts as a `Prism` and `Optic`. This behavior arises from the fact that a `Lens` is itself a
-/// more specific form of an optic, and prism and thus any `Lens` composition will also be usable as
-/// a `Prism` and an `Optic`.
-///
-/// # Construction
-///
-/// This struct **cannot** be manually constructed by users. Instead, it is created via
-/// composition of two optics using the appropriate `ComposableXXX` trait for each optic type.
-/// The `ComposedLens` structure is provided internally by the crate after you compose valid optics.
-///
-/// # See Also
-///
-/// - [`Lens`] — the core optic type that the `ComposedLens` is based on
-/// - [`Prism`] — the optic type that `ComposedLens` also acts as
-/// - [`Optic`] — the base trait that all optic types implement
-/// - [`crate::composers::ComposableLens`] — a trait for composing [`Lens`] optics another [`Optic`]
-/// - [`crate::composers::ComposablePrism`] — a trait for composing [`Prism`] optics another [`Optic`]
-/// - [`crate::composers::ComposableIso`] — a trait for composing [`Iso`] optics into another [`Optic`]
-/// - [`crate::composers::ComposableFallibleIso`] — a trait for composing [`FallibleIso`] optics into another [`Optic`]
 struct ComposedLens<L1: Lens<S, I>, L2: Lens<I, A>, S, I, A> {
     optic1: L1,
     optic2: L2,
@@ -76,6 +49,29 @@ where
     }
 }
 
+/// Creates a `Lens<S,A>` combined from two optics <S, I>, <I, A> applied one after another.
+///
+/// This struct is automatically created by composing two existing optics, and is **not** intended
+/// to be directly constructed outside the crate. Instead, it is generated through composition of
+/// two optics via the corresponding `composable_with_XXX` methods, where the two optics can be of any
+/// valid optic type that results in a `Lens`.
+///
+/// # Type Parameters
+/// - `S`: The source type of the first optic
+/// - `A`: The target type of the second optic
+/// - `I`: The intermediate type: the target type of the first optic and the source type of the second optic
+///
+/// # Arguments
+/// - `l1`: The first optic of type `Lens<S, I>`
+/// - `l2`: The second optic of type `Lens<I, A>`
+///
+/// This struct **should not** be manually constructed by users. Instead, it is created via
+/// composition of two optics using the appropriate `compose_with_XXX` methods on each optic impl.
+/// The `ComposedLens` structure is provided internally by the crate after you compose valid optics.
+///
+/// # See Also
+///
+/// - [`Lens`] — the optic type that `ComposedLens` is based on
 #[must_use]
 pub fn new<S, A, I, L1: Lens<S, I>, L2: Lens<I, A>>(
     l1: L1,

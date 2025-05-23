@@ -2,44 +2,65 @@ mod composed;
 mod mapped;
 mod wrapper;
 
-use crate::HasGetter;
+use crate::{mapped_partial_getter, HasGetter};
 pub use composed::new as composed_getter;
 use core::convert::Infallible;
 pub use mapped::new as mapped_getter;
 pub use wrapper::GetterImpl;
 
-/// A `Getter` is an optic that focuses on a potential value inside a sum type.
+/// A `Getter` is an optic that focuses on a value inside a product type.
 ///
 /// It provides:
-/// - `preview` to optionally extract a focus value from a larger type
-/// - `set` to construct the larger type from a focus value
+/// - `get` to extract a focused value from a larger type
 ///
-/// This is useful for working with `enum` variants, `Option` values, or
-/// other sum types where a focus value might be present.
+/// This is useful for working for example with required fields of a struct
 ///
-/// Be very careful if you intend to implement this trait yourself, it should not be needed.
+/// Type Arguments:
+///   - `S`: The data type the optic operates on
+///   - `A`: The data type the optic focuses on
 ///
 /// # Note
 ///
-/// `Getter` is currently the most general form of a *concrete optic* in this library.
-/// In the future, it may be generalized further to allow any error type in place
-/// of the fixed `NoFocus` error. When that happens, `Getter<S, A>` will become a
-/// special case of a fully general `Optic<S, A>` abstraction, making this trait
-/// redundant and subject to removal in favor of the unified `Optic<S, A>` design.
-///
-/// This would allow error type specialization while preserving the same core behavior.
+/// This is a marker trait that is blanket implemented for all structs that satisfy the requirements.
 ///
 /// # See Also
-/// - [`Optic`] — the base trait for all optic types, potentially unifying `Lens`, `Getter`, and `Iso`
+/// - [`HasGetter`] - A base trait for optics that provides a partial getter operation.
 /// - [`Lens`] — an optic that focuses on an always-present value in a product type (e.g., a struct field)
-/// - [`FallibleIso`] — a variant of `Iso` where the forward mapping might fail, returning an error
 /// - [`Iso`] — an isomorphism optic representing a reversible one-to-one transformation between two types
-///
-/// - [`NoFocus`] — the current error type returned by `Getter::preview` on failure
 pub trait Getter<S, A>: HasGetter<S, A, GetterError = Infallible> {}
 
 impl<S, A, G: HasGetter<S, A, GetterError = Infallible>> Getter<S, A> for G {}
 
+
+
+/// Creates a `Getter` that focuses on the entire input.
+///
+/// It can be useful in cases where you need an identity optic within
+/// a composition chain, or as a trivial getter implementation.
+///
+/// # Type Parameters
+///
+/// - `S`: The type of the input and output value. Must implement `Clone`.
+///
+/// # Returns
+///
+/// A `GetterImpl` instance that implements `Getter<S, S>`
+/// and always returns the cloned input value.
+///
+/// # Example
+///
+/// ```rust
+/// use optics::{identity_getter, HasTotalGetter};
+///
+/// let getter = identity_getter::<i32>();
+/// assert_eq!(getter.get(&42), 42);
+/// ```
+///
+/// # See Also
+///
+/// - [`mapped_getter`] for constructing custom `Getter`s
+///   from an arbitrary mapping function.
+///
 #[must_use]
 pub fn identity_getter<S: Clone>() -> GetterImpl<S, S, impl Getter<S, S>> {
     mapped_getter(|x: &S| x.clone())

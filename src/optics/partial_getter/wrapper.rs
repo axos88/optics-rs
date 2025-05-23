@@ -6,7 +6,7 @@ use crate::{
 use core::convert::identity;
 use core::marker::PhantomData;
 
-/// A wrapper of the [`PartialGetter`] optic implementations, encapsulating a getter function.
+/// A wrapper of the [`PartialGetter`] optic implementations, encapsulating a partial getter function.
 ///
 /// `PartialGetterImpl` provides a way to define partial getters - optics that attempt to retrieve
 /// a value of type `A` from a source of type `S`, potentially failing with an error.

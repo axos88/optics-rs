@@ -1,68 +1,30 @@
 use crate::optics::prism::composed::new as composed_prism;
-use crate::{
-    FallibleIso, FallibleIsoImpl, HasGetter, HasSetter, Iso, IsoImpl, Lens, LensImpl, Prism,
-    infallible,
-};
+use crate::{FallibleIso, FallibleIsoImpl, HasGetter, HasSetter, Iso, IsoImpl, Lens, LensImpl, Prism, infallible, PartialGetter};
 use core::convert::identity;
 use core::marker::PhantomData;
 
-/// Concrete implementation wrapper for a `Prism` optic.
+/// A wrapper of the [`Prism`] optic implementations, encapsulating a partial getter and a setter function.
 ///
-/// This struct provides a public, coherent-safe wrapper around any type implementing
-/// the [`Prism`] trait, and serves as the primary public-facing API for working with prisms
-/// in downstream code.
+/// `Prism` provides a way to define optics that can focus on a potentially missing value of type `A`
+/// from a source of type `S`, such as the variant of an enum.
 ///
-/// # Design
+/// # Note
 ///
-/// Due to Rust's coherence rules, we can't blanket-implement traits like `Prism`
-/// for downstream-defined types that might conflict with other implementations.
-/// To work around this, optics are wrapped in an `Impl` newtype struct like `PrismImpl`,
-/// which implements the optic's base traits (`HasPartialGetter`, `HasSetter`) as well as
-/// transitive optics (`PartialGetter`, `Setter`, `Prism` itself).
+/// This struct is not intended to be created by users directly, but it implements a From<PartialGetter<S,A>> so
+/// that implementors of new optic types can wrap their concrete implementation of a PartialGetter optic.
 ///
-/// This ensures that all public APIs return `PrismImpl`, while the internal implementations
-/// remain opaque and private to the crate.
+/// # Type Parameters
 ///
-/// # Composition
-///
-/// `PrismImpl` provides several `compose_with_*` methods to compose this prism with other
-/// optic types. Each of these returns a new `*Impl` wrapping a `Composed*`
-/// containing the two optics and any necessary error mappers.
-///
-/// The resulting optic type is determined by the composition rules defined in the
-/// crate's optic type system (see the composition table in the crate root documentation).
-///
-/// # Default Prism
-///
-/// The [`crate::identity_prism`] function returns a trivial identity prism, which always succeeds
-/// in previewing by cloning the source, and performs a no-op on `set`.
+/// - `S`: The source type from which the value is to be retrieved.
+/// - `A`: The target type of the value to be retrieved.
 ///
 /// # See Also
 ///
-/// - [`Prism`] — The marker trait defining the core behavior.
-/// - [`ComposedPrism`] — The struct representing the composition of two optics resulting in a prism.
-/// - [`MappedPrism`] — A prism implementation using custom getter and setter functions.
+/// - [`Prism`] an optic that focuses on a potentially missing value.
+/// - [`mapped_prism`] function for creating `PrismImpl` instances from mapping functions.
 pub struct PrismImpl<S, A, P: Prism<S, A>>(pub P, PhantomData<(S, A)>);
 
 impl<S, A, P: Prism<S, A>> PrismImpl<S, A, P> {
-    /// Constructs a new [`PrismImpl`] wrapper around a [`Prism`] implementation.
-    ///
-    /// This constructor is the primary entry point for creating a `PrismImpl`, which serves as the public-facing
-    /// interface for prism optics within this crate. By encapsulating the provided `Prism` implementation, it
-    /// ensures that it can be cast to lower optic types like `PartialGetter` and `Setter`.
-    ///
-    /// # Parameters
-    ///
-    /// - `prism`: A concrete implementation of the [`Prism`] trait, defining the core behavior of the optic.
-    ///
-    /// # Returns
-    ///
-    /// A new instance of [`PrismImpl`] that wraps the provided `Prism` implementation, ready for use in optic
-    /// compositions and transformations.
-    ///
-    /// # Notes
-    ///
-    /// Generally only used directly when prism implementations are created outside the crate
     fn new(prism: P) -> Self {
         //TODO: Verify not to nest an Impl inside an Impl - currently seems to be impossible at compile time.
         PrismImpl(prism, PhantomData)
@@ -89,12 +51,6 @@ impl<S, A, P: Prism<S, A>> HasSetter<S, A> for PrismImpl<S, A, P> {
     }
 }
 
-/// Composition methods for chaining a `PrismImpl` with other optic types,
-/// resulting in a new composed optic.
-///
-/// These methods return a new [`*Impl`] wrapping a [`Composed*`].
-///
-/// Error mappers can be provided when composing partial optics to reconcile their error types.
 impl<S, I, P1: Prism<S, I>> PrismImpl<S, I, P1> {
     //TODO: Partial Getter, Getter, Setter
 

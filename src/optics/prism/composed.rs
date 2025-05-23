@@ -1,4 +1,4 @@
-use crate::HasGetter;
+use crate::{HasGetter, PartialGetter};
 use crate::HasSetter;
 use crate::optics::prism::Prism;
 use crate::optics::prism::wrapper::PrismImpl;
@@ -83,34 +83,32 @@ where
     }
 }
 
-/// Constructs a new `ComposedPrism` by composing two optics, resulting in a `Prism` that focuses
-/// from a source type `S` to a target type `A` through an intermediate type `I`.
+/// Creates a `Prism<S,A>` combined from two optics <S, I>, <I, A> applied one after another.
 ///
-/// This function enables the composition of various combinations of optics, such as:
-/// - `Prism` + `Prism`
-/// - `Prism` + `Lens`
-/// - `FallibleIso` + `Lens`
-///
-/// The composition handles the potential fallibility of each optic by providing error mapping
-/// functions to unify different error types into a single error type `E`.
+/// This struct is automatically created by composing two existing optics, and is **not** intended
+/// to be directly constructed outside the crate. Instead, it is generated through composition of
+/// two optics via the corresponding `composable_with_XXX` methods, where the two optics can be of any
+/// valid optic type that results in a `Prism`.
 ///
 /// # Type Parameters
-/// - `S`: The source type.
-/// - `A`: The target type.
-/// - `I`: The intermediate type.
-/// - `E`: The unified error type resulting from composing the getter errors of `L1` and `L2`.
-/// - `P1`: The first optic, acting as a `Prism<S, I>`.
-/// - `P2`: The second optic, acting as a `Prism<I, A>`.
+/// - `S`: The source type of the first optic
+/// - `A`: The target type of the second optic
+/// - `I`: The intermediate type: the target type of the first optic and the source type of the second optic
+/// - `E`: The error type for the resulting optic
 ///
-/// # Parameters
-/// - `p1`: The first optic instance, focusing from `S` to `I`.
-/// - `p2`: The second optic instance, focusing from `I` to `A`.
-/// - `error_fn_1`: A function to map `P1`'s getter error to the unified error type `E`.
-/// - `error_fn_2`: A function to map `P2`'s getter error to the unified error type `E`.
+/// # Arguments
+/// - `p1`: The first optic of type `Prism<S, I>`
+/// - `p2`: The second optic of type `Prism<I, A>`
+/// - `error_fn_1`: A function that maps the error type of the first optic to a resulting error type `E`
+/// - `error_fn_2`: A function that maps the error type of the second optic to a resulting error type `E`
 ///
-/// # Returns
-/// A new `ComposedPrism<P1, P2, E, S, I, A>` instance.
+/// This struct **should not** be manually constructed by users. Instead, it is created via
+/// composition of two optics using the appropriate `compose_with_XXX` methods on each optic impl.
+/// The `ComposedPrism` structure is provided internally by the crate after you compose valid optics.
 ///
+/// # See Also
+///
+/// - [`Prism`] — the optic type that `ComposedPrism` is based on
 #[must_use]
 pub fn new<S, A, I, E, P1: Prism<S, I>, P2: Prism<I, A>>(
     p1: P1,

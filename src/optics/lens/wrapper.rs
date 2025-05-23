@@ -1,10 +1,27 @@
-use crate::{
-    FallibleIso, FallibleIsoImpl, HasGetter, HasSetter, HasTotalGetter, Iso, IsoImpl, Lens, Prism,
-    PrismImpl, composed_lens, composed_prism, infallible,
-};
+use crate::{FallibleIso, FallibleIsoImpl, HasGetter, HasSetter, HasTotalGetter, Iso, IsoImpl, Lens, Prism, PrismImpl, composed_lens, composed_prism, infallible, PartialGetter};
 use core::convert::{Infallible, identity};
 use core::marker::PhantomData;
 
+/// A wrapper of the [`Lens`] optic implementations, encapsulating a getter and setter function.
+///
+/// `LensImpl` provides a way to define lenses - optics that can retrieve and change a value of 
+/// type `A` inside a source of type `S`,
+/// They are particularly useful in scenarios where you need to focus on a field of a struct.
+///
+/// # Note
+///
+/// This struct is not intended to be created by users directly, but it implements a From<PartialGetter<S,A>> so
+/// that implementors of new optic types can wrap their concrete implementation of a PartialGetter optic.
+///
+/// # Type Parameters
+///
+/// - `S`: The source type from which the value is to be retrieved.
+/// - `A`: The target type of the value to be retrieved.
+///
+/// # See Also
+///
+/// - [`Lens`] trait for defining custom partial getters.
+/// - [`mapped_lens`] function for creating `LebsImpl` instances from mapping functions.
 pub struct LensImpl<S, A, L: Lens<S, A>>(pub L, PhantomData<(S, A)>);
 
 impl<S, A, L: Lens<S, A>> LensImpl<S, A, L> {

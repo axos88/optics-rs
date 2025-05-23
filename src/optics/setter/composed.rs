@@ -1,5 +1,5 @@
 use crate::optics::setter::wrapper::SetterImpl;
-use crate::{HasSetter, Prism};
+use crate::{HasSetter, PartialGetter, Prism};
 use crate::{Setter};
 use core::marker::PhantomData;
 
@@ -36,37 +36,36 @@ where
     }
 }
 
-/// A composed `Setter` type, combining two optics into a single `Setter`.
+/// Creates a `Setter<S,A>` combined from two optics <S, I>, <I, A> applied one after another.
 ///
 /// This struct is automatically created by composing two existing optics, and is **not** intended
 /// to be directly constructed outside the crate. Instead, it is generated through composition of
-/// two optics via the corresponding `ComposableXXX` traits, where each optic can be any
-/// valid optic type where the result is a `Setter`.
+/// two optics via the corresponding `composable_with_XXX` methods, where the two optics can be of any
+/// valid optic type that results in a `PartialGetter`.
+/// 
+/// This composer is a bit different from the other optics, as it requires the first optic to also
+/// have have a `Getter`, so be a `Prism`, as it requires to read the intermediate value so that it can change its focused value.
 ///
-/// A `ComposedSetter` not only combines two optics into a single lens, but it also inherently
-/// acts as a `Prism` and `Optic`. This behavior arises from the fact that a `Setter` is itself a
-/// more specific form of an optic, and prism and thus any `Setter` composition will also be usable as
-/// a `Prism` and an `Optic`.
+/// # Type Parameters
+/// - `S`: The source type of the first optic, needs to be a `Getter`
+/// - `A`: The target type of the second optic
+/// - `I`: The intermediate type: the target type of the first optic and the source type of the second optic
 ///
-/// # Construction
+/// # Arguments
+/// - `p1`: The first optic of type `Prism<S, I>` 
+/// - `s2`: The second optic of type `Setter<I, A>`
 ///
-/// This struct **cannot** be manually constructed by users. Instead, it is created via
-/// composition of two optics using the appropriate `ComposableXXX` trait for each optic type.
+/// This struct **should not** be manually constructed by users. Instead, it is created via
+/// composition of two optics using the appropriate `compose_with_XXX` methods on each optic impl.
 /// The `ComposedSetter` structure is provided internally by the crate after you compose valid optics.
 ///
 /// # See Also
 ///
-/// - [`Setter`] — the core optic type that the `ComposedSetter` is based on
-/// - [`Prism`] — the optic type that `ComposedSetter` also acts as
-/// - [`Optic`] — the base trait that all optic types implement
-/// - [`crate::composers::ComposableSetter`] — a trait for composing [`Setter`] optics another [`Optic`]
-/// - [`crate::composers::ComposablePrism`] — a trait for composing [`Prism`] optics another [`Optic`]
-/// - [`crate::composers::ComposableIso`] — a trait for composing [`Iso`] optics into another [`Optic`]
-/// - [`crate::composers::ComposableFallibleIso`] — a trait for composing [`FallibleIso`] optics into another [`Optic`]
+/// - [`Setter`] — the optic type that `ComposedSetter` is based on
 #[must_use]
 pub fn new<S, A, I, P1: Prism<S, I>, SETTER2: Setter<I, A>>(
-    l1: P1,
-    l2: SETTER2,
+    p1: P1,
+    s2: SETTER2,
 ) -> SetterImpl<S, A, impl Setter<S, A>> {
-    ComposedSetter::new(l1, l2).into()
+    ComposedSetter::new(p1, s2).into()
 }

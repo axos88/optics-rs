@@ -9,7 +9,7 @@ pub use composed::new as composed_partial_getter;
 pub use mapped::new as mapped_partial_getter;
 pub use wrapper::PartialGetterImpl;
 
-/// A `PartialGetter` is an optic that focuses on a potential value inside a sum type, providing
+/// A `PartialGetter` is an optic that focuses on a potentially missing value, providing
 /// only a read operations
 ///
 /// It provides:
@@ -27,9 +27,10 @@ pub use wrapper::PartialGetterImpl;
 /// This is a marker trait that is blanket implemented for all structs that satisfy the requirements.
 ///
 /// # See Also
-/// - [`Lens`] — an optic that focuses on an always-present value in a product type (e.g., a struct field)
-/// - [`FallibleIso`] — a variant of `Iso` where the forward mapping might fail, returning an error
-/// - [`Iso`] — an isomorphism optic representing a reversible one-to-one transformation between two types
+/// - [`Prism`] — an optic that focuses on a potentially missing value in a product type (ex. optional struct field) or a sum type vairant
+/// - [`Lens`] — an optic that focuses on an always-present value in a product type (e.g., a required struct field)
+/// - [`FallibleIso`] — a variant of `Iso` where the mapping might fail, returning an error
+/// - [`Iso`] — an isomorphism optic representing a reversible bijective conversion between two types
 pub trait PartialGetter<S, A>: HasGetter<S, A> {}
 
 impl<S, A, PG: HasGetter<S, A>> PartialGetter<S, A> for PG {}

@@ -56,7 +56,7 @@ where
 /// - `A`: The target type of the second optic
 /// - `I`: The intermediate type: the target type of the first optic and the source type of the second optic
 /// - `E`: The common error type for both optics
-/// 
+///
 /// # Arguments
 /// - `pg1`: The first optic of type `PartialGetter<S, I>`
 /// - `pg2`: The second optic of type `PartialGetter<I, A>`
@@ -70,11 +70,6 @@ where
 /// # See Also
 ///
 /// - [`PartialGetter`] — the optic type that `ComposedPartialGetter` is based on
-/// - [`Optic`] — the base trait that all optic types implement
-/// - [`crate::composers::ComposableLens`] — a trait for composing [`Lens`] optics another [`Optic`]
-/// - [`crate::composers::ComposablePartialGetter`] — a trait for composing [`PartialGetter`] optics another [`Optic`]
-/// - [`crate::composers::ComposableIso`] — a trait for composing [`Iso`] optics into another [`Optic`]
-/// - [`crate::composers::ComposableFallibleIso`] — a trait for composing [`FallibleIso`] optics into another [`Optic`]
 #[must_use]
 pub fn new<S, A, I, E, PG1: PartialGetter<S, I>, PG2: PartialGetter<I, A>>(
     pg1: PG1,

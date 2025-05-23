@@ -1,7 +1,27 @@
-use crate::{HasSetter, Setter};
+use crate::{HasSetter, PartialGetter, Setter};
 use core::marker::PhantomData;
 
-
+/// A wrapper of the [`Setter`] optic implementations, encapsulating a setter function.
+///
+/// `SetterImpl` provides a way to define setters - optics that are able to write to a focued  value 
+/// of type `A` from a source of type `S`.
+/// This struct is particularly useful in scenarios where you need to allow a callee to write into a
+/// struct without being able to read its contents.
+///
+/// # Note
+///
+/// This struct is not intended to be created by users directly, but it implements a From<Setter<S,A>> so
+/// that implementors of new optic types can wrap their concrete implementation of a Setter optic.
+///
+/// # Type Parameters
+///
+/// - `S`: The source type from which the value is to be retrieved.
+/// - `A`: The target type of the value to be retrieved.
+///
+/// # See Also
+///
+/// - [`Setter`] trait for defining custom partial getters.
+/// - [`mapped_setter`] function for creating `SetterImpl` instances from mapping functions.
 pub struct SetterImpl<S, A, SETTER: Setter<S, A>>(pub SETTER, PhantomData<(S, A)>);
 
 impl<S, A, SETTER: Setter<S, A>> SetterImpl<S, A, SETTER> {

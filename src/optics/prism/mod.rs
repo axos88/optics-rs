@@ -1,4 +1,4 @@
-use crate::HasGetter;
+use crate::{mapped_partial_getter, HasGetter};
 use crate::HasSetter;
 use core::convert::Infallible;
 
@@ -10,56 +10,64 @@ pub use composed::new as composed_prism;
 pub use mapped::new as mapped_prism;
 pub use wrapper::PrismImpl;
 
-/// An optic that focuses on a part of a sum type, allowing for partial access and construction.
+/// A `Prism` is an optic that focuses on a potentially missing value, such as a variant of a
+/// sum type (enum).
 ///
-/// A `Prism` is an optic used to work with sum types (also known as coproducts), such as Rust's `enum`s. It provides the ability to:
+/// It provides:
+/// - `try_get` to optionally extract a focus value from a larger type
+/// - `set` to set the focused value of a larger type
 ///
-/// - **Attempt to extract** a focused value of type `A` from a source of type `S`, potentially failing if the value is not present.
-/// - **Construct** a value of type `S` from a focused value of type `A`.
+/// This is useful for working with `enum` variants, `Option` values, or
+/// other sum types where a focus value might be absent.
 ///
-/// This is particularly useful for working with types like `Option`, `Result`, or custom enums, where a value may or may not be present.
+/// Type Arguments
+///   - `S`: The data type the optic operates on
+///   - `A`: The data type the optic focuses on
 ///
-/// # Trait Definition
+/// # Note
 ///
-/// The `Prism` trait extends the [`HasGetter`] and [`HasSetter`] traits:
-///
-/// - [`HasGetter<S, A>`]: Provides the `try_get` method to attempt extraction of a value of type `A` from `S`.
-/// - [`HasSetter<S, A>`]: Provides the `set` method to construct a value of type `S` from `A`.
-///
-/// Together, these traits allow for partial access and construction, embodying the essence of a `Prism`.
-///
-/// # Usage
-///
-/// Prisms are ideal for scenarios where you need to work with a specific variant of a sum type. For example, extracting the `Some` value from an `Option`, or the `Ok` value from a `Result`.
-///
-/// # Notes
-///
-/// - The setter should always construct a value, even if the getter would otherwise fail. Calling
-/// set on an Ok prism should always result in an Ok value, even if the previous focus was on an Err.
-///
-/// - Implementing this trait manually is generally discouraged unless you are working on a new prism implementation.
-/// Instead, use the provided implementations or constructors within the crate to ensure consistency and correctness.
+/// This is a marker trait that is blanket implemented for all structs that satisfy the requirements.
 ///
 /// # See Also
-///
-/// - [`HasGetter`]: A trait for types that can partially extract a value.
-/// - [`Setter`]: A trait for types that can set a value.
-///
+/// - [`Getter`] — an optic that focuses on a potentially missing value in a larger type
+/// - [`Setter`] — an optic that can change its focused value
+/// - [`Lens`] — an optic that focuses on an always-present value in a product type (e.g., a required struct field)
+/// - [`FallibleIso`] — a variant of `Iso` where the mapping might fail, returning an error
+/// - [`Iso`] — an isomorphism optic representing a reversible bijective conversion between two types
 pub trait Prism<S, A>: HasGetter<S, A> + HasSetter<S, A> {}
 
 impl<S, A, P: HasGetter<S, A> + HasSetter<S, A>> Prism<S, A> for P {}
 
-/// Constructs an identity `PrismImpl` that focuses on the entire value of type `S`.
+/// Creates a `Prism` that focuses on the entire input. Note that this is actually a lens in disguise.
 ///
-/// This function creates a `PrismImpl` that acts as a no-op or identity prism, meaning it
-/// focuses on the entire structure without any transformation or filtering.
+/// It can be useful in cases where you need an identity optic within
+/// a composition chain, or as a trivial prism implementation.
 ///
 /// # Type Parameters
-/// - `S`: The type of the value to focus on. This type must implement the `Clone` trait.
+///
+/// - `S`: The type of the input and output value. Must implement `Clone`.
 ///
 /// # Returns
-/// a new prism that focuses on the entire value of type `S`.
+///
+/// A `PrismImpl` instance that implements `Prism<S, S>`
+/// and always returns the cloned input value.
+///
+/// # Example
+///
+/// ```rust
+/// use optics::{identity_prism, HasGetter, HasSetter};
+///
+/// let prism = identity_prism::<u32>();
+/// let mut v = 42;
+/// assert_eq!(prism.try_get(&v), Ok(42));
+/// prism.set(&mut v, 43);
+/// assert_eq!(prism.try_get(&v), Ok(43));
+/// ```
+///
+/// # See Also
+///
+/// - [`mapped_prism`] for constructing custom `Prism`s from arbitrary mapping functions.
 #[must_use]
 pub fn identity_prism<S: Clone>() -> PrismImpl<S, S, impl Prism<S, S, GetterError = Infallible>> {
-    mapped_prism(|s: &S| Ok::<_, Infallible>(s.clone()), |_, _| ())
+    mapped_prism(|s: &S| Ok::<_, Infallible>(s.clone()), |s, v| *s = v)
 }

@@ -6,6 +6,28 @@ use crate::{
 use core::convert::{Infallible, identity};
 use core::marker::PhantomData;
 
+
+/// A wrapper of the [`Getter`] optic implementations, encapsulating a total getter function.
+///
+/// `GetterImpl` provides a way to define total getters - optics that retrieve
+/// a value of type `A` from a source of type `S`.
+/// This struct is particularly useful in scenarios where you need to compose or reuse getter logic
+/// that always succeeds.
+///
+/// # Note
+///
+/// This struct is not intended to be created by users directly, but it implements a From<Getter<S,A>> so
+/// that implementors of new optic types can wrap their concrete implementation of a Getter optic.
+///
+/// # Type Parameters
+///
+/// - `S`: The source type from which the value is to be retrieved.
+/// - `A`: The target type of the value to be retrieved.
+///
+/// # See Also
+///
+/// - [`Getter`] trait for defining custom partial getters.
+/// - [`mapped_getter`] function for creating `GetterImpl` instances from mapping functions.
 pub struct GetterImpl<S, A, G: Getter<S, A>>(pub G, PhantomData<(S, A)>);
 
 impl<S, A, G: Getter<S, A>> From<G> for GetterImpl<S, A, G> {

@@ -1,33 +1,8 @@
 use crate::optics::getter::wrapper::GetterImpl;
-use crate::{Getter, HasGetter, HasTotalGetter};
+use crate::{Getter, HasGetter, HasTotalGetter, PartialGetter};
 use core::convert::Infallible;
 use core::marker::PhantomData;
 
-/// A composed `Getter` type, combining two optics into a single prism.
-///
-/// This struct is automatically created by composing two existing optics, and is **not** intended
-/// to be directly constructed outside the crate. Instead, it is generated through composition of
-/// two optics via the corresponding `ComposableXXX` traits, where each optic can be any
-/// valid optic type that results in a `Getter`.
-///
-/// A `ComposedGetter` not only combines two optics into a single [`Getter`], but it also inherently
-/// acts as an `Optic`. This behavior arises from the fact that a `Getter` is itself a
-/// more specific form of an optic, and thus any `Getter` composition will also be usable an `Optic`.
-///
-/// # Construction
-///
-/// This struct **cannot** be manually constructed by users. Instead, it is created via
-/// composition of two optics using the appropriate `ComposableXXX` trait for each optic type.
-/// The `ComposedGetter` structure is provided internally by the crate after you compose valid optics.
-///
-/// # See Also
-///
-/// - [`Getter`] — the optic type that `ComposedGetter` is based on
-/// - [`Optic`] — the base trait that all optic types implement
-/// - [`crate::composers::ComposableLens`] — a trait for composing [`Lens`] optics another [`Optic`]
-/// - [`crate::composers::ComposableGetter`] — a trait for composing [`Getter`] optics another [`Optic`]
-/// - [`crate::composers::ComposableIso`] — a trait for composing [`Iso`] optics into another [`Optic`]
-/// - [`crate::composers::ComposableFallibleIso`] — a trait for composing [`FallibleIso`] optics into another [`Optic`]
 struct ComposedGetter<G1: Getter<S, I>, G2: Getter<I, A>, S, I, A> {
     optic1: G1,
     optic2: G2,
@@ -60,6 +35,30 @@ where
     }
 }
 
+
+/// Creates a `Getter<S,A>` combined from two optics <S, I>, <I, A> applied one after another.
+///
+/// This struct is automatically created by composing two existing optics, and is **not** intended
+/// to be directly constructed outside the crate. Instead, it is generated through composition of
+/// two optics via the corresponding `compose_with_XXX` methods, where the two optics can be of any
+/// valid optic type that results in a `Getter`.
+///
+/// # Type Parameters
+/// - `S`: The source type of the first optic
+/// - `A`: The target type of the second optic
+/// - `I`: The intermediate type: the target type of the first optic and the source type of the second optic
+///
+/// # Arguments
+/// - `g1`: The first optic of type `Getter<S, I>`
+/// - `g2`: The second optic of type `Getter<I, A>`
+///
+/// This struct **should not** be manually constructed by users. Instead, it is created via
+/// composition of two optics using the appropriate `compose_with_XXX` methods on each optic impl.
+/// The `ComposedGetter` structure is provided internally by the crate after you compose valid optics.
+///
+/// # See Also
+///
+/// - [`Getter`] — the optic type that `ComposedGetter` is based on
 #[must_use]
 pub fn new<S, A, I, G1: Getter<S, I>, G2: Getter<I, A>>(
     l1: G1,

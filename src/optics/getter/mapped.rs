@@ -3,30 +3,35 @@ use crate::{Getter, HasGetter};
 use core::convert::Infallible;
 use core::marker::PhantomData;
 
-/// A concrete implementation of the [`Prism`] trait.
+/// Creates a new `Getter` with the provided getter function.
 ///
-/// This struct allows you to create a `Prism` by providing custom getter and setter functions.
-/// It is the primary way to create a `Prism` manually, and is flexible enough to support any
-/// getter and setter functions that match the required signatures.
+/// # Type Parameters
+/// - `S`: The source type of the optic
+/// - `A`: The target type of the optic
+
+/// # Arguments
 ///
-/// Typically, you will only need to specify the source type `S` and the focus type `A`.
-/// The getter and setter functions will be inferred or explicitly provided.
+/// - `get_fn` — A function that retrieves the focus value `A` from the source `S`.
 ///
-/// If you prefer to use capturing closures, you can specify the trailing type parameters as `_`
-/// in the construction of `PrismImpl` to allow the compiler to infer them for you. This is especially
-/// useful when you need to use closures with captured environment variables.
+/// # Returns
 ///
-/// # Construction
+/// A new `GetterImpl` instance that can be used as a `Getter<S, A>`.
 ///
-/// The usual way to construct a `PrismImpl` is to use `PrismImpl::<S, A>::new()`, which
-/// will use non-capturing closures by default. Alternatively, you can specify the
-/// getter and setter type parameters as `PrismImpl::<S, A,_, _>::new()` for more complex use cases,
-/// such as captruring closures.
+/// # Examples
 ///
-/// # See Also
+/// ```
+/// use optics::{mapped_getter, HasTotalGetter};
 ///
-/// - [`Lens`] — a more restrictive optic type for focus values
-/// - [`Optic`] — base trait that all optics implement
+/// struct Point { x: i32, y: i32 }
+/// let x_partial_getter = mapped_getter(
+///     |s: &Point| s.x
+/// );
+///
+/// let point = Point { x: 10, y: 20 };
+///
+/// assert_eq!(x_partial_getter.get(&point), 10);
+/// ```
+
 struct MappedGetter<S, A, GET = fn(&S) -> A>
 where
     GET: Fn(&S) -> A,

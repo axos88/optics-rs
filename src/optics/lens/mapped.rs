@@ -5,28 +5,6 @@ use crate::HasGetter;
 use core::convert::Infallible;
 use core::marker::PhantomData;
 
-/// A concrete implementation of the [`Lens`] trait.
-///
-/// This struct allows you to create a `Lens` by providing custom getter and setter functions.
-/// It is the primary way to create a `Lens` manually, and is flexible enough to support any
-/// getter and setter functions that match the required signatures.
-///
-/// Typically, you will only need to specify the source type `S` and the focus type `A`.
-/// The getter and setter functions will be inferred or explicitly provided.
-///
-/// # Construction
-///
-/// The usual way to construct a `LensImpl` is to use `LensImpl::<S, A>::new()`, which
-/// will use non-capturing closures by default. Alternatively, you can specify the
-/// getter and setter type parameters as `LensImpl::<S, A,_, _>::new()`  for more complex use cases,
-/// such as captruring closures.
-///
-/// # See Also
-///
-/// - [`Lens`] — trait that `LensImpl` implements
-/// - [`Prism`] — optional optic type for sum types
-/// - [`Optic`] — base trait that all optics implement
-///
 struct MappedLens<S, A, GET = fn(&S) -> A, SET = fn(&mut S, A)>
 where
     GET: Fn(&S) -> A,
@@ -42,55 +20,6 @@ where
     GET: Fn(&S) -> A,
     SET: Fn(&mut S, A),
 {
-    /// Creates a new `LensImpl` with the provided getter and setter functions.
-    ///
-    /// # Arguments
-    ///
-    /// - `get_fn` — A function that retrieves the focus value `A` from the source `S`.
-    /// - `set_fn` — A function that sets the focus value `A` in the source `S`.
-    ///
-    /// # Returns
-    ///
-    /// A new `LensImpl` instance that can be used as a `Lens<S, A>`.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use optics::{mapped_lens, HasSetter, HasTotalGetter};
-    ///
-    /// struct Point { x: i32, y: i32 }
-    /// let mut point = Point { x: 10, y: 20 };
-    /// let x_lens = mapped_lens(
-    ///     |p: &Point| p.x,
-    ///     |p, new_x| p.x = new_x
-    /// );
-    /// let x_value = x_lens.get(&point);
-    /// assert_eq!(x_value, 10);
-    /// x_lens.set(&mut point, 30);
-    /// assert_eq!(point.x, 30);
-    /// ```
-    ///
-    /// # Capturing Closures
-    ///
-    /// You can also use capturing closures for more flexible behavior, such as when you
-    /// need to capture environment variables. In that case, you can specify the trailing
-    /// type parameters as `_`, and the compiler will infer them:
-    ///
-    /// ```
-    /// use optics::{mapped_lens, HasSetter, HasTotalGetter};
-    ///
-    /// struct Point { x: i32, y: i32 }
-    /// let factor = 2;
-    /// let mut point = Point { x: 10, y: 20 };
-    /// let multiplied_x_lens = mapped_lens(
-    ///     move |p: &Point| p.x * factor,
-    ///     move |p, new_x| p.x = new_x / factor
-    /// );
-    /// let x_value = multiplied_x_lens.get(&point);
-    /// assert_eq!(x_value, 20);
-    /// multiplied_x_lens.set(&mut point, 60);
-    /// assert_eq!(point.x, 30);
-    /// ```
     pub(crate) fn new(get_fn: GET, set_fn: SET) -> Self {
         MappedLens {
             get_fn,
@@ -121,6 +50,40 @@ where
         (self.set_fn)(source, value);
     }
 }
+
+/// Creates a new `Lens` with the provided getter and setter function.
+///
+/// # Type Parameters
+/// - `S`: The source type of the optic
+/// - `A`: The target type of the optic
+
+/// # Arguments
+///
+/// - `get_fn` — A function that retrieves the focus value `A` from the source `S`.
+/// - `set_fn` — A function that sets the focused value `A` from the source `S`.
+///
+/// # Returns
+///
+/// A new `LensImpl` instance that can be used as a `Lens<S, A>`.
+///
+/// # Examples
+///
+/// ```
+/// use optics::{mapped_lens, HasSetter, HasTotalGetter};
+///
+/// #[derive(Debug, PartialEq)]
+/// struct Point { x: u32, y: u32 };
+/// let x_lens = mapped_lens(
+///     |s: &Point| s.x,
+///     |s,v| s.x = v
+/// );
+///
+/// let mut p = Point { x: 10, y: 20 };
+///
+/// assert_eq!(x_lens.get(&p), 10);
+/// x_lens.set(&mut p, 42);
+/// assert_eq!(x_lens.get(&p), 42);
+/// ```
 
 #[must_use]
 pub fn new<S, A, GET, SET>(get_fn: GET, set_fn: SET) -> LensImpl<S, A, impl Lens<S, A>>
