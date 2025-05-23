@@ -1,7 +1,8 @@
 use crate::{
-    FallibleIso, FallibleIsoImpl, HasGetter, HasReverseGet, HasSetter, HasTotalGetter,
-    HasTotalReverseGet, Iso, Lens, LensImpl, Prism, PrismImpl, composed_fallible_iso, composed_iso,
-    composed_lens, composed_prism, infallible,
+    FallibleIso, FallibleIsoImpl, Getter, GetterImpl, HasGetter, HasReverseGet, HasSetter,
+    HasTotalGetter, HasTotalReverseGet, Iso, Lens, LensImpl, PartialGetter, PartialGetterImpl,
+    Prism, PrismImpl, Setter, SetterImpl, composed_fallible_iso, composed_getter, composed_iso,
+    composed_lens, composed_partial_getter, composed_prism, composed_setter, infallible,
 };
 use core::convert::{Infallible, identity};
 use core::marker::PhantomData;
@@ -65,6 +66,84 @@ impl<S, A, ISO: Iso<S, A>> HasReverseGet<S, A> for IsoImpl<S, A, ISO> {
 }
 
 impl<S, I, ISO1: Iso<S, I>> IsoImpl<S, I, ISO1> {
+    /// Composes this `IsoImpl<S,I>` with a `PartialGetter<I,A>`, resulting in a new `PartialGetter<S, A>`
+    /// that focuses through both optics sequentially.
+    ///
+    /// The resulting `PartialGetterImpl` will attempt to extract a value by first applying `self` and then
+    /// `other`. If the second optic fails to focus, the composition will fail to focus.
+    ///
+    /// # Type Parameters
+    ///
+    /// - `A`: The target type of the composed optic.
+    /// - `PG2`: The type of the partial getter to compose with.
+    ///
+    /// # Parameters
+    ///
+    /// - `other`: The partial getter to compose with.
+    ///
+    /// # Returns
+    ///
+    /// A new `PartialGetterImpl` that represents the composition of `self` and `other`.
+    ///
+    pub fn compose_with_partial_getter<A, PG2: PartialGetter<I, A>>(
+        self,
+        other: PartialGetterImpl<I, A, PG2>,
+    ) -> PartialGetterImpl<S, A, impl PartialGetter<S, A, GetterError = PG2::GetterError>> {
+        composed_partial_getter(self.0, other.0, infallible, identity)
+    }
+
+    /// Composes this `IsoImpl<S,I>` with a `GetterImpl<I,A>`, resulting in a new `GetterImpl<S, A>`
+    /// that focuses through both optics sequentially.
+    ///
+    /// The resulting `GetterImpl` will extract a value by first applying `self` and then
+    /// `other`.
+    ///
+    /// # Type Parameters
+    ///
+    /// - `A`: The target type of the composed optic.
+    /// - `G2`: The type of the partial getter to compose with.
+    ///
+    /// # Parameters
+    ///
+    /// - `other`: The getter to compose with.
+    ///
+    /// # Returns
+    ///
+    /// A new `GetterImpl` that represents the composition of `self` and `other`.
+    ///
+    pub fn compose_with_getter<A, G2: Getter<I, A>>(
+        self,
+        other: GetterImpl<I, A, G2>,
+    ) -> GetterImpl<S, A, impl Getter<S, A>> {
+        composed_getter(self.0, other.0)
+    }
+
+    /// Composes this `IsoImpl<S,I>` with a `Setter<I,A>`, resulting in a new `Setter<S, A>`
+    /// that focuses through both optics sequentially.
+    ///
+    /// The resulting `SetterImpl` will attempt to set a value by first applying `self` and then
+    /// `other`.
+    ///
+    /// # Type Parameters
+    ///
+    /// - `A`: The target type of the composed optic.
+    /// - `S2`: The type of the setter to compose with.
+    ///
+    /// # Parameters
+    ///
+    /// - `other`: The setter to compose with.
+    ///
+    /// # Returns
+    ///
+    /// A new `SetterImpl` that represents the composition of `self` and `other`.
+    ///
+    pub fn compose_with_setter<A, S2: Setter<I, A>>(
+        self,
+        other: SetterImpl<I, A, S2>,
+    ) -> SetterImpl<S, A, impl Setter<S, A>> {
+        composed_setter(self.0, other.0)
+    }
+
     pub fn compose_with_lens<A, L2: Lens<I, A>>(
         self,
         other: LensImpl<I, A, L2>,

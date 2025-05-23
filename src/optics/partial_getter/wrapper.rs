@@ -1,7 +1,7 @@
 use crate::optics::partial_getter::composed::new as composed_partial_getter;
 use crate::{
     FallibleIso, FallibleIsoImpl, Getter, GetterImpl, HasGetter, Iso, IsoImpl, Lens, LensImpl,
-    PartialGetter, Prism, PrismImpl, infallible,
+    PartialGetter, Prism, PrismImpl, Setter, SetterImpl, composed_setter, infallible,
 };
 use core::convert::identity;
 use core::marker::PhantomData;
@@ -76,6 +76,17 @@ impl<S, I, PG1: PartialGetter<S, I>> PartialGetterImpl<S, I, PG1> {
         other: GetterImpl<I, A, G2>,
     ) -> PartialGetterImpl<S, A, impl PartialGetter<S, A>> {
         composed_partial_getter(self, other, identity, infallible)
+    }
+
+    //Impossible!
+    pub fn compose_with_setter<A, S2: Setter<I, A>>(
+        self,
+        other: SetterImpl<I, A, S2>,
+    ) -> SetterImpl<S, A, impl Setter<S, A>>
+    where
+        PG1: Prism<S, I>,
+    {
+        composed_setter(self.0, other.0)
     }
 
     pub fn compose_with_prism<E, A, P2: Prism<I, A>>(

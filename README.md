@@ -217,4 +217,6 @@ fn example() {
 example();
 ```
 
+### Disclaimer:
 
+While the code was written with care, parts of the documentation and the tests are AI generated.
