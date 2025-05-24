@@ -133,31 +133,103 @@ impl<S, I, G1: Getter<S, I>> GetterImpl<S, I, G1> {
         composed_setter(self.0, other.0)
     }
 
+    /// Composes this `GetterImpl<S,I>` with a `Prism<I,A>`, resulting in a new `PartialGetterImpl<S, A>`
+    /// that focuses through both optics sequentially.
+    ///
+    /// The resulting `PartialGetterImpl` will attempt to extract a value by first applying `self` and then
+    /// `other`. If the prism fails to focus, the composition will fail.
+    ///
+    /// # Type Parameters
+    ///
+    /// - `A`: The target type of the composed prism.
+    /// - `P2`: The type of the second prism to compose with.
+    ///
+    /// # Parameters
+    ///
+    /// - `other`: The second prism to compose with.
+    ///
+    /// # Returns
+    ///
+    /// A new `PartialGetterImpl` that represents the composition of `self` and `other`.
     pub fn compose_with_prism<A, P2: Prism<I, A>>(
         self,
         other: PrismImpl<I, A, P2>,
     ) -> PartialGetterImpl<S, A, impl PartialGetter<S, A, GetterError = P2::GetterError>> {
-        composed_partial_getter(self, other, infallible, identity)
+        composed_partial_getter(self.0, other.0, infallible, identity)
     }
 
+    /// Composes this `GetterImpl<S,I>` with a `LensImpl<I,A>`, resulting in a new `GetterImpl<S, A>`
+    /// that focuses through both optics sequentially.
+    ///
+    /// The resulting `GetterImpl` will extract a value by first applying `self` and then
+    /// `other`.
+    ///
+    /// # Type Parameters
+    ///
+    /// - `A`: The target type of the composed lens.
+    /// - `L2`: The type of the lens to compose with.
+    ///
+    /// # Parameters
+    ///
+    /// - `other`: The lens to compose with.
+    ///
+    /// # Returns
+    ///
+    /// A new `GetterImpl` that represents the composition of `self` and `other`
     pub fn compose_with_lens<A, L2: Lens<I, A>>(
         self,
         other: LensImpl<I, A, L2>,
     ) -> GetterImpl<S, A, impl Getter<S, A>> {
-        composed_getter(self, other.0)
+        composed_getter(self.0, other.0)
     }
 
+    /// Composes this `GetterImpl<S,I>` with a `FallibleIso<I,A>`, resulting in a new `PartialGetterImpl<S, A>`
+    /// that focuses through both prisms sequentially.
+    ///
+    /// The resulting `PartialGetterImpl` will attempt to extract a value by first applying `self` and then
+    /// `other`. If the fallible iso fails to focus, the composition will fail to focus.
+    ///
+    /// # Type Parameters
+    ///
+    /// - `A`: The target type of the composed prism.
+    /// - `FI2`: The type of the fallible iso to compose with.
+    ///
+    /// # Parameters
+    ///
+    /// - `other`: The fallible iso to compose with.
+    ///
+    /// # Returns
+    ///
+    /// A new `PartialGetterImpl` that represents the composition of `self` and `other`.
     pub fn compose_with_fallible_iso<A, FI2: FallibleIso<I, A>>(
         self,
         other: FallibleIsoImpl<I, A, FI2>,
     ) -> PartialGetterImpl<S, A, impl PartialGetter<S, A, GetterError = FI2::GetterError>> {
-        composed_partial_getter(self, other.0, infallible, identity)
+        composed_partial_getter(self.0, other.0, infallible, identity)
     }
 
+    /// Composes this `GetterImpl<S,I>` with an `IsoImpl<I,A>`, resulting in a new `GetterImpl<S, A>`
+    /// that focuses through both optics sequentially.
+    ///
+    /// The resulting `GetterImpl` will extract a value by first applying `self` and then
+    /// `other`.
+    ///
+    /// # Type Parameters
+    ///
+    /// - `A`: The target type of the composed lens.
+    /// - `ISO2`: The type of the lens to compose with.
+    ///
+    /// # Parameters
+    ///
+    /// - `other`: The iso to compose with.
+    ///
+    /// # Returns
+    ///
+    /// A new `GetterImpl` that represents the composition of `self` and `other`
     pub fn compose_with_iso<A, ISO2: Iso<I, A>>(
         self,
         other: IsoImpl<I, A, ISO2>,
     ) -> GetterImpl<S, A, impl Getter<S, A>> {
-        composed_getter(self, other.0)
+        composed_getter(self.0, other.0)
     }
 }

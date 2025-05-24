@@ -117,5 +117,5 @@ where
     GET: Fn(&S) -> Result<A, GE>,
     REV: Fn(&A) -> Result<S, RE>,
 {
-    FallibleIsoImpl::new(MappedFallibleIso::new(get_fn, rev_fn))
+    MappedFallibleIso::new(get_fn, rev_fn).into()
 }

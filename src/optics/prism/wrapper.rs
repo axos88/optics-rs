@@ -276,7 +276,7 @@ impl<S, I, P1: Prism<S, I>> PrismImpl<S, I, P1> {
         self,
         other: LensImpl<I, A, L2>,
     ) -> PrismImpl<S, A, impl Prism<S, A, GetterError = P1::GetterError>> {
-        composed_prism(self, other, identity, infallible)
+        composed_prism(self.0, other.0, identity, infallible)
     }
 
     /// Composes this `PrismImpl<S,I>` with a `FallibleIso<I,A>`, resulting in a new `PrismImpl<S, A>`
@@ -313,7 +313,7 @@ impl<S, I, P1: Prism<S, I>> PrismImpl<S, I, P1> {
         FI2::GetterError: Into<E>,
         P1::GetterError: Into<E>,
     {
-        composed_prism(self, other, Into::into, Into::into)
+        composed_prism(self.0, other.0, Into::into, Into::into)
     }
 
     /// Composes this `PrismImpl<S,I>` with a `FallibleIso<I,A>`, resulting in a new `PrismImpl<S, A>`
@@ -350,7 +350,12 @@ impl<S, I, P1: Prism<S, I>> PrismImpl<S, I, P1> {
         getter_error_mapper_1: fn(P1::GetterError) -> E,
         getter_error_mapper_2: fn(FI2::GetterError) -> E,
     ) -> PrismImpl<S, A, impl Prism<S, A, GetterError = E>> {
-        composed_prism(self, other, getter_error_mapper_1, getter_error_mapper_2)
+        composed_prism(
+            self.0,
+            other.0,
+            getter_error_mapper_1,
+            getter_error_mapper_2,
+        )
     }
 
     /// Composes this `PrismImpl<S,I>` with an `Iso<I,A>`, resulting in a new `PrismImpl<S, A>`
@@ -362,7 +367,7 @@ impl<S, I, P1: Prism<S, I>> PrismImpl<S, I, P1> {
     /// # Type Parameters
     ///
     /// - `A`: The target type of the composed prism.
-    /// - `L2`: The type of the lens to compose with.
+    /// - `ISO2`: The type of the lens to compose with.
     ///
     /// # Parameters
     ///
@@ -375,6 +380,6 @@ impl<S, I, P1: Prism<S, I>> PrismImpl<S, I, P1> {
         self,
         other: IsoImpl<I, A, ISO2>,
     ) -> PrismImpl<S, A, impl Prism<S, A, GetterError = P1::GetterError>> {
-        composed_prism(self, other, identity, infallible)
+        composed_prism(self.0, other.0, identity, infallible)
     }
 }

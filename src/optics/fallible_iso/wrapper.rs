@@ -36,9 +36,15 @@ use core::marker::PhantomData;
 pub struct FallibleIsoImpl<S, A, FI: FallibleIso<S, A>>(pub FI, PhantomData<(S, A)>);
 
 impl<S, A, FI: FallibleIso<S, A>> FallibleIsoImpl<S, A, FI> {
-    pub fn new(l: FI) -> Self {
+    fn new(l: FI) -> Self {
         //TODO: Verify not to nest an Impl inside an Impl - currently seems to be impossible at compile time.
         FallibleIsoImpl(l, PhantomData)
+    }
+}
+
+impl<S, A, FI: FallibleIso<S, A>> From<FI> for FallibleIsoImpl<S, A, FI> {
+    fn from(value: FI) -> Self {
+        FallibleIsoImpl::new(value)
     }
 }
 
@@ -190,54 +196,188 @@ impl<S, I, FI1: FallibleIso<S, I>> FallibleIsoImpl<S, I, FI1> {
         composed_setter(self.0, other.0)
     }
 
+    /// Composes this `FallibleIsoImpl<S,I>` with another `Prism<I,A>`, resulting in a new `PrismImpl<S, A>`
+    /// that focuses through both optics sequentially.
+    ///
+    /// The resulting `PrismImpl` will attempt to extract a value by first applying `self` and then
+    /// `other`. If either optics fails to match, the composition will fail.
+    ///
+    /// # Type Parameters
+    ///
+    /// - `E`: The error type for the composed prism, which must should be able to be constructed from
+    ///   both `FI1::GetterError` and `P2::GetterError` through `Into::into`.
+    /// - `A`: The target type of the composed prism.
+    /// - `P2`: The type of the second prism to compose with.
+    ///
+    /// # Parameters
+    ///
+    /// - `other`: The prism to compose with.
+    ///
+    /// # Returns
+    ///
+    /// A new `PrismImpl` that represents the composition of `self` and `other`.
+    ///
+    /// # Note
+    ///
+    /// This method uses `Into::into` to convert the errors from both prisms into the
+    /// common error type `E`. If you need custom error mapping, consider using
+    /// [`compose_with_prism_with_mappers`](Self::compose_with_prism_with_mappers).
     pub fn compose_with_prism<E, A, P2: Prism<I, A>>(
         self,
-        other: P2,
+        other: PrismImpl<I, A, P2>,
     ) -> PrismImpl<S, A, impl Prism<S, A, GetterError = E>>
     where
         E: From<FI1::GetterError> + From<P2::GetterError>,
     {
-        composed_prism(self, other, Into::into, Into::into)
+        composed_prism(self.0, other.0, Into::into, Into::into)
     }
 
+    /// Composes this `FallibleIsoImpl<S,I>` with another `PrismImpl<I,A>`, resulting in a new `PrismImpl<S, A>`
+    /// that focuses through both prisms sequentially.
+    ///
+    /// The resulting `PrismImpl` will attempt to extract a value by first applying `self` and then
+    /// `other`. If either prism fails to match, the composition will fail.
+    ///
+    /// # Type Parameters
+    ///
+    /// - `E`: The common error type for the composed prism.
+    /// - `A`: The target type of the composed prism.
+    ///
+    /// # Parameters
+    ///
+    /// - `other`: The second prism to compose with.
+    /// - `error_mapper1`: A function to map `FI1::GetterError` into `E`.
+    /// - `error_mapper2`: A function to map `P2::GetterError` into `E`.
+    ///
+    /// # Returns
+    ///
+    /// A new `PrismImpl` that represents the composition of `self` and `other` with
+    /// custom error mapping.
+    ///
+    /// # Note
+    ///
+    /// This method is similar to [`compose_with_prism`](Self::compose_with_prism), but
+    /// provides the ability to specify custom functions to map the errors from each
+    /// prism into a common error type.
     pub fn compose_with_prism_with_mappers<E, A, P2: Prism<I, A>>(
         self,
-        other: P2,
+        other: PrismImpl<I, A, P2>,
         error_mapper_1: fn(FI1::GetterError) -> E,
         error_mapper_2: fn(P2::GetterError) -> E,
     ) -> PrismImpl<S, A, impl Prism<S, A, GetterError = E>> {
-        composed_prism(self, other, error_mapper_1, error_mapper_2)
+        composed_prism(self.0, other.0, error_mapper_1, error_mapper_2)
     }
 
+    /// Composes this `FallibleIsoImpl<S,I>` with a `Lens<I,A>`, resulting in a new `Prism<S, A>`
+    /// that focuses through both optics sequentially.
+    ///
+    /// The resulting `PrismImpl` will attempt to extract a value by first applying `self` and then
+    /// `other`. If the fallible iso fails to match, the composition will fail.
+    ///
+    /// # Type Parameters
+    ///
+    /// - `A`: The target type of the composed prism.
+    /// - `L2`: The type of the lens to compose with.
+    ///
+    /// # Parameters
+    ///
+    /// - `other`: The lens to compose with.
+    ///
+    /// # Returns
+    ///
+    /// A new `PrismImpl` that represents the composition of `self` and `other`
     pub fn compose_with_lens<A, L2: Lens<I, A>>(
         self,
         other: LensImpl<I, A, L2>,
     ) -> PrismImpl<S, A, impl Prism<S, A, GetterError = FI1::GetterError>> {
-        composed_prism(self, other, identity, infallible)
+        composed_prism(self.0, other.0, identity, infallible)
     }
 
+    /// Composes this `FallibleIsoImpl<S,I>` with a `FallibleIsoImpl<I,A>`, resulting in a new `FallibleIsoImpl<S, A>`
+    /// that focuses through both optics sequentially.
+    ///
+    /// The resulting `FallibleIsoImpl` will attempt to extract a value by first applying `self` and then
+    /// `other`. If either prism fails to match, the composition will fail.
+    ///
+    /// # Type Parameters
+    ///
+    /// - `E`: The error type for the composed fallible iso, which must should be able to be constructed from
+    ///   both `FI1::GetterError` and `FI2::GetterError` through `Into::into`.
+    /// - `A`: The target type of the composed prism.
+    /// - `FI2`: The type of the fallible iso to compose with.
+    ///
+    /// # Parameters
+    ///
+    /// - `other`: The second Fallible Iso to compose with.
+    ///
+    /// # Returns
+    ///
+    /// A new `FallibleIsoImpl` that represents the composition of `self` and `other`.
+    ///
+    /// # Note
+    ///
+    /// This method uses `Into::into` to convert the errors from both prisms into the
+    /// common error type `E`. If you need custom error mapping, consider using
+    /// [`compose_with_fallible_iso_with_mappers`](Self::compose_with_fallible_iso_with_mappers).
     pub fn compose_with_fallible_iso<GE, RE, A, FI2: FallibleIso<I, A>>(
         self,
-        other: FI2,
+        other: FallibleIsoImpl<I, A, FI2>,
     ) -> FallibleIsoImpl<S, A, impl FallibleIso<S, A, GetterError = GE, ReverseError = RE>>
     where
         GE: From<FI1::GetterError> + From<FI2::GetterError>,
         RE: From<FI1::ReverseError> + From<FI2::ReverseError>,
     {
-        composed_fallible_iso(self, other, Into::into, Into::into, Into::into, Into::into)
+        composed_fallible_iso(
+            self.0,
+            other.0,
+            Into::into,
+            Into::into,
+            Into::into,
+            Into::into,
+        )
     }
 
+    /// Composes this `FallibleIsoImpl<S,I>` with a `FallibleIsoImpl<I,A>`, resulting in a new `FallibleIsoImpl<S, A>`
+    /// that focuses through both optics sequentially.
+    ///
+    /// The resulting `FallibleIsoImpl` will attempt to extract a value by first applying `self` and then
+    /// `other`. If either prism fails to match, the composition will fail.
+    ///
+    /// # Type Parameters
+    ///
+    /// - `E`: The common error type for the composed fallible iso.
+    /// - `A`: The target type of the composed prism.
+    /// - `FI2`: The type of the fallible iso to compose with.
+    ///
+    /// # Parameters
+    ///
+    /// - `other`: The fallible iso to compose with.
+    /// - `getter_error_mapper_1`: A function to map `FI1::GetterError` into `E`.
+    /// - `getter_error_mapper_2`: A function to map `FI2::GetterError` into `E`.
+    /// - `reverse_error_mapper_1`: A function to map `FI1::ReverseError` into `E`.
+    /// - `reverse_error_mapper_2`: A function to map `FI2::ReverseError` into `E`.
+    ///
+    /// # Returns
+    ///
+    /// A new `FallibleIsoImpl` that represents the composition of `self` and `other` with
+    /// custom error mapping.
+    ///
+    /// # Note
+    ///
+    /// This method is similar to [`compose_with_fallible_iso`](Self::compose_with_fallible_iso), but
+    /// provides the ability to specify custom functions to map the errors from each
+    /// prism into a common error type.
     pub fn compose_with_fallible_iso_with_mappers<GE, RE, A, FI2: FallibleIso<I, A>>(
         self,
-        other: FI2,
+        other: FallibleIsoImpl<I, A, FI2>,
         getter_error_mapper_1: fn(FI1::GetterError) -> GE,
         getter_error_mapper_2: fn(FI2::GetterError) -> GE,
         reverse_error_mapper_1: fn(FI1::ReverseError) -> RE,
         reverse_error_mapper_2: fn(FI2::ReverseError) -> RE,
     ) -> FallibleIsoImpl<S, A, impl FallibleIso<S, A, GetterError = GE, ReverseError = RE>> {
         composed_fallible_iso(
-            self,
-            other,
+            self.0,
+            other.0,
             getter_error_mapper_1,
             getter_error_mapper_2,
             reverse_error_mapper_1,
@@ -245,6 +385,24 @@ impl<S, I, FI1: FallibleIso<S, I>> FallibleIsoImpl<S, I, FI1> {
         )
     }
 
+    /// Composes this `FallibleIsoImpl<S,I>` with an `Iso<I,A>`, resulting in a new `FallibleIsoImpl<S, A>`
+    /// that focuses through both optics sequentially.
+    ///
+    /// The resulting `FallibleIsoImpl` will attempt to extract a value by first applying `self` and then
+    /// `other`. If the fallible iso fails to match, the composition will fail.
+    ///
+    /// # Type Parameters
+    ///
+    /// - `A`: The target type of the composed prism.
+    /// - `ISO2`: The type of the lens to compose with.
+    ///
+    /// # Parameters
+    ///
+    /// - `other`: The iso to compose with.
+    ///
+    /// # Returns
+    ///
+    /// A new `FallibleIsoImpl` that represents the composition of `self` and `other`
     pub fn compose_with_iso<A, ISO2: Iso<I, A>>(
         self,
         other: IsoImpl<I, A, ISO2>,

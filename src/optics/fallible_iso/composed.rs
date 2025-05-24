@@ -118,12 +118,13 @@ pub fn new<S, A, I, GE, RE, FI1: FallibleIso<S, I>, FI2: FallibleIso<I, A>>(
 ) -> FallibleIsoImpl<S, A, impl FallibleIso<S, A, GetterError = GE, ReverseError = RE>>
 where
 {
-    FallibleIsoImpl::new(ComposedFallibleIso::new(
+    ComposedFallibleIso::new(
         f1,
         f2,
         getter_error_fn_1,
         getter_error_fn_2,
         reverse_error_fn_1,
         reverse_error_fn_2,
-    ))
+    )
+    .into()
 }

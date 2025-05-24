@@ -106,6 +106,32 @@ where
     }
 }
 
+/// Creates a new `Getter` with the provided getter function.
+///
+/// # Type Parameters
+/// - `S`: The source type of the optic
+/// - `A`: The target type of the optic
+/// # Arguments
+///
+/// - `get_fn` — A function that retrieves the focus value `A` from the source `S`.
+///
+/// # Returns
+///
+/// A new `GetterImpl` instance that can be used as a `Getter<S, A>`.
+///
+/// # Examples
+///
+/// ```
+/// use optics::{mapped_getter, HasTotalGetter};
+///
+/// #[derive(Debug, PartialEq)]
+/// struct Point { x: u32, y: u32 };
+/// let x_lens = mapped_getter( |s: &Point| s.x );
+///
+/// let mut p = Point { x: 10, y: 20 };
+///
+/// assert_eq!(x_lens.get(&p), 10);
+/// ```
 #[must_use]
 pub fn new<S, A, GET>(get_fn: GET) -> GetterImpl<S, A, impl Getter<S, A>>
 where

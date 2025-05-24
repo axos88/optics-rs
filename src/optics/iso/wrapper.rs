@@ -144,20 +144,74 @@ impl<S, I, ISO1: Iso<S, I>> IsoImpl<S, I, ISO1> {
         composed_setter(self.0, other.0)
     }
 
+    /// Composes this `IsoImpl<S,I>` with a `LensImpl<I,A>`, resulting in a new `LensImpl<S, A>`
+    /// that focuses through both optics sequentially.
+    ///
+    /// The resulting `LensImpl` will extract a value by first applying `self` and then
+    /// `other`.
+    ///
+    /// # Type Parameters
+    ///
+    /// - `A`: The target type of the composed lens.
+    /// - `L2`: The type of the lens to compose with.
+    ///
+    /// # Parameters
+    ///
+    /// - `other`: The lens to compose with.
+    ///
+    /// # Returns
+    ///
+    /// A new `LensImpl` that represents the composition of `self` and `other`
     pub fn compose_with_lens<A, L2: Lens<I, A>>(
         self,
         other: LensImpl<I, A, L2>,
     ) -> LensImpl<S, A, impl Lens<S, A>> {
-        composed_lens(self, other)
+        composed_lens(self.0, other.0)
     }
 
+    /// Composes this `IsoImpl<S,I>` with a `Prism<I,A>`, resulting in a new `PrismImpl<S, A>`
+    /// that focuses through both prisms sequentially.
+    ///
+    /// The resulting `PrismImpl` will attempt to extract a value by first applying `self` and then
+    /// `other`. If the prism fails to focus, the composition will fail.
+    ///
+    /// # Type Parameters
+    ///
+    /// - `A`: The target type of the composed prism.
+    /// - `P2`: The type of the prism to compose with.
+    ///
+    /// # Parameters
+    ///
+    /// - `other`: The prism to compose with.
+    ///
+    /// # Returns
+    ///
+    /// A new `PrismImpl` that represents the composition of `self` and `other`.
     pub fn compose_with_prism<A, P2: Prism<I, A>>(
         self,
-        other: P2,
+        other: PrismImpl<I, A, P2>,
     ) -> PrismImpl<S, A, impl Prism<S, A, GetterError = P2::GetterError>> {
-        composed_prism(self, other, infallible, identity)
+        composed_prism(self.0, other.0, infallible, identity)
     }
 
+    /// Composes this `IsoImpl<S,I>` with a `FallibleIso<I,A>`, resulting in a new `FallibleIsoImpl<S, A>`
+    /// that focuses through both prisms sequentially.
+    ///
+    /// The resulting `FallibleIsoImpl` will attempt to extract a value by first applying `self` and then
+    /// `other`. If the fallible iso fails to focus, the composition will fail to focus.
+    ///
+    /// # Type Parameters
+    ///
+    /// - `A`: The target type of the composed prism.
+    /// - `FI2`: The type of the fallible iso to compose with.
+    ///
+    /// # Parameters
+    ///
+    /// - `other`: The fallible iso to compose with.
+    ///
+    /// # Returns
+    ///
+    /// A new `FallibleIsoImpl` that represents the composition of `self` and `other`.
     pub fn compose_with_fallible_iso<A, FI2: FallibleIso<I, A>>(
         self,
         other: FallibleIsoImpl<I, A, FI2>,
@@ -166,9 +220,27 @@ impl<S, I, ISO1: Iso<S, I>> IsoImpl<S, I, ISO1> {
         A,
         impl FallibleIso<S, A, GetterError = FI2::GetterError, ReverseError = FI2::ReverseError>,
     > {
-        composed_fallible_iso(self, other, infallible, identity, infallible, identity)
+        composed_fallible_iso(self.0, other.0, infallible, identity, infallible, identity)
     }
 
+    /// Composes this `IsoImpl<S,I>` with an `IsoImpl<I,A>`, resulting in a new `IsoImpl<S, A>`
+    /// that focuses through both optics sequentially.
+    ///
+    /// The resulting `IsoImpl` will extract a value by first applying `self` and then
+    /// `other`.
+    ///
+    /// # Type Parameters
+    ///
+    /// - `A`: The target type of the composed lens.
+    /// - `ISO2`: The type of the lens to compose with.
+    ///
+    /// # Parameters
+    ///
+    /// - `other`: The iso to compose with.
+    ///
+    /// # Returns
+    ///
+    /// A new `IsoImpl` that represents the composition of `self` and `other`
     pub fn compose_with_iso<A, ISO2: Iso<I, A>>(
         self,
         other: IsoImpl<I, A, ISO2>,
