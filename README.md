@@ -11,11 +11,10 @@
 [![License](https://img.shields.io/crates/l/optics.svg)](https://github.com/axos88/optics-rs/blob/main/LICENSE)
 
 ## Summary
-`optics` is a set of **composable, type-safe tools** for accessing, transforming, and navigating data structures.
-It takes inspiration from the optics concepts you'd find in functional languages like Haskell —
-but it’s designed by someone who does not have a complete grasp on type theory or Van Laarhoven/profunctor lenses.
+`optics` is a set of **composable, type-safe tools** for accessing, transforming, and navigating data structures. It allows to separate navigation and performing operations on the data structures. Using optics a function is even able to perform a operations on otherwise opaque data structures.
 
-It tries to mimic similar functionality within the constraints of Rust’s type system without higher-kinded types.
+It takes inspiration from the optics concepts you'd find in functional languages like Haskell —
+but it’s not an implementatiton following strict type theory or Van Laarhoven/profunctor lenses, but it tries to mimic similar functionality within the constraints of Rust’s type system without higher-kinded types.
 
 The goal was simple:
 
@@ -25,7 +24,7 @@ The goal was simple:
 
 This is a **pre-release**, and the code is **unfinished** — but it’s good enough to start experimenting with in real projects.
 
-There’s a lot of room for simplification and improvement. Type-level constraints, trait bounds, and generic compositions are kind of bloated right now, and I wouldn’t mind help tightening it up.
+There’s a lot of room for simplification and improvement and I wouldn’t mind help and ideas to do so.
 
 ### ✨ Features
 - No dependencies — pure Rust, no external crates except for testing
@@ -41,11 +40,12 @@ within the limitations of Rust’s type system and my own understanding.
 
 ### 📦 Composability
 
-All optic implementations implement a set of base traits that define the operations they can perform. Currently three base operations are defined: (`HasSetter`, `HasGetter`, `HasReverseGet`). This will likely be extended in the future to make it possible to add a `Traversal` for example.
+All optic implementations implement a set of base traits that define the operations they can perform. Currently three base operations are defined: (`HasSetter`, `HasGetter`, `HasReverseGet`). This will likely need to be extended in the future to make it possible to add a `Traversal` for example.
+When certain conditions are met, specific marker traits are implemented for other base operations, such as `HasTotalGetter` (if the `HasGetter` error is `Infallible`), `HasOver` (if the optic is at least a prism), or `HasTotalReverseGet` (if the `HasReverseGet` error is `Infallible`.
 
 Concrete structs of implementations of the optics are private, and interaction with optics is only allowed when wrapped in an exposed `Impl` struct (constructor functions returning `Impl` are exposed). This can be used to combine optics or to downgrade an optic, such as a `Lens` into a `Getter`, if the desired behaviour is to restrict the optic to only allow reading data. 
 
-Optics - even if they are of different types can be combined. The rule of thumb is that the combination of two optics X<S, I> and Y<I, A> will result in the most advanced optic type that requires base traits that both components implement: 
+Optics - even if they are of different types can be combined. The rule of thumb is that the combination of two optics X<S, I> and Y<I, A> will result in the most advanced optic type that requires a set of base traits that both components implement: 
 
 |               | `PartialGetter` | Getter        | Prism | Lens | Iso | `FallibleIso` | Setter |
 |:--------------|:---------------|:--------------|:--------|:------|:-----|:--------------|:-------|
@@ -61,26 +61,14 @@ Optics - even if they are of different types can be combined. The rule of thumb 
 - [`PartialGetter`] - for fallible read-only access to data
 - [`Getter`] - for read-only access to data
 - [`Setter`] - for write-only access to data
-- [`Prism`] — mainly for working with enum variants (e.g. `SocketAddr` -> `SocketAddrV4`)
-- [`Lens`] — mainly for focusing on subfields of structs (e.g. `Point` -> `x: u32`)
-- [`Iso`]morphisms — for bijective, invertible mappings (eg. `Ipv4` ↔ `u32`)
-- [`FallibleIso`]morphisms — for conversions that might fail (e.g., `String` ↔ `u16`)
-
-### Optic Types
-This crate defines several types of optics that extend the functionality of the `Optic<S,A>` trait:
-
-- **Lenses**: Lenses focus on a part of a structure and provide a way to get and set the value of that part, such as `Point` -> `x: u32`
-
-- **Prisms**: Prisms in general allow for focusing on a specific variant of a sum type (like enums in Rust).
+- [`Prism`] — Prisms in general allow for focusing on a specific variant of a sum type (like enums in Rust).
   They can be used to extract or modify the value of that variant, or a focusing operation that may fail because the
   value that may or may not be present, such as `Option<u32>` -> `u32`
-
-- **Isos** (Isomorphisms): Isos provide a bijective mapping between types.
-  They can be used to transform data between two types while preserving structure, such as an `IpAddrV4` <=> `u32`.
-
-- **Fallible Isos**: Fallible isos extend the concept of isos by introducing the possibility of failure.
+- [`Lens`] — Lenses focus on a part of a structure and provide a way to get and set the value of that part, such as `Point` -> `x: u32`
+- [`Iso`]morphisms — Isos provide a bijective mapping between types. They can be used to transform data between two types while preserving structure, such as an `IpAddrV4` <=> `u32`, or a `CartesianPoint` and `PolarPoint`
+- [`FallibleIso`]morphisms — Fallible isos extend the concept of isos by introducing the possibility of failure.
   Both the getting and setting operations may fail, and they return Result types that allow you to handle errors.
-  This can be used for parsing or validating data, such as converting a string to an integer.
+  This can be used for parsing or validating data, such as converting a `String` to an `u16`.
 
 ### 🧩 Extensibility
 
@@ -96,12 +84,12 @@ Each optic type (e.g., Lens, Prism, Iso) is encapsulated within its own module. 
 A marker trait is defined to represent the optic type. This trait defines as supertraits the necessary base optic traits required for its functionality. For example, a Prism marker trait would extend `HasPartialGetter` and `HasSetter`. The marker trait has a blanket implementation to be automatically implement for all structs that implement the required base traits.
 
 #### Implementation Struct (Impl)
-An Impl struct (e.g., `LensImpl`) serves as the public interface for the optic type. The semantics of the Impl wrapper is "a container of an optics that currently acts as a ..." This struct wraps the concrete implementation opaquely and is directly returned by the crate's API. Utilizing a concrete struct also allows to use correct combinating function signatures and allow downgrading an optic to an inferior type (lens to prism, iso to getter).
+An Impl struct (e.g., `LensImpl`) serves as the public interface for the optic type. The semantics of the Impl wrapper is "a container of optics that currently acts as a ..." This struct wraps the concrete implementation opaquely and is directly returned by the crate's API. Utilizing a concrete struct also allows to use correct combining function signatures and allow downgrading an optic to an inferior type (lens to prism, iso to getter).
 
 The Impl struct is responsible for:
 - Implementing all base optic traits its wrapped optic implements, and allowing for casting between different optic types (e.g., from Iso to Lens or Prism).
 - Providing `combine_with_xxx` functions to compose optics, returning an Impl of the resulting optic type.
-- Providing `cast_to_xxx` functions returning an Impl of an inferior optic type (e.g., from Lens to Prism or Getter).
+- Providing `as_xxx` functions returning an Impl of an inferior optic type (e.g., from Lens to Prism or Getter).
 
 #### Composed Implementations
 A `composed.rs` file within each module contains implementations that compose two optics to form the current optic type. For instance, a `ComposedPrism` might combine a `Lens` and a `FallibleIso`. In some cases errors need to be wrapped either automatically if they implement `Into<>`, or by mapping functions.
@@ -126,12 +114,13 @@ When introducing a new optic type or implementation:
 - Define the Marker Trait: Inside the module, define a marker trait that extends the appropriate base optic traits. Add a blanket implementation for all structs that implement the required base traits.
 - Implement the Optic: Provide a concrete struct that implements the base optic traits and the marker trait. Add it as a submodule under the optic type module.
 - Wrap with Impl Struct: Create an Impl struct in a wrapper module that wraps the concrete implementation and implements downgrading and combining functions.
-- Compose Optics: If the optic type can be composed **from** existing optics, implement the composition in the composed.rs file.
+- Compose Optics: If the optic type can be composed **from** existing optics, implement the composition in the composed.rs file. Add extension traits for Impls of other optic types, and implement combining and downgrading functions to the optic being implemented if it makes sense.
 - Additional Implementations: Consider alternative implementations using closures or concrete structs for specific HKTs, as needed.
 - Pull requests are welcome :)
 
 By following these conventions, the optics crate maintains a consistent and extensible framework for optic types, promoting code reuse and reducing the potential for conflicts in trait implementations.
 
+The table below shows which optics can act as another optic type.
 
 |               | `Getter` | `TotalGetter` | `Prism` | `Lens` | `Iso` | `FallibleIso` | `Setter` |
 |---------------|:-------------:|:-----------:|:-----:|:----:|:---:|:-----------:|:------:|
@@ -148,7 +137,6 @@ By following these conventions, the optics crate maintains a consistent and exte
 
 If you know your type theory, or even if you just have an eye for clean Rust APIs — I’d love for you to take a look. Suggestions, critiques, and even teardown reviews are welcome.
 This is very much a **learning-while-doing** project for me.
-
 
 ## Examples
 Below is a simplified example of how the optics work in this crate. The code below illustrates how to use and combine the various optic types.
@@ -219,4 +207,4 @@ example();
 
 ### Disclaimer:
 
-While the code was written with care, parts of the documentation and the tests are AI generated.
+While the code was written with care, parts of the documentation and some of the tests are AI generated, especially the code quality tests.
