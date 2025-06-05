@@ -10,7 +10,6 @@ use crate::optics::prism::{Prism, mapped_prism};
 use crate::test::fixtures::{Config, DatabaseConfig, Timespan};
 use crate::{FallibleIso, HasReverseGet, Iso, mapped_fallible_iso, mapped_iso};
 use alloc::string::{String, ToString};
-use alloc::vec;
 
 macro_rules! assert_impl {
     ($val:ident : $trait:path) => {{
