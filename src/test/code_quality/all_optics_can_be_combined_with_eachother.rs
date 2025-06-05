@@ -115,6 +115,7 @@ fn extract_fn_names_and_type_params(input: &[ImplItemFn]) -> Vec<(Ident, Vec<Ide
         .collect::<Vec<_>>()
 }
 
+// Tests that combine_with_xxx functions are implemented for all optics
 #[test]
 fn test_all_optics_have_combine_with_functions() {
     helpers::CRATE_AST.with(|ast| {

@@ -1,19 +1,20 @@
-use crate::some_lens::some_prism;
+use crate::some_prism::some_prism;
 use optics::{HasSetter, mapped_lens};
 
-mod some_lens {
+mod some_prism {
     use optics::{HasGetter, HasSetter, Prism, PrismImpl};
 
+    struct WasNone;
     struct SomePrism<A>(std::marker::PhantomData<A>);
 
     impl<A: Clone> HasGetter<Option<A>, A> for SomePrism<A> {
-        type GetterError = ();
+        type GetterError = WasNone;
 
         fn try_get(&self, source: &Option<A>) -> Result<A, Self::GetterError> {
             if let Some(value) = source {
                 Ok(value.clone())
             } else {
-                Err(())
+                Err(WasNone)
             }
         }
     }
@@ -43,10 +44,10 @@ fn main() {
         z: Some(30),
     };
 
-    let z_lens =
+    let z_prism =
         mapped_lens(|p: &Point| p.z, |p: &mut Point, z| p.z = z).compose_with_prism(some_prism());
 
-    z_lens.set(&mut point, 42);
+    z_prism.set(&mut point, 42);
 
     assert_eq!(point.z, Some(42));
 }

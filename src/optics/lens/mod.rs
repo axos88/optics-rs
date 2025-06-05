@@ -86,3 +86,54 @@ impl<S, A, L: HasGetter<S, A, GetterError = Infallible> + HasSetter<S, A>> Lens<
 pub fn identity_lens<S: Clone>() -> LensImpl<S, S, impl Lens<S, S>> {
     mapped_lens(|x: &S| x.clone(), |s, v| *s = v)
 }
+
+/// Generates a lens for a specific field of a struct.
+///
+/// This macro expands to a call to `mapped_lens` with:
+/// - a getter closure that returns a reference to the specified field,
+/// - a setter closure that assigns a new value to the specified field.
+///
+/// # Syntax
+///
+/// ```ignore
+/// field_lens!(StructType, field_name)
+/// ```
+///
+/// - `StructType`: The struct type containing the field.
+/// - `field_name`: The field name to create the lens for.
+///
+/// # Example
+///
+/// ```rust
+/// # use optics::{field_lens, HasSetter, HasTotalGetter, LensImpl};
+/// # fn mapped_lens<GET, SET, T, F>(getter: GET, setter: SET) -> (GET, SET)
+/// # where GET: Fn(&T) -> &F, SET: Fn(&mut T, F), { (getter, setter) }
+///
+/// struct Point {
+///     x: i32,
+///     y: i32,
+/// }
+///
+/// let x_lens: LensImpl<Point, i32, _> = field_lens!(Point, x);
+///
+/// let mut p = Point { x: 10, y: 20 };
+/// assert_eq!(x_lens.get(&p), 10);
+///
+/// x_lens.set(&mut p, 42);
+/// assert_eq!(p.x, 42);
+/// ```
+///
+/// # Notes
+///
+/// - The getter returns a reference to the field.
+/// - The setter assigns the new value to the field.
+/// - The field must be accessible (e.g., public or within the same module).
+#[macro_export]
+macro_rules! field_lens {
+    ($type:ty, $field:ident) => {
+        $crate::mapped_lens::<$type, _, _, _>(
+            |input: &$type| input.$field.clone(),
+            |input: &mut $type, value| input.$field = value,
+        )
+    };
+}

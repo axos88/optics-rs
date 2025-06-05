@@ -3,6 +3,7 @@ use convert_case::{Case, Casing};
 use syn::visit::Visit;
 use syn::{ItemFn, ItemMod, ItemStruct, Visibility, visit};
 
+/// Verifies that no API leakage occurs.
 #[test]
 fn optic_implementations_exported_struct_and_fns() {
     #[derive(Default)]

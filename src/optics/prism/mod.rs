@@ -5,6 +5,7 @@ use core::convert::Infallible;
 mod composed;
 mod mapped;
 mod wrapper;
+// mod enum_prism; // Needs #![feature(more_qualified_paths)] stabilized https://github.com/rust-lang/rust/issues/86935
 
 pub use composed::new as composed_prism;
 pub use mapped::new as mapped_prism;
