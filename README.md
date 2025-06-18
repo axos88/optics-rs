@@ -138,67 +138,77 @@ This is very much a **learning-while-doing** project for me.
 Below is a simplified example of how the optics work in this crate. The code below illustrates how to use and combine the various optic types.
 
 ```rust
-use optics::{LensImpl, FallibleIsoImpl, PrismImpl, mapped_lens, mapped_prism, mapped_fallible_iso, HasSetter, HasGetter};
+use core::net::SocketAddr;
+
+use optics::{mapped_lens, mapped_prism, mapped_fallible_iso, HasSetter, HasGetter};
 
 #[derive(Debug, Clone)]
 struct HttpConfig {
-  bind_address: Option<String>,
-  workers: usize,
+    bind_address: Option<String>,
+    workers: usize,
 }
 
 #[derive(Debug, Clone)]
 struct AppConfig {
-  http: HttpConfig,
-  name: String,
+    http: HttpConfig,
+    name: String,
 }
 
-fn example() {
-  // Define lenses to focus on subfields
-  let http_lens = mapped_lens(
+// AppConfig -> HttpConfig
+let focus_http = mapped_lens(
     |app: &AppConfig| app.http.clone(),
     |app, http| app.http = http,
-  );
+);
 
-  let bind_address_prism = mapped_prism(
+// HttpConfig ~> String
+let focus_addr = mapped_prism(
     |http: &HttpConfig| http.bind_address.clone().ok_or(()),
     |http, addr| http.bind_address = Some(addr),
-  );
+);
 
-  let minimum_port = 1024;
-  // Define a fallible isomorphism between String and u16 (parsing a port)
-  let port_fallible_iso = mapped_fallible_iso(
-    |addr: &String| {
-      addr.rsplit(':')
-        .next()
-        .and_then(|port| port.parse::<u16>().ok()).ok_or(())
+// String ~> SocketAddr
+let focus_socketaddr = mapped_prism(
+    |s: &String| s.parse::<SocketAddr>().map_err(|_| ()),
+    |s, addr| *s = addr.to_string(),
+);
+
+// SocketAddr -> u16
+let focus_port = mapped_lens(
+    |addr: &SocketAddr| addr.port(),
+    |addr: &mut SocketAddr, port: u16| addr.set_port(port),
+);
+
+// u16 <~> u16
+let restrict_port = mapped_fallible_iso(
+    |port: &u16| Ok::<_, ()>(*port),
+    |port: &u16| {
+        if *port < 1024 { Err(()) } else { Ok(*port) }
     },
-    move |port: &u16| if *port > minimum_port { Ok(format!("0.0.0.0:{}", port)) } else { Err(()) }
-  );
+);
 
-  // Compose lens and fallible iso into a ComposedFallibleIso
+// AppConfig ~> u16
+let comp_focus_port = focus_http
+    .compose_with_prism(focus_addr)
+    .compose_with_prism::<(), _, _>(focus_socketaddr)
+    .compose_with_lens(focus_port)
+    .compose_with_fallible_iso::<(), _, _>(restrict_port);
 
-  let http_bind_address_prism = http_lens.compose_with_prism(bind_address_prism);
-  let http_bind_address_port_prism = http_bind_address_prism.compose_with_fallible_iso::<(), _, _>(port_fallible_iso);
-
-  let mut config = AppConfig {
+let mut config = AppConfig {
     http: HttpConfig {
-      bind_address: Some("127.0.0.1:8080".to_string()),
-      workers: 4,
+        bind_address: Some("127.0.0.1:8080".to_string()),
+        workers: 4,
     },
     name: "my_app".into(),
-  };
+};
 
-  // Use the composed optic to get the port
-  let port = http_bind_address_port_prism.try_get(&config).unwrap();
-  println!("Current port: {}", port); // 8080
+let port = comp_focus_port.try_get(&config).unwrap();
+assert_eq!(port, 8080);
 
-  // Use it to increment the port and update the config
-  http_bind_address_port_prism.set(&mut config, port + 1);
+comp_focus_port.set(&mut config, port + 1);
+assert_eq!(config.http.bind_address, Some("127.0.0.1:8081".into())); // port has changed
 
-  println!("Updated bind address: {:?}", config.http.bind_address); // port is now 8081
-}
-
-example();
+comp_focus_port.set(&mut config, 0);
+assert_eq!(config.http.bind_address, Some("127.0.0.1:8081".into())); // unchanged because port was not large enough
 ```
 
 ### Disclaimer:
